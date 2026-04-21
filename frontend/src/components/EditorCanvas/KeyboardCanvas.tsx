@@ -16,7 +16,7 @@ const KeyboardCanvas: React.FC = () => {
       orthographic={is2D}
       camera={is2D 
         ? { position: [0, 500, 0], zoom: 10, up: [0, 0, -1], near: 0.1, far: 1000 }
-        : { position: [150, 200, 250], fov: 45, near: 0.1, far: 2000 }
+        : { position: [150, 200, 250], fov: 45, up: [0, 1, 0], near: 0.1, far: 2000 }
       }
       style={{ height: '100%', width: '100%' }}
       onPointerMissed={() => selectKey(null)}
@@ -71,12 +71,13 @@ const KeyboardCanvas: React.FC = () => {
       </Suspense>
 
       <OrbitControls 
+        key={viewMode}
         enablePan={true} 
         enableZoom={true} 
         enableRotate={!is2D}
         makeDefault 
-        minPolarAngle={is2D ? 0 : undefined}
-        maxPolarAngle={is2D ? 0 : undefined}
+        minPolarAngle={is2D ? 0 : 0}
+        maxPolarAngle={is2D ? 0 : Math.PI}
       />
     </Canvas>
   );
