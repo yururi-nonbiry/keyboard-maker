@@ -9,7 +9,8 @@ interface KeySwitchProps {
 }
 
 const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
-  const { selectedKeyId, selectKey, collisions, updateKey, gridSnapping, gridSize } = useKeyboardStore();
+  const { data, selectedKeyId, selectKey, collisions, updateKey, gridSnapping, gridSize } = useKeyboardStore();
+  const { keyPitch } = data.case_config;
   const groupRef = useRef<THREE.Group>(null);
   const meshGroupRef = useRef<THREE.Group>(null);
   const isSelected = selectedKeyId === config.id;
@@ -53,6 +54,9 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
     }
   };
 
+  const keycapW = (keyPitch - 1.05) * config.keycapSize.width;
+  const keycapH = (keyPitch - 1.05) * config.keycapSize.height;
+
   return (
     <group 
       ref={groupRef}
@@ -89,7 +93,7 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
 
           {/* Keycap */}
           <mesh position={[0, 10, 0]}>
-            <boxGeometry args={[18 * config.keycapSize.width - 1, 8, 18 * config.keycapSize.height - 1]} />
+            <boxGeometry args={[keycapW, 8, keycapH]} />
             <meshStandardMaterial 
               color={hasCollision ? "#ef4444" : (isSelected ? "#6366f1" : "#1c1c21")} 
               metalness={0.1} 
@@ -102,7 +106,7 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
           {/* Selection Glow */}
           {isSelected && (
             <mesh position={[0, 1, 0]}>
-              <boxGeometry args={[19, 0.5, 19]} />
+              <boxGeometry args={[keyPitch, 0.5, keyPitch]} />
               <meshStandardMaterial 
                 color="#6366f1" 
                 emissive="#6366f1" 

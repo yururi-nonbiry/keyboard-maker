@@ -41,11 +41,11 @@ const KeyboardCanvas: React.FC = () => {
   const leftKeys = data.layout.filter(k => k.side === 'left' || !k.side);
   const rightKeys = data.layout.filter(k => k.side === 'right');
 
-  const bbox = calculateBoundingBox(data.layout);
+  const bbox = calculateBoundingBox(data.layout, data.case_config.keyPitch);
   const centerOffset = bbox ? [-bbox.centerX, 0, -bbox.centerY] : [0, 0, 0];
 
-  const leftBbox = calculateBoundingBox(leftKeys);
-  const rightBbox = calculateBoundingBox(rightKeys);
+  const leftBbox = calculateBoundingBox(leftKeys, data.case_config.keyPitch);
+  const rightBbox = calculateBoundingBox(rightKeys, data.case_config.keyPitch);
 
   return (
     <Canvas

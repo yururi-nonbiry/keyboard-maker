@@ -55,6 +55,7 @@ const DEFAULT_CASE: CaseConfig = {
   tentingAngle: 0,
   splitRotation: 0,
   splitGap: 40,
+  keyPitch: 19.05,
 };
 
 const INITIAL_LAYOUT: KeyConfig[] = Array.from({ length: 9 }, (_, i) => ({
@@ -99,7 +100,7 @@ export const useKeyboardStore = create<KeyboardState>()(
           const newLayout = [...state.data.layout, key];
           return {
             data: { ...state.data, layout: newLayout },
-            collisions: checkInterference(newLayout),
+            collisions: checkInterference(newLayout, state.data.case_config.keyPitch),
           };
         }),
 
@@ -108,7 +109,7 @@ export const useKeyboardStore = create<KeyboardState>()(
           const newLayout = state.data.layout.map((k) => (k.id === id ? { ...k, ...config } : k));
           return {
             data: { ...state.data, layout: newLayout },
-            collisions: checkInterference(newLayout),
+            collisions: checkInterference(newLayout, state.data.case_config.keyPitch),
           };
         }),
 
@@ -117,7 +118,7 @@ export const useKeyboardStore = create<KeyboardState>()(
           const newLayout = state.data.layout.filter((k) => k.id !== id);
           return {
             data: { ...state.data, layout: newLayout },
-            collisions: checkInterference(newLayout),
+            collisions: checkInterference(newLayout, state.data.case_config.keyPitch),
             selectedKeyId: state.selectedKeyId === id ? null : state.selectedKeyId,
           };
         }),
@@ -130,9 +131,15 @@ export const useKeyboardStore = create<KeyboardState>()(
         })),
 
       updateCaseConfig: (case_config) =>
-        set((state) => ({
-          data: { ...state.data, case_config: { ...state.data.case_config, ...case_config } },
-        })),
+        set((state) => {
+          const newData = { ...state.data, case_config: { ...state.data.case_config, ...case_config } };
+          const newGridSize = case_config.keyPitch !== undefined ? case_config.keyPitch : state.gridSize;
+          return {
+            data: newData,
+            gridSize: newGridSize,
+            collisions: checkInterference(newData.layout, newData.case_config.keyPitch),
+          };
+        }),
 
       updateKeyboardType: (type) =>
         set((state) => ({
@@ -141,7 +148,7 @@ export const useKeyboardStore = create<KeyboardState>()(
 
       setKeyboardData: (data) => set({ 
         data, 
-        collisions: checkInterference(data.layout) 
+        collisions: checkInterference(data.layout, data.case_config.keyPitch || 19.05) 
       }),
     }),
     {
@@ -151,7 +158,7 @@ export const useKeyboardStore = create<KeyboardState>()(
       onRehydrateStorage: () => {
         return (rehydratedState) => {
           if (rehydratedState) {
-            rehydratedState.collisions = checkInterference(rehydratedState.data.layout);
+            rehydratedState.collisions = checkInterference(rehydratedState.data.layout, rehydratedState.data.case_config.keyPitch);
           }
         };
       },

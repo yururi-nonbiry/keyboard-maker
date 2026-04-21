@@ -5,9 +5,9 @@ export interface CollisionResult {
   collidingKeyIds: string[];
 }
 
-export const checkInterference = (layout: KeyConfig[]): Record<string, boolean> => {
+export const checkInterference = (layout: KeyConfig[], keyPitch: number = 19.05): Record<string, boolean> => {
   const collisions: Record<string, boolean> = {};
-  const UNIT = 19.05; // Standard key spacing in mm
+  const UNIT = keyPitch; // Use provided key pitch
 
   for (let i = 0; i < layout.length; i++) {
     const keyA = layout[i];
@@ -55,11 +55,11 @@ export interface BoundingBox {
   maxY: number;
 }
 
-export const calculateBoundingBox = (keys: KeyConfig[], padding: number = 0): BoundingBox | null => {
+export const calculateBoundingBox = (keys: KeyConfig[], keyPitch: number = 19.05, padding: number = 0): BoundingBox | null => {
   if (keys.length === 0) return null;
   
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  const UNIT = 19.05;
+  const UNIT = keyPitch;
 
   keys.forEach(key => {
     const halfW = (key.keycapSize.width * UNIT) / 2;

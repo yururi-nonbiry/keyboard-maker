@@ -96,6 +96,18 @@ const Sidebar: React.FC = () => {
             </div>
           </>
         )}
+        <div className={styles.group}>
+          <label className={styles.label}>キーピッチ: {data.case_config.keyPitch}mm</label>
+          <input
+            type="number"
+            min="15"
+            max="20"
+            step="0.01"
+            className={styles.input}
+            value={data.case_config.keyPitch}
+            onChange={(e) => updateCaseConfig({ keyPitch: parseFloat(e.target.value) || 19.05 })}
+          />
+        </div>
       </div>
       <div className={styles.section}>
         <h3 className={styles.sectionTitle}>PCB/コントローラー設定</h3>
