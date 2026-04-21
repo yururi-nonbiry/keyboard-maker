@@ -99,6 +99,7 @@ const KeyboardCanvas: React.FC = () => {
                           position={[c.x, c.mountingSide === 'bottom' ? -4 : -2, c.y]}
                           rotation={[c.mountingSide === 'bottom' ? Math.PI : 0, 0, (c.rotation * Math.PI) / 180]}
                           mountingSide={c.mountingSide}
+                          side="left"
                         />
                       ))}
                     </group>
@@ -127,6 +128,7 @@ const KeyboardCanvas: React.FC = () => {
                           position={[c.x, c.mountingSide === 'bottom' ? -4 : -2, c.y]}
                           rotation={[c.mountingSide === 'bottom' ? Math.PI : 0, 0, (c.rotation * Math.PI) / 180]}
                           mountingSide={c.mountingSide}
+                          side="right"
                         />
                       ))}
                     </group>

@@ -353,6 +353,17 @@ const Keyboard2D: React.FC = () => {
         >
           {controller.type.toUpperCase().replace('_', ' ')}
         </text>
+        {/* Side Label (for split) */}
+        <text
+          y={-3}
+          textAnchor="middle"
+          fontSize={4}
+          fontWeight="bold"
+          fill={controller.side === 'left' ? '#60a5fa' : '#f87171'}
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+          {controller.side.toUpperCase()}
+        </text>
         {/* Mounting Side Indicator */}
         <text
           y={8}

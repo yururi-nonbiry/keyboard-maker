@@ -7,9 +7,10 @@ interface MicroControllerProps {
   position: [number, number, number];
   rotation: [number, number, number];
   mountingSide?: 'top' | 'bottom';
+  side?: 'left' | 'right';
 }
 
-const MicroController: React.FC<MicroControllerProps> = ({ type, position, rotation, mountingSide = 'top' }) => {
+const MicroController: React.FC<MicroControllerProps> = ({ type, position, rotation, mountingSide = 'top', side }) => {
   const dimensions = useMemo(() => {
     switch (type) {
       case 'pro_micro':
@@ -50,16 +51,28 @@ const MicroController: React.FC<MicroControllerProps> = ({ type, position, rotat
       </Box>
 
       {/* Label */}
-      <Text
-        position={[0, dimensions.height / 2 + 0.1, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        fontSize={3}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-      >
-        {label}
-      </Text>
+      <group position={[0, (mountingSide === 'top' ? 1 : -1) * (dimensions.height / 2 + 0.1), 0]} rotation={[(mountingSide === 'top' ? -1 : 1) * Math.PI / 2, 0, 0]}>
+        <Text
+          fontSize={3}
+          color="white"
+          anchorX="center"
+          anchorY="middle"
+          position={[0, 0, 0]}
+        >
+          {label}
+        </Text>
+        {side && (
+          <Text
+            fontSize={2}
+            color={side === 'left' ? '#60a5fa' : '#f87171'}
+            anchorX="center"
+            anchorY="middle"
+            position={[0, -4, 0]}
+          >
+            {side.toUpperCase()}
+          </Text>
+        )}
+      </group>
 
       {/* Pins Visualization (Optional, just simple lines/boxes) */}
       <group position={[0, -dimensions.height / 2 - 1, 0]}>

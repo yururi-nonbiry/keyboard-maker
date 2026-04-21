@@ -151,13 +151,22 @@ const Sidebar: React.FC = () => {
             className={styles.input}
             onClick={() => {
               const id = `mcu-${Date.now()}`;
+              let side: 'left' | 'right' = 'left';
+              
+              if (data.type === 'split') {
+                const hasLeft = (data.controllers || []).some(c => c.side === 'left');
+                const hasRight = (data.controllers || []).some(c => c.side === 'right');
+                if (hasLeft && !hasRight) side = 'right';
+                else if (!hasLeft) side = 'left';
+              }
+
               addController({
                 id,
                 type: 'pro_micro',
                 x: 0,
                 y: -60,
                 rotation: 0,
-                side: 'left',
+                side,
                 mountingSide: 'top'
               });
               selectController(id);
@@ -315,7 +324,14 @@ const Sidebar: React.FC = () => {
         </div>
       ) : selectedController ? (
         <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>MCU設定</h3>
+          <div className={styles.sectionHeader}>
+            <h3 className={styles.sectionTitle}>MCU設定</h3>
+            {data.type === 'split' && (
+              <span className={`${styles.badge} ${selectedController.side === 'left' ? styles.badgeLeft : styles.badgeRight}`}>
+                {selectedController.side === 'left' ? 'LEFT' : 'RIGHT'}
+              </span>
+            )}
+          </div>
           <div className={styles.group}>
             <label className={styles.label}>種類</label>
             <select

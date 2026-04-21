@@ -213,6 +213,22 @@ export const useKeyboardStore = create<KeyboardState>()(
                 }));
               }
             }
+
+            // Also handle controllers for split
+            if (!newData.controllers || newData.controllers.length === 0) {
+              newData.controllers = [
+                { id: `mcu-left-${Date.now()}`, type: 'pro_micro', x: 0, y: -60, rotation: 0, side: 'left', mountingSide: 'top' },
+                { id: `mcu-right-${Date.now()}`, type: 'pro_micro', x: 0, y: -60, rotation: 0, side: 'right', mountingSide: 'top' }
+              ];
+            } else if (newData.controllers.length === 1) {
+              const existing = newData.controllers[0];
+              const otherSide = existing.side === 'left' ? 'right' : 'left';
+              newData.controllers.push({
+                ...existing,
+                id: `mcu-${otherSide}-${Date.now()}`,
+                side: otherSide
+              });
+            }
           }
           
           return { data: newData };
