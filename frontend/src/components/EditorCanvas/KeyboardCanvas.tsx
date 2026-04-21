@@ -6,7 +6,8 @@ import KeySwitch from './KeySwitch';
 import Plate from './Plate';
 
 const KeyboardCanvas: React.FC = () => {
-  const { data, selectKey } = useKeyboardStore();
+  const { data, selectKey, selectedKeyId } = useKeyboardStore();
+  const isEditing = selectedKeyId !== null;
 
   return (
     <Canvas
@@ -25,7 +26,11 @@ const KeyboardCanvas: React.FC = () => {
         
         <Environment preset="city" />
 
-        <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.5}>
+        <Float 
+          speed={isEditing ? 0 : 1.5} 
+          rotationIntensity={isEditing ? 0 : 0.2} 
+          floatIntensity={isEditing ? 0 : 0.5}
+        >
           <group position={[0, 0, 0]}>
             {data.layout.map((key) => (
               <KeySwitch key={key.id} config={key} />
