@@ -4,6 +4,7 @@ import { OrbitControls, ContactShadows, Environment, Float, Grid } from '@react-
 import { useKeyboardStore } from '../../store/useKeyboardStore';
 import KeySwitch from './KeySwitch';
 import Plate from './Plate';
+import Case from './Case';
 import MicroController from './MicroController';
 
 import { calculateBoundingBox } from '../../utils/geometry';
@@ -86,6 +87,7 @@ const KeyboardCanvas: React.FC = () => {
                   <KeySwitch key={key.id} config={key} />
                 ))}
                 <Plate />
+                <Case />
                 <MicroController 
                   type={data.pcb_config.controllerType}
                   position={[0, -2, -60]} // Positioned behind the keys
@@ -105,6 +107,7 @@ const KeyboardCanvas: React.FC = () => {
                         <KeySwitch key={key.id} config={key} />
                       ))}
                       <Plate side="left" />
+                      <Case side="left" />
                       <MicroController 
                         type={data.pcb_config.controllerType}
                         position={[0, -2, -60]} 
@@ -125,6 +128,7 @@ const KeyboardCanvas: React.FC = () => {
                         <KeySwitch key={key.id} config={key} />
                       ))}
                       <Plate side="right" />
+                      <Case side="right" />
                       <MicroController 
                         type={data.pcb_config.controllerType}
                         position={[0, -2, -60]} 
