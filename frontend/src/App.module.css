@@ -1,0 +1,34 @@
+.container {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-rows: var(--toolbar-height) 1fr;
+  grid-template-areas:
+    "toolbar toolbar"
+    "sidebar canvas";
+  height: 100vh;
+  width: 100vw;
+}
+
+.toolbar {
+  grid-area: toolbar;
+  z-index: 20;
+}
+
+.sidebar {
+  grid-area: sidebar;
+  z-index: 10;
+  overflow-y: auto;
+}
+
+.canvas {
+  grid-area: canvas;
+  position: relative;
+  background: radial-gradient(circle at center, #1c1c21 0%, #0a0a0c 100%);
+}
+
+.overlay {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  pointer-events: none;
+}

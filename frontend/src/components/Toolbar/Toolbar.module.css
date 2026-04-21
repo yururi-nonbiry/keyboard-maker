@@ -1,0 +1,47 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 100%;
+}
+
+.logo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+}
+
+.button:hover {
+  background: var(--color-border);
+  border-color: var(--color-border-hover);
+}
+
+.primaryButton {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.primaryButton:hover {
+  background: #4f46e5;
+  box-shadow: 0 0 20px var(--color-primary-glow);
+}
