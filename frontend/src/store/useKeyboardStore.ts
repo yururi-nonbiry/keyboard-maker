@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { KeyboardData, KeyConfig, KeyboardMetadata, PcbConfig, CaseConfig, SwitchType } from '../types';
+import type { KeyboardData, KeyConfig, KeyboardMetadata, PcbConfig, CaseConfig, SwitchType, KeyboardType } from '../types';
 import { checkInterference } from '../utils/geometry';
 
 interface KeyboardState {
@@ -15,6 +15,7 @@ interface KeyboardState {
   selectKey: (id: string | null) => void;
   updatePcbConfig: (config: Partial<PcbConfig>) => void;
   updateCaseConfig: (config: Partial<CaseConfig>) => void;
+  updateKeyboardType: (type: KeyboardType) => void;
   setKeyboardData: (data: KeyboardData) => void;
   
   // Grid Settings
@@ -58,11 +59,13 @@ const INITIAL_LAYOUT: KeyConfig[] = Array.from({ length: 9 }, (_, i) => ({
   rotation: 0,
   switchType: 'mx' as SwitchType,
   keycapSize: { width: 1, height: 1 },
+  side: 'left', // Default side
 }));
 
 export const useKeyboardStore = create<KeyboardState>((set) => ({
   data: {
     metadata: DEFAULT_METADATA,
+    type: 'integrated',
     layout: INITIAL_LAYOUT,
     pcb_config: DEFAULT_PCB,
     case_config: DEFAULT_CASE,
@@ -122,6 +125,11 @@ export const useKeyboardStore = create<KeyboardState>((set) => ({
   updateCaseConfig: (case_config) =>
     set((state) => ({
       data: { ...state.data, case_config: { ...state.data.case_config, ...case_config } },
+    })),
+
+  updateKeyboardType: (type) =>
+    set((state) => ({
+      data: { ...state.data, type },
     })),
 
   setKeyboardData: (data) => set({ 

@@ -7,6 +7,8 @@ export interface KeyboardMetadata {
 
 export type SwitchType = 'mx' | 'choc' | 'choc_v2' | 'x_switch' | 'ec';
 
+export type KeyboardType = 'integrated' | 'split';
+
 export interface KeyConfig {
   id: string;
   x: number; // in mm
@@ -18,6 +20,7 @@ export interface KeyConfig {
     height: number;
   };
   stabilizer?: boolean;
+  side?: 'left' | 'right';
 }
 
 export interface PcbConfig {
@@ -37,6 +40,7 @@ export interface CaseConfig {
 
 export interface KeyboardData {
   metadata: KeyboardMetadata;
+  type: KeyboardType;
   layout: KeyConfig[];
   pcb_config: PcbConfig;
   case_config: CaseConfig;

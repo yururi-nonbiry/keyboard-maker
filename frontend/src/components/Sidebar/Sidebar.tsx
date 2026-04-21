@@ -1,10 +1,10 @@
 import React from 'react';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
-import type { SwitchType } from '../../types';
+import type { SwitchType, KeyboardType } from '../../types';
 import styles from './Sidebar.module.css';
 
 const Sidebar: React.FC = () => {
-  const { data, updateMetadata, selectedKeyId, updateKey, removeKey } = useKeyboardStore();
+  const { data, updateMetadata, updateKeyboardType, selectedKeyId, updateKey, removeKey } = useKeyboardStore();
   const selectedKey = data.layout.find(k => k.id === selectedKeyId);
 
   return (
@@ -18,6 +18,17 @@ const Sidebar: React.FC = () => {
             value={data.metadata.name}
             onChange={(e) => updateMetadata({ name: e.target.value })}
           />
+        </div>
+        <div className={styles.group}>
+          <label className={styles.label}>タイプ</label>
+          <select
+            className={styles.input}
+            value={data.type}
+            onChange={(e) => updateKeyboardType(e.target.value as KeyboardType)}
+          >
+            <option value="integrated">一体型 (Integrated)</option>
+            <option value="split">分割型 (Split)</option>
+          </select>
         </div>
       </div>
 
@@ -64,6 +75,19 @@ const Sidebar: React.FC = () => {
               <option value="ec">静電容量無接点方式 (Topre)</option>
             </select>
           </div>
+          {data.type === 'split' && (
+            <div className={styles.group}>
+              <label className={styles.label}>配置サイド</label>
+              <select
+                className={styles.input}
+                value={selectedKey.side || 'left'}
+                onChange={(e) => updateKey(selectedKey.id, { side: e.target.value as 'left' | 'right' })}
+              >
+                <option value="left">左手 (Left)</option>
+                <option value="right">右手 (Right)</option>
+              </select>
+            </div>
+          )}
           <div style={{ marginTop: 'auto' }}>
             <button 
               className={styles.input} 
