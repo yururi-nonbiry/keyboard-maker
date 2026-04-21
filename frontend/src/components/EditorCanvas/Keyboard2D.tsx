@@ -21,6 +21,9 @@ const Keyboard2D: React.FC = () => {
   const [draggingKeyId, setDraggingKeyId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [viewBox, setViewBox] = useState({ x: -250, y: -200, width: 500, height: 400 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [hasMovedDuringPan, setHasMovedDuringPan] = useState(false);
 
   const { layout, type: keyboardType, case_config } = data;
   const { splitGap, splitRotation } = case_config;
@@ -45,7 +48,7 @@ const Keyboard2D: React.FC = () => {
     }
   }, [keyboardType, splitGap]);
 
-  const getMousePos = (e: React.MouseEvent | MouseEvent) => {
+  const getMousePos = (e: React.MouseEvent | MouseEvent | React.WheelEvent) => {
     if (!svgRef.current) return { x: 0, y: 0 };
     const svg = svgRef.current;
     const pt = svg.createSVGPoint();
@@ -83,11 +86,51 @@ const Keyboard2D: React.FC = () => {
         x: snap(newX),
         y: snap(newY)
       });
+    } else if (isPanning) {
+      const dx = (e.clientX - panStart.x) * (viewBox.width / (svgRef.current?.clientWidth || 1));
+      const dy = (e.clientY - panStart.y) * (viewBox.height / (svgRef.current?.clientHeight || 1));
+      
+      if (Math.abs(e.clientX - panStart.x) > 2 || Math.abs(e.clientY - panStart.y) > 2) {
+        setHasMovedDuringPan(true);
+      }
+
+      setViewBox(prev => ({
+        ...prev,
+        x: prev.x - dx,
+        y: prev.y - dy
+      }));
+      setPanStart({ x: e.clientX, y: e.clientY });
     }
   };
 
   const handleMouseUp = () => {
     setDraggingKeyId(null);
+    setIsPanning(false);
+  };
+
+  const handleSvgMouseDown = (e: React.MouseEvent) => {
+    if (e.button === 0) { // Left click
+      setIsPanning(true);
+      setPanStart({ x: e.clientX, y: e.clientY });
+      setHasMovedDuringPan(false);
+    }
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    const scaleFactor = e.deltaY > 0 ? 1.1 : 0.9;
+    
+    setViewBox(prev => {
+      const mousePos = getMousePos(e);
+      const newWidth = prev.width * scaleFactor;
+      const newHeight = prev.height * scaleFactor;
+      
+      return {
+        x: prev.x + (mousePos.x - prev.x) * (1 - scaleFactor),
+        y: prev.y + (mousePos.y - prev.y) * (1 - scaleFactor),
+        width: newWidth,
+        height: newHeight
+      };
+    });
   };
 
   const renderKey = (key: KeyConfig) => {
@@ -176,7 +219,13 @@ const Keyboard2D: React.FC = () => {
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        onClick={() => selectKey(null)}
+        onMouseDown={handleSvgMouseDown}
+        onWheel={handleWheel}
+        onClick={() => {
+          if (!hasMovedDuringPan) {
+            selectKey(null);
+          }
+        }}
       >
         <defs>
           <pattern id="grid" width={UNIT} height={UNIT} patternUnits="userSpaceOnUse">
