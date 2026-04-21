@@ -299,6 +299,30 @@ const Sidebar: React.FC = () => {
               <option value="adns9800">ADNS9800</option>
             </select>
           </div>
+          <div className={styles.group}>
+            <label className={styles.label}>センサーの配置角度: {selectedTrackball.sensorAngle || 0}°</label>
+            <input
+              type="range"
+              min="0"
+              max="360"
+              step="1"
+              className={styles.input}
+              value={selectedTrackball.sensorAngle || 0}
+              onChange={(e) => updateTrackball(selectedTrackball.id, { sensorAngle: parseFloat(e.target.value) })}
+            />
+          </div>
+          <div className={styles.group}>
+            <label className={styles.label}>センサーの回転: {selectedTrackball.sensorRotation || 0}°</label>
+            <input
+              type="range"
+              min="0"
+              max="360"
+              step="1"
+              className={styles.input}
+              value={selectedTrackball.sensorRotation || 0}
+              onChange={(e) => updateTrackball(selectedTrackball.id, { sensorRotation: parseFloat(e.target.value) })}
+            />
+          </div>
           {data.type === 'split' && (
             <div className={styles.group}>
               <label className={styles.label}>配置サイド</label>

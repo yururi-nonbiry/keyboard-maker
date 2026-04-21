@@ -59,11 +59,16 @@ const Trackball: React.FC<TrackballProps> = ({ config }) => {
         disableRotations
       >
         <group ref={meshGroupRef}>
-          {/* Trackball Sensor Housing */}
-          <mesh position={[0, 5, 0]}>
-            <boxGeometry args={[30, 10, 30]} />
-            <meshStandardMaterial color={isSelected ? "#4f46e5" : "#222"} metalness={0.5} roughness={0.5} />
-          </mesh>
+          {/* Trackball Sensor Housing rotated around ball center */}
+          <group 
+            position={[0, 15 + config.diameter / 2 - 5, 0]} 
+            rotation={[0, 0, THREE.MathUtils.degToRad(config.sensorAngle || 0)]}
+          >
+            <mesh position={[0, -(10 + config.diameter / 2), 0]} rotation={[0, THREE.MathUtils.degToRad(config.sensorRotation || 0), 0]}>
+              <boxGeometry args={[30, 10, 30]} />
+              <meshStandardMaterial color={isSelected ? "#4f46e5" : "#222"} metalness={0.5} roughness={0.5} />
+            </mesh>
+          </group>
 
           {/* Ball */}
           <mesh position={[0, 15 + config.diameter / 2 - 5, 0]}>

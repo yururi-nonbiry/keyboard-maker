@@ -298,6 +298,15 @@ const Keyboard2D: React.FC = () => {
         >
           {trackball.diameter}mm
         </text>
+        {/* Sensor Position Indicator */}
+        <circle
+          cx={Math.sin((trackball.sensorAngle || 0) * Math.PI / 180) * (r * 0.7)}
+          cy={0} // In 2D, it only moves left-right if it's rotating in X-Y plane
+          r={3}
+          fill="#4f46e5"
+          stroke="#fff"
+          strokeWidth={0.5}
+        />
       </g>
     );
   };

@@ -51,6 +51,8 @@ export interface TrackballConfig {
   y: number; // in mm
   diameter: number; // in mm, typically 34mm or 55mm
   sensorType: 'pmw3360' | 'pmw3389' | 'adns9800';
+  sensorAngle?: number; // angle around the ball in degrees
+  sensorRotation?: number; // rotation of the sensor chip in degrees
   side?: 'left' | 'right';
 }
 
