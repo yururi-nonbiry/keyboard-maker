@@ -1,5 +1,5 @@
-import React, { Suspense, useEffect } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
+import React, { Suspense } from 'react';
+import { Canvas } from '@react-three/fiber';
 import { OrbitControls, ContactShadows, Environment, Float, Grid } from '@react-three/drei';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
 import KeySwitch from './KeySwitch';
@@ -9,33 +9,11 @@ import MicroController from './MicroController';
 
 import { calculateBoundingBox } from '../../utils/geometry';
 
-const CameraHandler: React.FC<{ is2D: boolean }> = ({ is2D }) => {
-  const { camera } = useThree();
-
-  useEffect(() => {
-    if (is2D) {
-      // Orthographic camera settings for 2D
-      camera.position.set(0, 500, 0);
-      camera.up.set(0, 0, -1);
-      camera.lookAt(0, 0, 0);
-    } else {
-      // Perspective camera settings for 3D
-      camera.position.set(150, 200, 250);
-      camera.up.set(0, 1, 0);
-      camera.lookAt(0, 0, 0);
-    }
-    camera.updateProjectionMatrix();
-  }, [is2D, camera]);
-
-  return null;
-};
-
 const KeyboardCanvas: React.FC = () => {
-  const { data, selectKey, selectedKeyId, gridVisible, gridSize, viewMode } = useKeyboardStore();
+  const { data, selectKey, selectedKeyId, gridVisible, gridSize } = useKeyboardStore();
 
   const { typingAngle } = data.case_config;
   const isEditing = selectedKeyId !== null;
-  const is2D = viewMode === '2D';
 
   const { tentingAngle, splitRotation, splitGap } = data.case_config;
   const leftKeys = data.layout.filter(k => k.side === 'left' || !k.side);
@@ -50,35 +28,28 @@ const KeyboardCanvas: React.FC = () => {
   return (
     <Canvas
       shadows
-      orthographic={is2D}
-      camera={is2D 
-        ? { position: [0, 500, 0], zoom: 10, up: [0, 0, -1], near: 0.1, far: 2000 }
-        : { position: [150, 200, 250], fov: 45, up: [0, 1, 0], near: 0.1, far: 2000 }
-      }
+      camera={{ position: [150, 200, 250], fov: 45, up: [0, 1, 0], near: 0.1, far: 2000 }}
       style={{ height: '100%', width: '100%' }}
       onPointerMissed={() => selectKey(null)}
     >
       <color attach="background" args={['#0a0a0c']} />
       <fog attach="fog" args={['#0a0a0c', 200, 1000]} />
       
-      <CameraHandler is2D={is2D} />
-
       <Suspense fallback={null}>
-        <ambientLight intensity={is2D ? 0.8 : 0.5} />
+        <ambientLight intensity={0.5} />
         <spotLight position={[100, 200, 100]} angle={0.15} penumbra={1} intensity={1} castShadow />
         <pointLight position={[-100, -100, -100]} intensity={0.5} />
-        {is2D && <directionalLight position={[0, 500, 0]} intensity={0.5} />}
         
         <Environment preset="city" />
 
         <Float 
-          speed={isEditing || is2D ? 0 : 1.5} 
-          rotationIntensity={isEditing || is2D ? 0 : 0.2} 
-          floatIntensity={isEditing || is2D ? 0 : 0.5}
+          speed={isEditing ? 0 : 1.5} 
+          rotationIntensity={isEditing ? 0 : 0.2} 
+          floatIntensity={isEditing ? 0 : 0.5}
         >
           {/* Apply typing angle tilt and centering offset */}
           <group 
-            rotation={is2D ? [0, 0, 0] : [typingAngle * (Math.PI / 180), 0, 0]}
+            rotation={[typingAngle * (Math.PI / 180), 0, 0]}
             position={[0, 0, 0]}
           >
             {data.type === 'integrated' ? (
@@ -98,7 +69,7 @@ const KeyboardCanvas: React.FC = () => {
               <>
                 {/* Left Side */}
                 <group 
-                  rotation={is2D ? [0, 0, 0] : [0, splitRotation * (Math.PI / 180), tentingAngle * (Math.PI / 180)]}
+                  rotation={[0, splitRotation * (Math.PI / 180), tentingAngle * (Math.PI / 180)]}
                   position={[-splitGap / 2, 0, 0]}
                 >
                   {leftBbox && (
@@ -119,7 +90,7 @@ const KeyboardCanvas: React.FC = () => {
 
                 {/* Right Side */}
                 <group 
-                  rotation={is2D ? [0, 0, 0] : [0, -splitRotation * (Math.PI / 180), -tentingAngle * (Math.PI / 180)]}
+                  rotation={[0, -splitRotation * (Math.PI / 180), -tentingAngle * (Math.PI / 180)]}
                   position={[splitGap / 2, 0, 0]}
                 >
                   {rightBbox && (
@@ -155,26 +126,22 @@ const KeyboardCanvas: React.FC = () => {
           </group>
         </Float>
 
-
-        {!is2D && (
-          <ContactShadows 
-            opacity={0.4} 
-            scale={400} 
-            blur={2} 
-            far={10} 
-            resolution={256} 
-            color="#000000" 
-            position={[0, -4.9, 0]}
-          />
-        )}
+        <ContactShadows 
+          opacity={0.4} 
+          scale={400} 
+          blur={2} 
+          far={10} 
+          resolution={256} 
+          color="#000000" 
+          position={[0, -4.9, 0]}
+        />
       </Suspense>
 
       <OrbitControls 
-        key={viewMode}
         target={[0, 0, 0]} // Always orbit around the centered keyboard
         enablePan={true} 
         enableZoom={true} 
-        enableRotate={!is2D}
+        enableRotate={true}
         makeDefault 
       />
     </Canvas>
