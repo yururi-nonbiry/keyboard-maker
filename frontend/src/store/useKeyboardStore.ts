@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { KeyboardData, KeyConfig, KeyboardMetadata, PcbConfig, CaseConfig, SwitchType, KeyboardType } from '../types';
-import { checkInterference } from '../utils/geometry';
+import { checkInterference, calculateBoundingBox } from '../utils/geometry';
 
 interface KeyboardState {
   data: KeyboardData;
@@ -97,7 +97,11 @@ export const useKeyboardStore = create<KeyboardState>()(
 
       addKey: (key) =>
         set((state) => {
-          const newLayout = [...state.data.layout, key];
+          const keyWithSide = { ...key };
+          if (state.data.type === 'split' && !keyWithSide.side) {
+            keyWithSide.side = keyWithSide.x >= 0 ? 'right' : 'left';
+          }
+          const newLayout = [...state.data.layout, keyWithSide];
           return {
             data: { ...state.data, layout: newLayout },
             collisions: checkInterference(newLayout, state.data.case_config.keyPitch),
@@ -142,9 +146,26 @@ export const useKeyboardStore = create<KeyboardState>()(
         }),
 
       updateKeyboardType: (type) =>
-        set((state) => ({
-          data: { ...state.data, type },
-        })),
+        set((state) => {
+          const newData = { ...state.data, type };
+          
+          // If switching to split and all keys are currently on one side, try to auto-split
+          if (type === 'split') {
+            const hasRightKeys = state.data.layout.some(k => k.side === 'right');
+            if (!hasRightKeys) {
+              const bbox = calculateBoundingBox(state.data.layout, state.data.case_config.keyPitch);
+              if (bbox) {
+                const centerX = bbox.centerX;
+                newData.layout = state.data.layout.map(k => ({
+                  ...k,
+                  side: k.x >= centerX ? 'right' : 'left'
+                }));
+              }
+            }
+          }
+          
+          return { data: newData };
+        }),
 
       setKeyboardData: (data) => set({ 
         data, 
