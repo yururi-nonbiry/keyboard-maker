@@ -24,6 +24,10 @@ interface KeyboardState {
   toggleGridVisible: () => void;
   toggleGridSnapping: () => void;
   setGridSize: (size: number) => void;
+
+  // View Mode
+  viewMode: '2D' | '3D';
+  setViewMode: (mode: '2D' | '3D') => void;
 }
 
 const DEFAULT_METADATA: KeyboardMetadata = {
@@ -68,10 +72,12 @@ export const useKeyboardStore = create<KeyboardState>((set) => ({
   gridVisible: true,
   gridSnapping: true,
   gridSize: 19.05,
+  viewMode: '3D',
 
   toggleGridVisible: () => set((state) => ({ gridVisible: !state.gridVisible })),
   toggleGridSnapping: () => set((state) => ({ gridSnapping: !state.gridSnapping })),
   setGridSize: (gridSize) => set({ gridSize }),
+  setViewMode: (viewMode) => set({ viewMode }),
 
   updateMetadata: (metadata) =>
     set((state) => ({

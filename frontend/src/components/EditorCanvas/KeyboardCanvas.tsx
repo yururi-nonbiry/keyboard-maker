@@ -6,30 +6,35 @@ import KeySwitch from './KeySwitch';
 import Plate from './Plate';
 
 const KeyboardCanvas: React.FC = () => {
-  const { data, selectKey, selectedKeyId, gridVisible, gridSize } = useKeyboardStore();
+  const { data, selectKey, selectedKeyId, gridVisible, gridSize, viewMode } = useKeyboardStore();
   const isEditing = selectedKeyId !== null;
+  const is2D = viewMode === '2D';
 
   return (
     <Canvas
       shadows
-      camera={{ position: [100, 150, 200], fov: 45 }}
+      orthographic={is2D}
+      camera={is2D 
+        ? { position: [0, 500, 0], zoom: 10, up: [0, 0, -1], near: 0.1, far: 1000 }
+        : { position: [150, 200, 250], fov: 45, near: 0.1, far: 2000 }
+      }
       style={{ height: '100%', width: '100%' }}
       onPointerMissed={() => selectKey(null)}
     >
       <color attach="background" args={['#0a0a0c']} />
-      <fog attach="fog" args={['#0a0a0c', 200, 600]} />
+      <fog attach="fog" args={['#0a0a0c', 200, 1000]} />
       
       <Suspense fallback={null}>
-        <ambientLight intensity={0.4} />
+        <ambientLight intensity={0.5} />
         <spotLight position={[100, 200, 100]} angle={0.15} penumbra={1} intensity={1} castShadow />
         <pointLight position={[-100, -100, -100]} intensity={0.5} />
         
-        <Environment preset="city" />
+        {!is2D && <Environment preset="city" />}
 
         <Float 
-          speed={isEditing ? 0 : 1.5} 
-          rotationIntensity={isEditing ? 0 : 0.2} 
-          floatIntensity={isEditing ? 0 : 0.5}
+          speed={isEditing || is2D ? 0 : 1.5} 
+          rotationIntensity={isEditing || is2D ? 0 : 0.2} 
+          floatIntensity={isEditing || is2D ? 0 : 0.5}
         >
           <group position={[0, 0, 0]}>
             {data.layout.map((key) => (
@@ -42,7 +47,7 @@ const KeyboardCanvas: React.FC = () => {
         {gridVisible && (
           <Grid
             infiniteGrid
-            fadeDistance={400}
+            fadeDistance={1000}
             fadeStrength={5}
             cellSize={gridSize / 4}
             sectionSize={gridSize}
@@ -52,21 +57,25 @@ const KeyboardCanvas: React.FC = () => {
           />
         )}
 
-        <ContactShadows 
-          opacity={0.4} 
-          scale={400} 
-          blur={2} 
-          far={10} 
-          resolution={256} 
-          color="#000000" 
-        />
+        {!is2D && (
+          <ContactShadows 
+            opacity={0.4} 
+            scale={400} 
+            blur={2} 
+            far={10} 
+            resolution={256} 
+            color="#000000" 
+          />
+        )}
       </Suspense>
 
       <OrbitControls 
         enablePan={true} 
         enableZoom={true} 
-        enableRotate={true}
+        enableRotate={!is2D}
         makeDefault 
+        minPolarAngle={is2D ? 0 : undefined}
+        maxPolarAngle={is2D ? 0 : undefined}
       />
     </Canvas>
   );

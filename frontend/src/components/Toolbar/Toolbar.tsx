@@ -1,4 +1,4 @@
-import { Save, FolderOpen, Download, Plus, Grid, Magnet } from 'lucide-react';
+import { Save, FolderOpen, Download, Plus, Grid, Magnet, Box, Square } from 'lucide-react';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
 import { saveProjectFile, loadProjectFile } from '../../utils/fileSystem';
 import styles from './Toolbar.module.css';
@@ -11,7 +11,9 @@ const Toolbar: React.FC = () => {
     gridVisible, 
     gridSnapping, 
     toggleGridVisible, 
-    toggleGridSnapping 
+    toggleGridSnapping,
+    viewMode,
+    setViewMode
   } = useKeyboardStore();
 
   const handleSave = async () => {
@@ -39,6 +41,23 @@ const Toolbar: React.FC = () => {
     <div className={`${styles.toolbar} glass`}>
       <div className={styles.logo}>Keyboard Maker</div>
       <div className={styles.actions}>
+        <button 
+          className={`${styles.button} ${viewMode === '3D' ? styles.activeButton : ''}`} 
+          onClick={() => setViewMode('3D')}
+          title="3D View Mode"
+        >
+          <Box size={18} />
+          <span>3D</span>
+        </button>
+        <button 
+          className={`${styles.button} ${viewMode === '2D' ? styles.activeButton : ''}`} 
+          onClick={() => setViewMode('2D')}
+          title="2D View Mode (Top Down)"
+        >
+          <Square size={18} />
+          <span>2D</span>
+        </button>
+        <div style={{ width: '1px', background: 'var(--color-border)', margin: '0 8px' }} />
         <button 
           className={`${styles.button} ${gridVisible ? styles.activeButton : ''}`} 
           onClick={toggleGridVisible}
