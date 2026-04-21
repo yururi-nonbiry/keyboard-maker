@@ -78,3 +78,16 @@ button {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-border-hover);
 }
+
+@keyframes dashOffset {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 8;
+  }
+}
+
+.split-line-animation {
+  animation: dashOffset 0.5s linear infinite;
+}

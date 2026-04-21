@@ -1,4 +1,4 @@
-import { Save, FolderOpen, Download, Plus, Grid, Magnet, Box, Square } from 'lucide-react';
+import { Save, FolderOpen, Download, Plus, Grid, Magnet, Box, Square, Scissors } from 'lucide-react';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
 import { saveProjectFile, loadProjectFile } from '../../utils/fileSystem';
 import styles from './Toolbar.module.css';
@@ -13,7 +13,9 @@ const Toolbar: React.FC = () => {
     toggleGridVisible, 
     toggleGridSnapping,
     viewMode,
-    setViewMode
+    setViewMode,
+    splitMode,
+    toggleSplitMode
   } = useKeyboardStore();
 
   const handleSave = async () => {
@@ -82,6 +84,16 @@ const Toolbar: React.FC = () => {
         <button className={styles.button} onClick={handleSave}>
           <Save size={18} />
         </button>
+        {data.type === 'integrated' && (
+          <button 
+            className={`${styles.button} ${splitMode ? styles.activeButton : ''}`} 
+            onClick={toggleSplitMode}
+            title="分割レイアウトに変換"
+          >
+            <Scissors size={18} />
+            <span>分割</span>
+          </button>
+        )}
         <div style={{ width: '1px', background: 'var(--color-border)', margin: '0 8px' }} />
         <button className={`${styles.button} ${styles.primaryButton}`} onClick={handleAddKey}>
           <Plus size={18} />

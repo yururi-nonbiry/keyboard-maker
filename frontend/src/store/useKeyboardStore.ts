@@ -30,6 +30,13 @@ interface KeyboardState {
   // View Mode
   viewMode: '2D' | '3D';
   setViewMode: (mode: '2D' | '3D') => void;
+
+  // Split Mode
+  splitMode: boolean;
+  tempSplitX: number | null;
+  toggleSplitMode: () => void;
+  setTempSplitX: (x: number | null) => void;
+  applySplit: (x: number) => void;
 }
 
 const DEFAULT_METADATA: KeyboardMetadata = {
@@ -84,6 +91,27 @@ export const useKeyboardStore = create<KeyboardState>()(
       gridSnapping: true,
       gridSize: 19.05,
       viewMode: '3D',
+      splitMode: false,
+      tempSplitX: null,
+
+      toggleSplitMode: () => set((state) => ({ splitMode: !state.splitMode })),
+      setTempSplitX: (tempSplitX) => set({ tempSplitX }),
+      applySplit: (x) => set((state) => {
+        const newData = { 
+          ...state.data, 
+          type: 'split' as const,
+          layout: state.data.layout.map(k => ({
+            ...k,
+            side: k.x >= x ? 'right' as const : 'left' as const
+          }))
+        };
+        return { 
+          data: newData, 
+          splitMode: false, 
+          tempSplitX: null,
+          viewMode: '2D' // Switch to 2D to see the result clearly if not already there
+        };
+      }),
 
       toggleGridVisible: () => set((state) => ({ gridVisible: !state.gridVisible })),
       toggleGridSnapping: () => set((state) => ({ gridSnapping: !state.gridSnapping })),

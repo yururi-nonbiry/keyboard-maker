@@ -14,7 +14,11 @@ const Keyboard2D: React.FC = () => {
     gridVisible, 
     gridSnapping, 
     gridSize,
-    collisions 
+    collisions,
+    splitMode,
+    tempSplitX,
+    setTempSplitX,
+    applySplit
   } = useKeyboardStore();
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -100,6 +104,11 @@ const Keyboard2D: React.FC = () => {
         y: prev.y - dy
       }));
       setPanStart({ x: e.clientX, y: e.clientY });
+    } else if (splitMode) {
+      const mousePos = getMousePos(e);
+      const snapIncrement = gridSnapping ? gridSize / 4 : 0.25;
+      const snap = (val: number) => Math.round(val / snapIncrement) * snapIncrement;
+      setTempSplitX(snap(mousePos.x));
     }
   };
 
@@ -109,6 +118,8 @@ const Keyboard2D: React.FC = () => {
   };
 
   const handleSvgMouseDown = (e: React.MouseEvent) => {
+    if (splitMode) return; // Prevent panning during split selection
+
     if (e.button === 0) { // Left click
       setIsPanning(true);
       setPanStart({ x: e.clientX, y: e.clientY });
@@ -143,8 +154,8 @@ const Keyboard2D: React.FC = () => {
       <g 
         key={key.id}
         transform={`translate(${key.x}, ${key.y}) rotate(${-key.rotation})`}
-        onMouseDown={(e) => handleMouseDown(e, key.id)}
-        style={{ cursor: 'move' }}
+        onMouseDown={(e) => !splitMode && handleMouseDown(e, key.id)}
+        style={{ cursor: splitMode ? 'default' : 'move' }}
       >
         {/* Keycap Outer */}
         <rect
@@ -222,7 +233,9 @@ const Keyboard2D: React.FC = () => {
         onMouseDown={handleSvgMouseDown}
         onWheel={handleWheel}
         onClick={() => {
-          if (!hasMovedDuringPan) {
+          if (splitMode && tempSplitX !== null) {
+            applySplit(tempSplitX);
+          } else if (!hasMovedDuringPan) {
             selectKey(null);
           }
         }}
@@ -270,6 +283,40 @@ const Keyboard2D: React.FC = () => {
             </>
           )}
         </g>
+
+        {/* Split Mode Preview Line */}
+        {splitMode && tempSplitX !== null && (
+          <g>
+            <line
+              x1={tempSplitX}
+              y1={viewBox.y}
+              x2={tempSplitX}
+              y2={viewBox.y + viewBox.height}
+              stroke="#fbbf24"
+              strokeWidth={2}
+              strokeDasharray="4,2"
+              className="split-line-animation"
+            />
+            <rect
+              x={tempSplitX - 20}
+              y={viewBox.y + 20}
+              width={40}
+              height={20}
+              rx={4}
+              fill="#fbbf24"
+            />
+            <text
+              x={tempSplitX}
+              y={viewBox.y + 34}
+              textAnchor="middle"
+              fontSize={10}
+              fontWeight="bold"
+              fill="#000"
+            >
+              SPLIT
+            </text>
+          </g>
+        )}
       </svg>
 
       {/* Info Overlay */}
