@@ -35,12 +35,15 @@ const KeyboardCanvas: React.FC = () => {
   const isEditing = selectedKeyId !== null;
   const is2D = viewMode === '2D';
 
-  const bbox = calculateBoundingBox(data.layout);
-  const centerOffset = bbox ? [-bbox.centerX, 0, -bbox.centerY] : [0, 0, 0];
-
   const { tentingAngle, splitRotation, splitGap } = data.case_config;
   const leftKeys = data.layout.filter(k => k.side === 'left' || !k.side);
   const rightKeys = data.layout.filter(k => k.side === 'right');
+
+  const bbox = calculateBoundingBox(data.layout);
+  const centerOffset = bbox ? [-bbox.centerX, 0, -bbox.centerY] : [0, 0, 0];
+
+  const leftBbox = calculateBoundingBox(leftKeys);
+  const rightBbox = calculateBoundingBox(rightKeys);
 
   return (
     <Canvas
@@ -76,40 +79,46 @@ const KeyboardCanvas: React.FC = () => {
             rotation={is2D ? [0, 0, 0] : [typingAngle * (Math.PI / 180), 0, 0]}
             position={[0, 0, 0]}
           >
-            <group position={centerOffset as [number, number, number]}>
-              {data.type === 'integrated' ? (
-                <>
-                  {data.layout.map((key) => (
-                    <KeySwitch key={key.id} config={key} />
-                  ))}
-                  <Plate />
-                </>
-              ) : (
-                <>
-                  {/* Left Side */}
-                  <group 
-                    rotation={is2D ? [0, 0, 0] : [0, splitRotation * (Math.PI / 180), tentingAngle * (Math.PI / 180)]}
-                    position={[-splitGap / 2, 0, 0]}
-                  >
-                    {leftKeys.map((key) => (
-                      <KeySwitch key={key.id} config={key} />
-                    ))}
-                    <Plate side="left" />
-                  </group>
+            {data.type === 'integrated' ? (
+              <group position={centerOffset as [number, number, number]}>
+                {data.layout.map((key) => (
+                  <KeySwitch key={key.id} config={key} />
+                ))}
+                <Plate />
+              </group>
+            ) : (
+              <>
+                {/* Left Side */}
+                <group 
+                  rotation={is2D ? [0, 0, 0] : [0, splitRotation * (Math.PI / 180), tentingAngle * (Math.PI / 180)]}
+                  position={[-splitGap / 2, 0, 0]}
+                >
+                  {leftBbox && (
+                    <group position={[-leftBbox.centerX, 0, -leftBbox.centerY]}>
+                      {leftKeys.map((key) => (
+                        <KeySwitch key={key.id} config={key} />
+                      ))}
+                      <Plate side="left" />
+                    </group>
+                  )}
+                </group>
 
-                  {/* Right Side */}
-                  <group 
-                    rotation={is2D ? [0, 0, 0] : [0, -splitRotation * (Math.PI / 180), -tentingAngle * (Math.PI / 180)]}
-                    position={[splitGap / 2, 0, 0]}
-                  >
-                    {rightKeys.map((key) => (
-                      <KeySwitch key={key.id} config={key} />
-                    ))}
-                    <Plate side="right" />
-                  </group>
-                </>
-              )}
-            </group>
+                {/* Right Side */}
+                <group 
+                  rotation={is2D ? [0, 0, 0] : [0, -splitRotation * (Math.PI / 180), -tentingAngle * (Math.PI / 180)]}
+                  position={[splitGap / 2, 0, 0]}
+                >
+                  {rightBbox && (
+                    <group position={[-rightBbox.centerX, 0, -rightBbox.centerY]}>
+                      {rightKeys.map((key) => (
+                        <KeySwitch key={key.id} config={key} />
+                      ))}
+                      <Plate side="right" />
+                    </group>
+                  )}
+                </group>
+              </>
+            )}
 
             {gridVisible && (
               <Grid
