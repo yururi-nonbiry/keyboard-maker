@@ -1,5 +1,5 @@
-import React, { Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, { Suspense, useEffect } from 'react';
+import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, ContactShadows, Environment, Float, Grid } from '@react-three/drei';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
 import KeySwitch from './KeySwitch';
@@ -7,8 +7,30 @@ import Plate from './Plate';
 
 import { calculateBoundingBox } from '../../utils/geometry';
 
+const CameraHandler: React.FC<{ is2D: boolean }> = ({ is2D }) => {
+  const { camera } = useThree();
+
+  useEffect(() => {
+    if (is2D) {
+      // Orthographic camera settings for 2D
+      camera.position.set(0, 500, 0);
+      camera.up.set(0, 0, -1);
+      camera.lookAt(0, 0, 0);
+    } else {
+      // Perspective camera settings for 3D
+      camera.position.set(150, 200, 250);
+      camera.up.set(0, 1, 0);
+      camera.lookAt(0, 0, 0);
+    }
+    camera.updateProjectionMatrix();
+  }, [is2D, camera]);
+
+  return null;
+};
+
 const KeyboardCanvas: React.FC = () => {
   const { data, selectKey, selectedKeyId, gridVisible, gridSize, viewMode } = useKeyboardStore();
+
   const { typingAngle } = data.case_config;
   const isEditing = selectedKeyId !== null;
   const is2D = viewMode === '2D';
@@ -25,7 +47,7 @@ const KeyboardCanvas: React.FC = () => {
       shadows
       orthographic={is2D}
       camera={is2D 
-        ? { position: [0, 500, 0], zoom: 10, up: [0, 0, -1], near: 0.1, far: 1000 }
+        ? { position: [0, 500, 0], zoom: 10, up: [0, 0, -1], near: 0.1, far: 2000 }
         : { position: [150, 200, 250], fov: 45, up: [0, 1, 0], near: 0.1, far: 2000 }
       }
       style={{ height: '100%', width: '100%' }}
@@ -34,6 +56,8 @@ const KeyboardCanvas: React.FC = () => {
       <color attach="background" args={['#0a0a0c']} />
       <fog attach="fog" args={['#0a0a0c', 200, 1000]} />
       
+      <CameraHandler is2D={is2D} />
+
       <Suspense fallback={null}>
         <ambientLight intensity={is2D ? 0.8 : 0.5} />
         <spotLight position={[100, 200, 100]} angle={0.15} penumbra={1} intensity={1} castShadow />
@@ -126,3 +150,4 @@ const KeyboardCanvas: React.FC = () => {
 };
 
 export default KeyboardCanvas;
+
