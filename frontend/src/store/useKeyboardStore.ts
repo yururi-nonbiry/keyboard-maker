@@ -50,6 +50,9 @@ const DEFAULT_CASE: CaseConfig = {
   wallThickness: 3,
   cornerRadius: 4,
   plateThickness: 1.5,
+  typingAngle: 6,
+  tentingAngle: 0,
+  splitRotation: 0,
 };
 
 const INITIAL_LAYOUT: KeyConfig[] = Array.from({ length: 9 }, (_, i) => ({

@@ -4,8 +4,17 @@ import type { SwitchType, KeyboardType } from '../../types';
 import styles from './Sidebar.module.css';
 
 const Sidebar: React.FC = () => {
-  const { data, updateMetadata, updateKeyboardType, selectedKeyId, updateKey, removeKey } = useKeyboardStore();
+  const { 
+    data, 
+    updateMetadata, 
+    updateKeyboardType, 
+    updateCaseConfig,
+    selectedKeyId, 
+    updateKey, 
+    removeKey 
+  } = useKeyboardStore();
   const selectedKey = data.layout.find(k => k.id === selectedKeyId);
+  const { typingAngle, tentingAngle, splitRotation } = data.case_config;
 
   return (
     <div className={`${styles.sidebar} glass`}>
@@ -30,6 +39,50 @@ const Sidebar: React.FC = () => {
             <option value="split">分割型 (Split)</option>
           </select>
         </div>
+      </div>
+
+      <div className={styles.section}>
+        <h3 className={styles.sectionTitle}>ケース設定</h3>
+        <div className={styles.group}>
+          <label className={styles.label}>ベース角度 (タイピング角): {typingAngle}°</label>
+          <input
+            type="range"
+            min="0"
+            max="15"
+            step="0.5"
+            className={styles.input}
+            value={typingAngle}
+            onChange={(e) => updateCaseConfig({ typingAngle: parseFloat(e.target.value) })}
+          />
+        </div>
+        {data.type === 'split' && (
+          <>
+            <div className={styles.group}>
+              <label className={styles.label}>テント角: {tentingAngle}°</label>
+              <input
+                type="range"
+                min="0"
+                max="30"
+                step="1"
+                className={styles.input}
+                value={tentingAngle}
+                onChange={(e) => updateCaseConfig({ tentingAngle: parseFloat(e.target.value) })}
+              />
+            </div>
+            <div className={styles.group}>
+              <label className={styles.label}>分割回転角: {splitRotation}°</label>
+              <input
+                type="range"
+                min="0"
+                max="45"
+                step="1"
+                className={styles.input}
+                value={splitRotation}
+                onChange={(e) => updateCaseConfig({ splitRotation: parseFloat(e.target.value) })}
+              />
+            </div>
+          </>
+        )}
       </div>
 
       {selectedKey ? (

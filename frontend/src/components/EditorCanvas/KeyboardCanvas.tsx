@@ -5,10 +5,20 @@ import { useKeyboardStore } from '../../store/useKeyboardStore';
 import KeySwitch from './KeySwitch';
 import Plate from './Plate';
 
+import { calculateBoundingBox } from '../../utils/geometry';
+
 const KeyboardCanvas: React.FC = () => {
   const { data, selectKey, selectedKeyId, gridVisible, gridSize, viewMode } = useKeyboardStore();
+  const { typingAngle } = data.case_config;
   const isEditing = selectedKeyId !== null;
   const is2D = viewMode === '2D';
+
+  const bbox = calculateBoundingBox(data.layout);
+  const centerOffset = bbox ? [-bbox.centerX, 0, -bbox.centerY] : [0, 0, 0];
+
+  const { tentingAngle, splitRotation } = data.case_config;
+  const leftKeys = data.layout.filter(k => k.side === 'left' || !k.side);
+  const rightKeys = data.layout.filter(k => k.side === 'right');
 
   return (
     <Canvas
@@ -37,11 +47,43 @@ const KeyboardCanvas: React.FC = () => {
           rotationIntensity={isEditing || is2D ? 0 : 0.2} 
           floatIntensity={isEditing || is2D ? 0 : 0.5}
         >
-          <group position={[0, 0, 0]}>
-            {data.layout.map((key) => (
-              <KeySwitch key={key.id} config={key} />
-            ))}
-            <Plate />
+          {/* Apply typing angle tilt and centering offset */}
+          <group 
+            rotation={is2D ? [0, 0, 0] : [-typingAngle * (Math.PI / 180), 0, 0]}
+            position={[0, 0, 0]}
+          >
+            <group position={centerOffset as [number, number, number]}>
+              {data.type === 'integrated' ? (
+                <>
+                  {data.layout.map((key) => (
+                    <KeySwitch key={key.id} config={key} />
+                  ))}
+                  <Plate />
+                </>
+              ) : (
+                <>
+                  {/* Left Side */}
+                  <group 
+                    rotation={is2D ? [0, 0, 0] : [0, splitRotation * (Math.PI / 180), tentingAngle * (Math.PI / 180)]}
+                  >
+                    {leftKeys.map((key) => (
+                      <KeySwitch key={key.id} config={key} />
+                    ))}
+                    <Plate side="left" />
+                  </group>
+
+                  {/* Right Side */}
+                  <group 
+                    rotation={is2D ? [0, 0, 0] : [0, -splitRotation * (Math.PI / 180), -tentingAngle * (Math.PI / 180)]}
+                  >
+                    {rightKeys.map((key) => (
+                      <KeySwitch key={key.id} config={key} />
+                    ))}
+                    <Plate side="right" />
+                  </group>
+                </>
+              )}
+            </group>
           </group>
         </Float>
 
@@ -54,7 +96,7 @@ const KeyboardCanvas: React.FC = () => {
             sectionSize={gridSize}
             sectionColor="#4f46e5"
             cellColor="#2e2e3a"
-            position={[0, -0.1, 0]}
+            position={[0, -5, 0]} // Fixed floor grid below the plate
           />
         )}
 
@@ -66,18 +108,18 @@ const KeyboardCanvas: React.FC = () => {
             far={10} 
             resolution={256} 
             color="#000000" 
+            position={[0, -4.9, 0]}
           />
         )}
       </Suspense>
 
       <OrbitControls 
         key={viewMode}
+        target={[0, 0, 0]} // Always orbit around the centered keyboard
         enablePan={true} 
         enableZoom={true} 
         enableRotate={!is2D}
         makeDefault 
-        minPolarAngle={is2D ? 0 : 0}
-        maxPolarAngle={is2D ? 0 : Math.PI}
       />
     </Canvas>
   );

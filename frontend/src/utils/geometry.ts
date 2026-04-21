@@ -43,3 +43,41 @@ export const checkInterference = (layout: KeyConfig[]): Record<string, boolean> 
 
   return collisions;
 };
+
+export interface BoundingBox {
+  width: number;
+  height: number;
+  centerX: number;
+  centerY: number;
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+}
+
+export const calculateBoundingBox = (keys: KeyConfig[], padding: number = 0): BoundingBox | null => {
+  if (keys.length === 0) return null;
+  
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  const UNIT = 19.05;
+
+  keys.forEach(key => {
+    const halfW = (key.keycapSize.width * UNIT) / 2;
+    const halfH = (key.keycapSize.height * UNIT) / 2;
+    minX = Math.min(minX, key.x - halfW);
+    maxX = Math.max(maxX, key.x + halfW);
+    minY = Math.min(minY, key.y - halfH);
+    maxY = Math.max(maxY, key.y + halfH);
+  });
+
+  return {
+    width: (maxX - minX) + padding * 2,
+    height: (maxY - minY) + padding * 2,
+    centerX: (maxX + minX) / 2,
+    centerY: (maxY + minY) / 2,
+    minX: minX - padding,
+    maxX: maxX + padding,
+    minY: minY - padding,
+    maxY: maxY + padding,
+  };
+};

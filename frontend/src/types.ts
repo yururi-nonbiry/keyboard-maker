@@ -36,6 +36,9 @@ export interface CaseConfig {
   wallThickness: number;
   cornerRadius: number;
   plateThickness: number;
+  typingAngle: number; // in degrees
+  tentingAngle: number; // in degrees
+  splitRotation: number; // in degrees
 }
 
 export interface KeyboardData {
