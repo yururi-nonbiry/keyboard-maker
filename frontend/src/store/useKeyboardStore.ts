@@ -53,6 +53,7 @@ const DEFAULT_CASE: CaseConfig = {
   typingAngle: 6,
   tentingAngle: 0,
   splitRotation: 0,
+  splitGap: 40,
 };
 
 const INITIAL_LAYOUT: KeyConfig[] = Array.from({ length: 9 }, (_, i) => ({

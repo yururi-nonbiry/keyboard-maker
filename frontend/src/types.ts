@@ -39,6 +39,7 @@ export interface CaseConfig {
   typingAngle: number; // in degrees
   tentingAngle: number; // in degrees
   splitRotation: number; // in degrees
+  splitGap: number; // in mm
 }
 
 export interface KeyboardData {

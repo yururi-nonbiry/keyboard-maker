@@ -81,6 +81,18 @@ const Sidebar: React.FC = () => {
                 onChange={(e) => updateCaseConfig({ splitRotation: parseFloat(e.target.value) })}
               />
             </div>
+            <div className={styles.group}>
+              <label className={styles.label}>分割幅 (Gap): {data.case_config.splitGap}mm</label>
+              <input
+                type="range"
+                min="0"
+                max="200"
+                step="1"
+                className={styles.input}
+                value={data.case_config.splitGap}
+                onChange={(e) => updateCaseConfig({ splitGap: parseFloat(e.target.value) })}
+              />
+            </div>
           </>
         )}
       </div>

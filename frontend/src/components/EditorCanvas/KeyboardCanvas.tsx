@@ -38,7 +38,7 @@ const KeyboardCanvas: React.FC = () => {
   const bbox = calculateBoundingBox(data.layout);
   const centerOffset = bbox ? [-bbox.centerX, 0, -bbox.centerY] : [0, 0, 0];
 
-  const { tentingAngle, splitRotation } = data.case_config;
+  const { tentingAngle, splitRotation, splitGap } = data.case_config;
   const leftKeys = data.layout.filter(k => k.side === 'left' || !k.side);
   const rightKeys = data.layout.filter(k => k.side === 'right');
 
@@ -89,6 +89,7 @@ const KeyboardCanvas: React.FC = () => {
                   {/* Left Side */}
                   <group 
                     rotation={is2D ? [0, 0, 0] : [0, splitRotation * (Math.PI / 180), tentingAngle * (Math.PI / 180)]}
+                    position={[-splitGap / 2, 0, 0]}
                   >
                     {leftKeys.map((key) => (
                       <KeySwitch key={key.id} config={key} />
@@ -99,6 +100,7 @@ const KeyboardCanvas: React.FC = () => {
                   {/* Right Side */}
                   <group 
                     rotation={is2D ? [0, 0, 0] : [0, -splitRotation * (Math.PI / 180), -tentingAngle * (Math.PI / 180)]}
+                    position={[splitGap / 2, 0, 0]}
                   >
                     {rightKeys.map((key) => (
                       <KeySwitch key={key.id} config={key} />
