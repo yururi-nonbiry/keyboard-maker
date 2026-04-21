@@ -27,7 +27,7 @@ const Toolbar: React.FC = () => {
     if (loadedData) setKeyboardData(loadedData);
   };
 
-  const handleAddKey = () => {
+  const handleAddKey = (side?: 'left' | 'right') => {
     const newKey = {
       id: `key-${Date.now()}`,
       x: 0,
@@ -35,6 +35,7 @@ const Toolbar: React.FC = () => {
       rotation: 0,
       switchType: 'mx' as const,
       keycapSize: { width: 1, height: 1 },
+      side: side,
     };
     addKey(newKey);
   };
@@ -95,10 +96,31 @@ const Toolbar: React.FC = () => {
           </button>
         )}
         <div style={{ width: '1px', background: 'var(--color-border)', margin: '0 8px' }} />
-        <button className={`${styles.button} ${styles.primaryButton}`} onClick={handleAddKey}>
-          <Plus size={18} />
-          <span>キーを追加</span>
-        </button>
+        {data.type === 'split' ? (
+          <div className={`${styles.buttonGroup} ${styles.primaryButtonGroup}`}>
+            <button 
+              className={`${styles.button} ${styles.primaryButton}`} 
+              onClick={() => handleAddKey('left')}
+              title="左手側に追加"
+            >
+              <Plus size={16} />
+              <span>左手に追加</span>
+            </button>
+            <button 
+              className={`${styles.button} ${styles.primaryButton}`} 
+              onClick={() => handleAddKey('right')}
+              title="右手側に追加"
+            >
+              <Plus size={16} />
+              <span>右手に追加</span>
+            </button>
+          </div>
+        ) : (
+          <button className={`${styles.button} ${styles.primaryButton}`} onClick={() => handleAddKey()}>
+            <Plus size={18} />
+            <span>キーを追加</span>
+          </button>
+        )}
         <button className={styles.button}>
           <Download size={18} />
         </button>
