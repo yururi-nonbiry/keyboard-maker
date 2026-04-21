@@ -73,7 +73,7 @@ const KeyboardCanvas: React.FC = () => {
         >
           {/* Apply typing angle tilt and centering offset */}
           <group 
-            rotation={is2D ? [0, 0, 0] : [-typingAngle * (Math.PI / 180), 0, 0]}
+            rotation={is2D ? [0, 0, 0] : [typingAngle * (Math.PI / 180), 0, 0]}
             position={[0, 0, 0]}
           >
             <group position={centerOffset as [number, number, number]}>
@@ -108,21 +108,22 @@ const KeyboardCanvas: React.FC = () => {
                 </>
               )}
             </group>
+
+            {gridVisible && (
+              <Grid
+                infiniteGrid
+                fadeDistance={1000}
+                fadeStrength={5}
+                cellSize={gridSize / 4}
+                sectionSize={gridSize}
+                sectionColor="#4f46e5"
+                cellColor="#2e2e3a"
+                position={[0, -4.5, 0]} // Grid plane parallel to the keyboard base
+              />
+            )}
           </group>
         </Float>
 
-        {gridVisible && (
-          <Grid
-            infiniteGrid
-            fadeDistance={1000}
-            fadeStrength={5}
-            cellSize={gridSize / 4}
-            sectionSize={gridSize}
-            sectionColor="#4f46e5"
-            cellColor="#2e2e3a"
-            position={[0, -5, 0]} // Fixed floor grid below the plate
-          />
-        )}
 
         {!is2D && (
           <ContactShadows 
