@@ -132,18 +132,24 @@ const Sidebar: React.FC = () => {
           <div className={styles.group}>
             <label className={styles.label}>座標 (X, Y)</label>
             <div className={styles.row}>
-              <input
-                className={styles.input}
-                type="number"
-                value={selectedKey.x}
-                onChange={(e) => updateKey(selectedKey.id, { x: parseFloat(e.target.value) || 0 })}
-              />
-              <input
-                className={styles.input}
-                type="number"
-                value={selectedKey.y}
-                onChange={(e) => updateKey(selectedKey.id, { y: parseFloat(e.target.value) || 0 })}
-              />
+              <div className={styles.inputWrapper}>
+                <span className={styles.coordLabel}>X</span>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={selectedKey.x}
+                  onChange={(e) => updateKey(selectedKey.id, { x: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+              <div className={styles.inputWrapper}>
+                <span className={styles.coordLabel}>Y</span>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={selectedKey.y}
+                  onChange={(e) => updateKey(selectedKey.id, { y: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
             </div>
           </div>
           <div className={styles.group}>
