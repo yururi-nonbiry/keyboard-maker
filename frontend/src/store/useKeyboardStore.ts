@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { KeyboardData, KeyConfig, KeyboardMetadata, PcbConfig, CaseConfig, SwitchType, KeyboardType, TrackballConfig } from '../types';
+import type { KeyboardData, KeyConfig, KeyboardMetadata, PcbConfig, CaseConfig, SwitchType, KeyboardType, TrackballConfig, ControllerConfig } from '../types';
 import { checkInterference, calculateBoundingBox } from '../utils/geometry';
 
 interface KeyboardState {
@@ -24,6 +24,12 @@ interface KeyboardState {
   updateTrackball: (id: string, config: Partial<TrackballConfig>) => void;
   removeTrackball: (id: string) => void;
   selectTrackball: (id: string | null) => void;
+
+  // Controller Actions
+  addController: (controller: ControllerConfig) => void;
+  updateController: (id: string, config: Partial<ControllerConfig>) => void;
+  removeController: (id: string) => void;
+  selectController: (id: string | null) => void;
   
   // Grid Settings
   gridVisible: boolean;
@@ -45,6 +51,7 @@ interface KeyboardState {
   applySplit: (x: number) => void;
 
   selectedTrackballId: string | null;
+  selectedControllerId: string | null;
 }
 
 const DEFAULT_METADATA: KeyboardMetadata = {
@@ -91,11 +98,13 @@ export const useKeyboardStore = create<KeyboardState>()(
         type: 'integrated',
         layout: INITIAL_LAYOUT,
         trackballs: [],
+        controllers: [],
         pcb_config: DEFAULT_PCB,
         case_config: DEFAULT_CASE,
       },
       selectedKeyId: null,
       selectedTrackballId: null,
+      selectedControllerId: null,
       collisions: {},
       gridVisible: true,
       gridSnapping: true,
@@ -165,7 +174,11 @@ export const useKeyboardStore = create<KeyboardState>()(
           };
         }),
 
-      selectKey: (id) => set((state) => ({ selectedKeyId: id, selectedTrackballId: id ? null : state.selectedTrackballId })),
+      selectKey: (id) => set((state) => ({ 
+        selectedKeyId: id, 
+        selectedTrackballId: id ? null : state.selectedTrackballId,
+        selectedControllerId: id ? null : state.selectedControllerId 
+      })),
 
       updatePcbConfig: (pcb_config) =>
         set((state) => ({
@@ -232,7 +245,44 @@ export const useKeyboardStore = create<KeyboardState>()(
           selectedTrackballId: state.selectedTrackballId === id ? null : state.selectedTrackballId,
         })),
 
-      selectTrackball: (id) => set((state) => ({ selectedTrackballId: id, selectedKeyId: id ? null : state.selectedKeyId })),
+      selectTrackball: (id) => set((state) => ({ 
+        selectedTrackballId: id, 
+        selectedKeyId: id ? null : state.selectedKeyId,
+        selectedControllerId: id ? null : state.selectedControllerId 
+      })),
+
+      addController: (controller) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            controllers: [...(state.data.controllers || []), controller],
+          },
+        })),
+
+      updateController: (id, config) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            controllers: (state.data.controllers || []).map((c) =>
+              c.id === id ? { ...c, ...config } : c
+            ),
+          },
+        })),
+
+      removeController: (id) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            controllers: (state.data.controllers || []).filter((c) => c.id !== id),
+          },
+          selectedControllerId: state.selectedControllerId === id ? null : state.selectedControllerId,
+        })),
+
+      selectController: (id) => set((state) => ({ 
+        selectedControllerId: id, 
+        selectedKeyId: id ? null : state.selectedKeyId,
+        selectedTrackballId: id ? null : state.selectedTrackballId
+      })),
 
       setKeyboardData: (data) => set({ 
         data, 

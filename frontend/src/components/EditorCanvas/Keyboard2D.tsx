@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
 import { calculateBoundingBox } from '../../utils/geometry';
-import type { KeyConfig, TrackballConfig } from '../../types';
+import type { KeyConfig, TrackballConfig, ControllerConfig } from '../../types';
 
 const UNIT = 19.05; // Standard key pitch
 
@@ -21,12 +21,16 @@ const Keyboard2D: React.FC = () => {
     applySplit,
     selectedTrackballId,
     selectTrackball,
-    updateTrackball
+    updateTrackball,
+    selectedControllerId,
+    selectController,
+    updateController
   } = useKeyboardStore();
 
   const svgRef = useRef<SVGSVGElement>(null);
   const [draggingKeyId, setDraggingKeyId] = useState<string | null>(null);
   const [draggingTrackballId, setDraggingTrackballId] = useState<string | null>(null);
+  const [draggingControllerId, setDraggingControllerId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [viewBox, setViewBox] = useState({ x: -250, y: -200, width: 500, height: 400 });
   const [isPanning, setIsPanning] = useState(false);
@@ -41,6 +45,8 @@ const Keyboard2D: React.FC = () => {
 
   const leftTrackballs = useMemo(() => (data.trackballs || []).filter(t => t.side === 'left' || !t.side), [data.trackballs]);
   const rightTrackballs = useMemo(() => (data.trackballs || []).filter(t => t.side === 'right'), [data.trackballs]);
+  const leftControllers = useMemo(() => (data.controllers || []).filter(c => c.side === 'left' || !c.side), [data.controllers]);
+  const rightControllers = useMemo(() => (data.controllers || []).filter(c => c.side === 'right'), [data.controllers]);
 
   const leftBbox = useMemo(() => calculateBoundingBox(leftKeys, case_config.keyPitch), [leftKeys, case_config.keyPitch]);
   const rightBbox = useMemo(() => calculateBoundingBox(rightKeys, case_config.keyPitch), [rightKeys, case_config.keyPitch]);
@@ -99,6 +105,21 @@ const Keyboard2D: React.FC = () => {
     }
   };
 
+  const handleControllerMouseDown = (e: React.MouseEvent, controllerId: string) => {
+    e.stopPropagation();
+    selectController(controllerId);
+    setDraggingControllerId(controllerId);
+    
+    const controller = (data.controllers || []).find(c => c.id === controllerId);
+    if (controller) {
+      const mousePos = getMousePos(e);
+      setDragOffset({
+        x: mousePos.x - controller.x,
+        y: mousePos.y - controller.y
+      });
+    }
+  };
+
   const handleMouseMove = (e: React.MouseEvent) => {
     if (draggingKeyId) {
       const mousePos = getMousePos(e);
@@ -121,6 +142,18 @@ const Keyboard2D: React.FC = () => {
       const snap = (val: number) => Math.round(val / snapIncrement) * snapIncrement;
 
       updateTrackball(draggingTrackballId, {
+        x: snap(newX),
+        y: snap(newY)
+      });
+    } else if (draggingControllerId) {
+      const mousePos = getMousePos(e);
+      const newX = mousePos.x - dragOffset.x;
+      const newY = mousePos.y - dragOffset.y;
+      
+      const snapIncrement = gridSnapping ? gridSize / 4 : 0.25;
+      const snap = (val: number) => Math.round(val / snapIncrement) * snapIncrement;
+
+      updateController(draggingControllerId, {
         x: snap(newX),
         y: snap(newY)
       });
@@ -149,6 +182,7 @@ const Keyboard2D: React.FC = () => {
   const handleMouseUp = () => {
     setDraggingKeyId(null);
     setDraggingTrackballId(null);
+    setDraggingControllerId(null);
     setIsPanning(false);
   };
 
@@ -268,6 +302,71 @@ const Keyboard2D: React.FC = () => {
     );
   };
 
+  const renderController = (controller: ControllerConfig) => {
+    const isSelected = selectedControllerId === controller.id;
+    
+    let dimensions = { width: 18, length: 33 };
+    switch (controller.type) {
+      case 'xiao_rp2040': dimensions = { width: 18, length: 21 }; break;
+      case 'pico': dimensions = { width: 21, length: 51 }; break;
+      case 'bluepill': dimensions = { width: 23, length: 53 }; break;
+    }
+
+    const { width: w, length: l } = dimensions;
+
+    return (
+      <g 
+        key={controller.id}
+        transform={`translate(${controller.x}, ${controller.y}) rotate(${-controller.rotation})`}
+        onMouseDown={(e) => !splitMode && handleControllerMouseDown(e, controller.id)}
+        onClick={(e) => e.stopPropagation()}
+        style={{ cursor: splitMode ? 'default' : 'move' }}
+      >
+        {/* PCB Body */}
+        <rect
+          x={-w/2}
+          y={-l/2}
+          width={w}
+          height={l}
+          rx={2}
+          fill={isSelected ? 'rgba(16, 185, 129, 0.4)' : 'rgba(16, 185, 129, 0.6)'}
+          stroke={isSelected ? '#34d399' : '#10b981'}
+          strokeWidth={isSelected ? 2 : 1}
+        />
+        {/* USB Connector Indicator */}
+        <rect
+          x={-4}
+          y={-l/2 - 2}
+          width={8}
+          height={4}
+          rx={1}
+          fill="#999"
+        />
+        {/* Label */}
+        <text
+          y={2}
+          textAnchor="middle"
+          fontSize={5}
+          fontWeight="bold"
+          fill="#fff"
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+          {controller.type.toUpperCase().replace('_', ' ')}
+        </text>
+        {/* Mounting Side Indicator */}
+        <text
+          y={8}
+          textAnchor="middle"
+          fontSize={4}
+          fill="rgba(255, 255, 255, 0.8)"
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+          {controller.mountingSide.toUpperCase()}
+        </text>
+      </g>
+    );
+  };
+
   const renderHalf = (keys: KeyConfig[], bbox: any, side: 'left' | 'right') => {
     if (!bbox) return null;
 
@@ -291,6 +390,7 @@ const Keyboard2D: React.FC = () => {
         <g transform={`translate(${-bbox.centerX}, ${-bbox.centerY})`}>
           {keys.map(renderKey)}
           {(side === 'left' ? leftTrackballs : rightTrackballs).map(renderTrackball)}
+          {(side === 'left' ? leftControllers : rightControllers).map(renderController)}
         </g>
       </g>
     );
@@ -313,6 +413,7 @@ const Keyboard2D: React.FC = () => {
           } else if (!hasMovedDuringPan) {
             selectKey(null);
             selectTrackball(null);
+            selectController(null);
           }
         }}
       >
@@ -350,8 +451,9 @@ const Keyboard2D: React.FC = () => {
                   strokeDasharray="4,2"
                 />
                )}
-              {layout.map(renderKey)}
+               {layout.map(renderKey)}
               {(data.trackballs || []).map(renderTrackball)}
+              {(data.controllers || []).map(renderController)}
             </g>
           ) : (
             <>

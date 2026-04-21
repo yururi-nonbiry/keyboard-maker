@@ -11,10 +11,10 @@ import Trackball from './Trackball';
 import { calculateBoundingBox } from '../../utils/geometry';
 
 const KeyboardCanvas: React.FC = () => {
-  const { data, selectKey, selectedKeyId, selectTrackball, selectedTrackballId, gridVisible, gridSize } = useKeyboardStore();
+  const { data, selectKey, selectedKeyId, selectTrackball, selectedTrackballId, selectController, selectedControllerId, gridVisible, gridSize } = useKeyboardStore();
 
   const { typingAngle } = data.case_config;
-  const isEditing = selectedKeyId !== null || selectedTrackballId !== null;
+  const isEditing = selectedKeyId !== null || selectedTrackballId !== null || selectedControllerId !== null;
 
   const { tentingAngle, splitRotation, splitGap } = data.case_config;
   const leftKeys = data.layout.filter(k => k.side === 'left' || !k.side);
@@ -65,11 +65,15 @@ const KeyboardCanvas: React.FC = () => {
                 {(data.trackballs || []).map((t) => (
                   <Trackball key={t.id} config={t} />
                 ))}
-                <MicroController 
-                  type={data.pcb_config.controllerType}
-                  position={[0, -2, -60]} // Positioned behind the keys
-                  rotation={[0, 0, 0]}
-                />
+                {(data.controllers || []).map((c) => (
+                  <MicroController 
+                    key={c.id}
+                    type={c.type}
+                    position={[c.x, c.mountingSide === 'bottom' ? -4 : -2, c.y]}
+                    rotation={[c.mountingSide === 'bottom' ? Math.PI : 0, 0, (c.rotation * Math.PI) / 180]}
+                    mountingSide={c.mountingSide}
+                  />
+                ))}
               </group>
             ) : (
               <>
@@ -88,11 +92,15 @@ const KeyboardCanvas: React.FC = () => {
                       {leftTrackballs.map((t) => (
                         <Trackball key={t.id} config={t} />
                       ))}
-                      <MicroController 
-                        type={data.pcb_config.controllerType}
-                        position={[0, -2, -60]} 
-                        rotation={[0, 0, 0]}
-                      />
+                      {(data.controllers || []).filter(c => c.side === 'left' || !c.side).map((c) => (
+                        <MicroController 
+                          key={c.id}
+                          type={c.type}
+                          position={[c.x, c.mountingSide === 'bottom' ? -4 : -2, c.y]}
+                          rotation={[c.mountingSide === 'bottom' ? Math.PI : 0, 0, (c.rotation * Math.PI) / 180]}
+                          mountingSide={c.mountingSide}
+                        />
+                      ))}
                     </group>
                   )}
                 </group>
@@ -112,11 +120,15 @@ const KeyboardCanvas: React.FC = () => {
                       {rightTrackballs.map((t) => (
                         <Trackball key={t.id} config={t} />
                       ))}
-                      <MicroController 
-                        type={data.pcb_config.controllerType}
-                        position={[0, -2, -60]} 
-                        rotation={[0, 0, 0]}
-                      />
+                      {(data.controllers || []).filter(c => c.side === 'right').map((c) => (
+                        <MicroController 
+                          key={c.id}
+                          type={c.type}
+                          position={[c.x, c.mountingSide === 'bottom' ? -4 : -2, c.y]}
+                          rotation={[c.mountingSide === 'bottom' ? Math.PI : 0, 0, (c.rotation * Math.PI) / 180]}
+                          mountingSide={c.mountingSide}
+                        />
+                      ))}
                     </group>
                   )}
                 </group>
@@ -164,6 +176,7 @@ const KeyboardCanvas: React.FC = () => {
         onClick={() => {
           selectKey(null);
           selectTrackball(null);
+          selectController(null);
         }}
       >
         <planeGeometry args={[2000, 2000]} />

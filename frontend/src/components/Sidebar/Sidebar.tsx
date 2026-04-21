@@ -15,10 +15,16 @@ const Sidebar: React.FC = () => {
     removeKey,
     selectedTrackballId,
     updateTrackball,
-    removeTrackball
+    removeTrackball,
+    selectedControllerId,
+    updateController,
+    removeController,
+    selectController,
+    addController
   } = useKeyboardStore();
   const selectedKey = data.layout.find(k => k.id === selectedKeyId);
   const selectedTrackball = (data.trackballs || []).find(t => t.id === selectedTrackballId);
+  const selectedController = (data.controllers || []).find(c => c.id === selectedControllerId);
   const { typingAngle, tentingAngle, splitRotation } = data.case_config;
 
   return (
@@ -139,6 +145,26 @@ const Sidebar: React.FC = () => {
             <option value="col2row">Col to Row</option>
             <option value="row2col">Row to Col</option>
           </select>
+        </div>
+        <div className={styles.group}>
+          <button 
+            className={styles.input}
+            onClick={() => {
+              const id = `mcu-${Date.now()}`;
+              addController({
+                id,
+                type: 'pro_micro',
+                x: 0,
+                y: -60,
+                rotation: 0,
+                side: 'left',
+                mountingSide: 'top'
+              });
+              selectController(id);
+            }}
+          >
+            MCUを追加
+          </button>
         </div>
       </div>
 
@@ -287,9 +313,92 @@ const Sidebar: React.FC = () => {
             </button>
           </div>
         </div>
+      ) : selectedController ? (
+        <div className={styles.section}>
+          <h3 className={styles.sectionTitle}>MCU設定</h3>
+          <div className={styles.group}>
+            <label className={styles.label}>種類</label>
+            <select
+              className={styles.input}
+              value={selectedController.type}
+              onChange={(e) => updateController(selectedController.id, { type: e.target.value as any })}
+            >
+              <option value="pro_micro">Pro Micro</option>
+              <option value="elite_c">Elite-C</option>
+              <option value="xiao_rp2040">XIAO RP2040</option>
+              <option value="pico">Raspberry Pi Pico</option>
+              <option value="bluepill">Bluepill (STM32)</option>
+            </select>
+          </div>
+          <div className={styles.group}>
+            <label className={styles.label}>座標 (X, Y)</label>
+            <div className={styles.row}>
+              <div className={styles.inputWrapper}>
+                <span className={styles.coordLabel}>X</span>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={selectedController.x}
+                  onChange={(e) => updateController(selectedController.id, { x: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+              <div className={styles.inputWrapper}>
+                <span className={styles.coordLabel}>Y</span>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={selectedController.y}
+                  onChange={(e) => updateController(selectedController.id, { y: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+            </div>
+          </div>
+          <div className={styles.group}>
+            <label className={styles.label}>回転</label>
+            <input
+              className={styles.input}
+              type="number"
+              value={selectedController.rotation}
+              onChange={(e) => updateController(selectedController.id, { rotation: parseFloat(e.target.value) || 0 })}
+            />
+          </div>
+          <div className={styles.group}>
+            <label className={styles.label}>マウント面</label>
+            <select
+              className={styles.input}
+              value={selectedController.mountingSide}
+              onChange={(e) => updateController(selectedController.id, { mountingSide: e.target.value as 'top' | 'bottom' })}
+            >
+              <option value="top">表面 (Top)</option>
+              <option value="bottom">裏面 (Bottom)</option>
+            </select>
+          </div>
+          {data.type === 'split' && (
+            <div className={styles.group}>
+              <label className={styles.label}>配置サイド</label>
+              <select
+                className={styles.input}
+                value={selectedController.side || 'left'}
+                onChange={(e) => updateController(selectedController.id, { side: e.target.value as 'left' | 'right' })}
+              >
+                <option value="left">左手 (Left)</option>
+                <option value="right">右手 (Right)</option>
+              </select>
+            </div>
+          )}
+          <div style={{ marginTop: 'auto' }}>
+            <button 
+              className={styles.input} 
+              style={{ width: '100%', borderColor: 'var(--color-secondary)', color: 'var(--color-secondary)' }}
+              onClick={() => removeController(selectedController.id)}
+            >
+              MCUを削除
+            </button>
+          </div>
+        </div>
       ) : (
         <div className={styles.section}>
-          <p className={styles.label}>編集するキーまたはトラックボールを選択してください。</p>
+          <p className={styles.label}>編集する項目を選択してください。</p>
         </div>
       )}
     </div>

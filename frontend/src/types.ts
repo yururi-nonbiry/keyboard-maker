@@ -54,11 +54,22 @@ export interface TrackballConfig {
   side?: 'left' | 'right';
 }
 
+export interface ControllerConfig {
+  id: string;
+  type: ControllerType;
+  x: number; // in mm
+  y: number; // in mm
+  rotation: number; // in degrees
+  side: 'left' | 'right';
+  mountingSide: 'top' | 'bottom';
+}
+
 export interface KeyboardData {
   metadata: KeyboardMetadata;
   type: KeyboardType;
   layout: KeyConfig[];
   trackballs?: TrackballConfig[];
+  controllers?: ControllerConfig[];
   pcb_config: PcbConfig;
   case_config: CaseConfig;
 }

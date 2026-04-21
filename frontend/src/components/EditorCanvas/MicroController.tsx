@@ -6,9 +6,10 @@ interface MicroControllerProps {
   type: ControllerType;
   position: [number, number, number];
   rotation: [number, number, number];
+  mountingSide?: 'top' | 'bottom';
 }
 
-const MicroController: React.FC<MicroControllerProps> = ({ type, position, rotation }) => {
+const MicroController: React.FC<MicroControllerProps> = ({ type, position, rotation, mountingSide = 'top' }) => {
   const dimensions = useMemo(() => {
     switch (type) {
       case 'pro_micro':
