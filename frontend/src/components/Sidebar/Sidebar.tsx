@@ -1,6 +1,6 @@
 import React from 'react';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
-import type { SwitchType, KeyboardType } from '../../types';
+import type { SwitchType, KeyboardType, ControllerType } from '../../types';
 import styles from './Sidebar.module.css';
 
 const Sidebar: React.FC = () => {
@@ -9,6 +9,7 @@ const Sidebar: React.FC = () => {
     updateMetadata, 
     updateKeyboardType, 
     updateCaseConfig,
+    updatePcbConfig,
     selectedKeyId, 
     updateKey, 
     removeKey 
@@ -95,6 +96,34 @@ const Sidebar: React.FC = () => {
             </div>
           </>
         )}
+      </div>
+      <div className={styles.section}>
+        <h3 className={styles.sectionTitle}>PCB/コントローラー設定</h3>
+        <div className={styles.group}>
+          <label className={styles.label}>マイクロコントローラー</label>
+          <select
+            className={styles.input}
+            value={data.pcb_config.controllerType}
+            onChange={(e) => updatePcbConfig({ controllerType: e.target.value as ControllerType })}
+          >
+            <option value="pro_micro">Pro Micro</option>
+            <option value="elite_c">Elite-C</option>
+            <option value="xiao_rp2040">XIAO RP2040</option>
+            <option value="pico">Raspberry Pi Pico</option>
+            <option value="bluepill">Bluepill (STM32)</option>
+          </select>
+        </div>
+        <div className={styles.group}>
+          <label className={styles.label}>ダイオード方向</label>
+          <select
+            className={styles.input}
+            value={data.pcb_config.diodeDirection}
+            onChange={(e) => updatePcbConfig({ diodeDirection: e.target.value as 'col2row' | 'row2col' })}
+          >
+            <option value="col2row">Col to Row</option>
+            <option value="row2col">Row to Col</option>
+          </select>
+        </div>
       </div>
 
       {selectedKey ? (

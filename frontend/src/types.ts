@@ -7,6 +7,8 @@ export interface KeyboardMetadata {
 
 export type SwitchType = 'mx' | 'choc' | 'choc_v2' | 'x_switch' | 'ec';
 
+export type ControllerType = 'pro_micro' | 'elite_c' | 'xiao_rp2040' | 'pico' | 'bluepill';
+
 export type KeyboardType = 'integrated' | 'split';
 
 export interface KeyConfig {
@@ -24,7 +26,7 @@ export interface KeyConfig {
 }
 
 export interface PcbConfig {
-  controllerType: string;
+  controllerType: ControllerType;
   controllerPosition: { x: number; y: number; rotation: number };
   diodeDirection: 'col2row' | 'row2col';
   footprintAttributes: Record<string, string>;

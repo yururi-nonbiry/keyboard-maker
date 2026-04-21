@@ -38,7 +38,7 @@ const DEFAULT_METADATA: KeyboardMetadata = {
 };
 
 const DEFAULT_PCB: PcbConfig = {
-  controllerType: 'Pro Micro',
+  controllerType: 'pro_micro',
   controllerPosition: { x: 0, y: 0, rotation: 0 },
   diodeDirection: 'col2row',
   footprintAttributes: {},
