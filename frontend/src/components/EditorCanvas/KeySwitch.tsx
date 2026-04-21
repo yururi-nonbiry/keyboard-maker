@@ -66,6 +66,8 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
         e.stopPropagation();
         selectKey(config.id);
       }}
+      onPointerDown={(e) => e.stopPropagation()}
+      onPointerUp={(e) => e.stopPropagation()}
     >
       <PivotControls
         key={isSelected ? 'active' : 'inactive'} // Force reset matrix when selection changes

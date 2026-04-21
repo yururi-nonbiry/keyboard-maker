@@ -155,6 +155,7 @@ const Keyboard2D: React.FC = () => {
         key={key.id}
         transform={`translate(${key.x}, ${key.y}) rotate(${-key.rotation})`}
         onMouseDown={(e) => !splitMode && handleMouseDown(e, key.id)}
+        onClick={(e) => e.stopPropagation()}
         style={{ cursor: splitMode ? 'default' : 'move' }}
       >
         {/* Keycap Outer */}

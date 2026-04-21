@@ -30,7 +30,6 @@ const KeyboardCanvas: React.FC = () => {
       shadows
       camera={{ position: [150, 200, 250], fov: 45, up: [0, 1, 0], near: 0.1, far: 2000 }}
       style={{ height: '100%', width: '100%' }}
-      onPointerMissed={() => selectKey(null)}
     >
       <color attach="background" args={['#0a0a0c']} />
       <fog attach="fog" args={['#0a0a0c', 200, 1000]} />
@@ -144,6 +143,16 @@ const KeyboardCanvas: React.FC = () => {
         enableRotate={true}
         makeDefault 
       />
+
+      {/* Background plane for deselection */}
+      <mesh 
+        rotation={[-Math.PI / 2, 0, 0]} 
+        position={[0, -10, 0]} 
+        onClick={() => selectKey(null)}
+      >
+        <planeGeometry args={[2000, 2000]} />
+        <meshBasicMaterial visible={false} />
+      </mesh>
     </Canvas>
   );
 };
