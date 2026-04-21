@@ -1,4 +1,4 @@
-import { Save, FolderOpen, Download, Plus, Grid, Magnet, Box, Square, Scissors } from 'lucide-react';
+import { Save, FolderOpen, Download, Plus, Grid, Magnet, Box, Square, Scissors, Circle } from 'lucide-react';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
 import { saveProjectFile, loadProjectFile } from '../../utils/fileSystem';
 import styles from './Toolbar.module.css';
@@ -15,7 +15,8 @@ const Toolbar: React.FC = () => {
     viewMode,
     setViewMode,
     splitMode,
-    toggleSplitMode
+    toggleSplitMode,
+    addTrackball
   } = useKeyboardStore();
 
   const handleSave = async () => {
@@ -38,6 +39,18 @@ const Toolbar: React.FC = () => {
       side: side,
     };
     addKey(newKey);
+  };
+
+  const handleAddTrackball = (side?: 'left' | 'right') => {
+    const newTrackball = {
+      id: `trackball-${Date.now()}`,
+      x: 0,
+      y: 0,
+      diameter: 34,
+      sensorType: 'pmw3360' as const,
+      side: side,
+    };
+    addTrackball(newTrackball);
   };
 
   return (
@@ -101,25 +114,48 @@ const Toolbar: React.FC = () => {
             <button 
               className={`${styles.button} ${styles.primaryButton}`} 
               onClick={() => handleAddKey('left')}
-              title="左手側に追加"
+              title="左手側にキーを追加"
             >
               <Plus size={16} />
-              <span>左手に追加</span>
+              <span>左手キー</span>
             </button>
             <button 
               className={`${styles.button} ${styles.primaryButton}`} 
+              onClick={() => handleAddTrackball('left')}
+              title="左手側にトラックボールを追加"
+            >
+              <Circle size={16} />
+              <span>左手TB</span>
+            </button>
+            <div style={{ width: '1px', background: 'rgba(255,255,255,0.2)', margin: '4px 0' }} />
+            <button 
+              className={`${styles.button} ${styles.primaryButton}`} 
               onClick={() => handleAddKey('right')}
-              title="右手側に追加"
+              title="右手側にキーを追加"
             >
               <Plus size={16} />
-              <span>右手に追加</span>
+              <span>右手キー</span>
+            </button>
+            <button 
+              className={`${styles.button} ${styles.primaryButton}`} 
+              onClick={() => handleAddTrackball('right')}
+              title="右手側にトラックボールを追加"
+            >
+              <Circle size={16} />
+              <span>右手TB</span>
             </button>
           </div>
         ) : (
-          <button className={`${styles.button} ${styles.primaryButton}`} onClick={() => handleAddKey()}>
-            <Plus size={18} />
-            <span>キーを追加</span>
-          </button>
+          <div className={`${styles.buttonGroup} ${styles.primaryButtonGroup}`}>
+            <button className={`${styles.button} ${styles.primaryButton}`} onClick={() => handleAddKey()}>
+              <Plus size={18} />
+              <span>キー追加</span>
+            </button>
+            <button className={`${styles.button} ${styles.primaryButton}`} onClick={() => handleAddTrackball()}>
+              <Circle size={18} />
+              <span>TB追加</span>
+            </button>
+          </div>
         )}
         <button className={styles.button}>
           <Download size={18} />

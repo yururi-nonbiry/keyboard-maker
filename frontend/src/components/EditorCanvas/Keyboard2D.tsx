@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
 import { calculateBoundingBox } from '../../utils/geometry';
-import type { KeyConfig } from '../../types';
+import type { KeyConfig, TrackballConfig } from '../../types';
 
 const UNIT = 19.05; // Standard key pitch
 
@@ -9,20 +9,24 @@ const Keyboard2D: React.FC = () => {
   const { 
     data, 
     selectedKeyId, 
-    selectKey, 
-    updateKey, 
-    gridVisible, 
-    gridSnapping, 
+    selectKey,
+    updateKey,
+    gridVisible,
+    gridSnapping,
     gridSize,
     collisions,
     splitMode,
     tempSplitX,
     setTempSplitX,
-    applySplit
+    applySplit,
+    selectedTrackballId,
+    selectTrackball,
+    updateTrackball
   } = useKeyboardStore();
 
   const svgRef = useRef<SVGSVGElement>(null);
   const [draggingKeyId, setDraggingKeyId] = useState<string | null>(null);
+  const [draggingTrackballId, setDraggingTrackballId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [viewBox, setViewBox] = useState({ x: -250, y: -200, width: 500, height: 400 });
   const [isPanning, setIsPanning] = useState(false);
@@ -34,6 +38,9 @@ const Keyboard2D: React.FC = () => {
 
   const leftKeys = useMemo(() => layout.filter(k => k.side === 'left' || !k.side), [layout]);
   const rightKeys = useMemo(() => layout.filter(k => k.side === 'right'), [layout]);
+
+  const leftTrackballs = useMemo(() => (data.trackballs || []).filter(t => t.side === 'left' || !t.side), [data.trackballs]);
+  const rightTrackballs = useMemo(() => (data.trackballs || []).filter(t => t.side === 'right'), [data.trackballs]);
 
   const leftBbox = useMemo(() => calculateBoundingBox(leftKeys, case_config.keyPitch), [leftKeys, case_config.keyPitch]);
   const rightBbox = useMemo(() => calculateBoundingBox(rightKeys, case_config.keyPitch), [rightKeys, case_config.keyPitch]);
@@ -77,6 +84,21 @@ const Keyboard2D: React.FC = () => {
     }
   };
 
+  const handleTrackballMouseDown = (e: React.MouseEvent, trackballId: string) => {
+    e.stopPropagation();
+    selectTrackball(trackballId);
+    setDraggingTrackballId(trackballId);
+    
+    const trackball = (data.trackballs || []).find(t => t.id === trackballId);
+    if (trackball) {
+      const mousePos = getMousePos(e);
+      setDragOffset({
+        x: mousePos.x - trackball.x,
+        y: mousePos.y - trackball.y
+      });
+    }
+  };
+
   const handleMouseMove = (e: React.MouseEvent) => {
     if (draggingKeyId) {
       const mousePos = getMousePos(e);
@@ -87,6 +109,18 @@ const Keyboard2D: React.FC = () => {
       const snap = (val: number) => Math.round(val / snapIncrement) * snapIncrement;
 
       updateKey(draggingKeyId, {
+        x: snap(newX),
+        y: snap(newY)
+      });
+    } else if (draggingTrackballId) {
+      const mousePos = getMousePos(e);
+      const newX = mousePos.x - dragOffset.x;
+      const newY = mousePos.y - dragOffset.y;
+      
+      const snapIncrement = gridSnapping ? gridSize / 4 : 0.25;
+      const snap = (val: number) => Math.round(val / snapIncrement) * snapIncrement;
+
+      updateTrackball(draggingTrackballId, {
         x: snap(newX),
         y: snap(newY)
       });
@@ -114,6 +148,7 @@ const Keyboard2D: React.FC = () => {
 
   const handleMouseUp = () => {
     setDraggingKeyId(null);
+    setDraggingTrackballId(null);
     setIsPanning(false);
   };
 
@@ -195,6 +230,44 @@ const Keyboard2D: React.FC = () => {
     );
   };
 
+  const renderTrackball = (trackball: TrackballConfig) => {
+    const isSelected = selectedTrackballId === trackball.id;
+    const r = (trackball.diameter || 34) / 2;
+
+    return (
+      <g 
+        key={trackball.id}
+        transform={`translate(${trackball.x}, ${trackball.y})`}
+        onMouseDown={(e) => !splitMode && handleTrackballMouseDown(e, trackball.id)}
+        onClick={(e) => e.stopPropagation()}
+        style={{ cursor: splitMode ? 'default' : 'move' }}
+      >
+        <circle
+          r={r}
+          fill={isSelected ? 'rgba(239, 68, 68, 0.4)' : 'rgba(239, 68, 68, 0.6)'}
+          stroke={isSelected ? '#f87171' : '#ef4444'}
+          strokeWidth={isSelected ? 2 : 1}
+        />
+        <circle
+          r={r - 4}
+          fill="none"
+          stroke="rgba(255, 255, 255, 0.2)"
+          strokeWidth={0.5}
+        />
+        <text
+          y={4}
+          textAnchor="middle"
+          fontSize={8}
+          fontWeight="bold"
+          fill="#fff"
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+          {trackball.diameter}mm
+        </text>
+      </g>
+    );
+  };
+
   const renderHalf = (keys: KeyConfig[], bbox: any, side: 'left' | 'right') => {
     if (!bbox) return null;
 
@@ -217,6 +290,7 @@ const Keyboard2D: React.FC = () => {
         />
         <g transform={`translate(${-bbox.centerX}, ${-bbox.centerY})`}>
           {keys.map(renderKey)}
+          {(side === 'left' ? leftTrackballs : rightTrackballs).map(renderTrackball)}
         </g>
       </g>
     );
@@ -238,6 +312,7 @@ const Keyboard2D: React.FC = () => {
             applySplit(tempSplitX);
           } else if (!hasMovedDuringPan) {
             selectKey(null);
+            selectTrackball(null);
           }
         }}
       >
@@ -274,8 +349,9 @@ const Keyboard2D: React.FC = () => {
                   strokeWidth={1}
                   strokeDasharray="4,2"
                 />
-              )}
+               )}
               {layout.map(renderKey)}
+              {(data.trackballs || []).map(renderTrackball)}
             </g>
           ) : (
             <>

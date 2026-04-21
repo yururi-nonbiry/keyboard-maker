@@ -12,9 +12,13 @@ const Sidebar: React.FC = () => {
     updatePcbConfig,
     selectedKeyId, 
     updateKey, 
-    removeKey 
+    removeKey,
+    selectedTrackballId,
+    updateTrackball,
+    removeTrackball
   } = useKeyboardStore();
   const selectedKey = data.layout.find(k => k.id === selectedKeyId);
+  const selectedTrackball = (data.trackballs || []).find(t => t.id === selectedTrackballId);
   const { typingAngle, tentingAngle, splitRotation } = data.case_config;
 
   return (
@@ -210,9 +214,82 @@ const Sidebar: React.FC = () => {
             </button>
           </div>
         </div>
+      ) : selectedTrackball ? (
+        <div className={styles.section}>
+          <h3 className={styles.sectionTitle}>トラックボール設定</h3>
+          <div className={styles.group}>
+            <label className={styles.label}>座標 (X, Y)</label>
+            <div className={styles.row}>
+              <div className={styles.inputWrapper}>
+                <span className={styles.coordLabel}>X</span>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={selectedTrackball.x}
+                  onChange={(e) => updateTrackball(selectedTrackball.id, { x: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+              <div className={styles.inputWrapper}>
+                <span className={styles.coordLabel}>Y</span>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={selectedTrackball.y}
+                  onChange={(e) => updateTrackball(selectedTrackball.id, { y: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+            </div>
+          </div>
+          <div className={styles.group}>
+            <label className={styles.label}>直径 (Diameter): {selectedTrackball.diameter}mm</label>
+            <input
+              type="range"
+              min="10"
+              max="60"
+              step="1"
+              className={styles.input}
+              value={selectedTrackball.diameter}
+              onChange={(e) => updateTrackball(selectedTrackball.id, { diameter: parseFloat(e.target.value) || 34 })}
+            />
+          </div>
+          <div className={styles.group}>
+            <label className={styles.label}>センサーの種類</label>
+            <select
+              className={styles.input}
+              value={selectedTrackball.sensorType}
+              onChange={(e) => updateTrackball(selectedTrackball.id, { sensorType: e.target.value as any })}
+            >
+              <option value="pmw3360">PMW3360</option>
+              <option value="pmw3389">PMW3389</option>
+              <option value="adns9800">ADNS9800</option>
+            </select>
+          </div>
+          {data.type === 'split' && (
+            <div className={styles.group}>
+              <label className={styles.label}>配置サイド</label>
+              <select
+                className={styles.input}
+                value={selectedTrackball.side || 'left'}
+                onChange={(e) => updateTrackball(selectedTrackball.id, { side: e.target.value as 'left' | 'right' })}
+              >
+                <option value="left">左手 (Left)</option>
+                <option value="right">右手 (Right)</option>
+              </select>
+            </div>
+          )}
+          <div style={{ marginTop: 'auto' }}>
+            <button 
+              className={styles.input} 
+              style={{ width: '100%', borderColor: 'var(--color-secondary)', color: 'var(--color-secondary)' }}
+              onClick={() => removeTrackball(selectedTrackball.id)}
+            >
+              トラックボールを削除
+            </button>
+          </div>
+        </div>
       ) : (
         <div className={styles.section}>
-          <p className={styles.label}>編集するキーを選択してください。</p>
+          <p className={styles.label}>編集するキーまたはトラックボールを選択してください。</p>
         </div>
       )}
     </div>

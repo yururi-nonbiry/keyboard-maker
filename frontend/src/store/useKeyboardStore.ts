@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { KeyboardData, KeyConfig, KeyboardMetadata, PcbConfig, CaseConfig, SwitchType, KeyboardType } from '../types';
+import type { KeyboardData, KeyConfig, KeyboardMetadata, PcbConfig, CaseConfig, SwitchType, KeyboardType, TrackballConfig } from '../types';
 import { checkInterference, calculateBoundingBox } from '../utils/geometry';
 
 interface KeyboardState {
@@ -18,6 +18,12 @@ interface KeyboardState {
   updateCaseConfig: (config: Partial<CaseConfig>) => void;
   updateKeyboardType: (type: KeyboardType) => void;
   setKeyboardData: (data: KeyboardData) => void;
+  
+  // Trackball Actions
+  addTrackball: (trackball: TrackballConfig) => void;
+  updateTrackball: (id: string, config: Partial<TrackballConfig>) => void;
+  removeTrackball: (id: string) => void;
+  selectTrackball: (id: string | null) => void;
   
   // Grid Settings
   gridVisible: boolean;
@@ -37,6 +43,8 @@ interface KeyboardState {
   toggleSplitMode: () => void;
   setTempSplitX: (x: number | null) => void;
   applySplit: (x: number) => void;
+
+  selectedTrackballId: string | null;
 }
 
 const DEFAULT_METADATA: KeyboardMetadata = {
@@ -82,10 +90,12 @@ export const useKeyboardStore = create<KeyboardState>()(
         metadata: DEFAULT_METADATA,
         type: 'integrated',
         layout: INITIAL_LAYOUT,
+        trackballs: [],
         pcb_config: DEFAULT_PCB,
         case_config: DEFAULT_CASE,
       },
       selectedKeyId: null,
+      selectedTrackballId: null,
       collisions: {},
       gridVisible: true,
       gridSnapping: true,
@@ -155,7 +165,7 @@ export const useKeyboardStore = create<KeyboardState>()(
           };
         }),
 
-      selectKey: (id) => set({ selectedKeyId: id }),
+      selectKey: (id) => set((state) => ({ selectedKeyId: id, selectedTrackballId: id ? null : state.selectedTrackballId })),
 
       updatePcbConfig: (pcb_config) =>
         set((state) => ({
@@ -194,6 +204,35 @@ export const useKeyboardStore = create<KeyboardState>()(
           
           return { data: newData };
         }),
+
+      addTrackball: (trackball) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            trackballs: [...(state.data.trackballs || []), trackball],
+          },
+        })),
+
+      updateTrackball: (id, config) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            trackballs: (state.data.trackballs || []).map((t) =>
+              t.id === id ? { ...t, ...config } : t
+            ),
+          },
+        })),
+
+      removeTrackball: (id) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            trackballs: (state.data.trackballs || []).filter((t) => t.id !== id),
+          },
+          selectedTrackballId: state.selectedTrackballId === id ? null : state.selectedTrackballId,
+        })),
+
+      selectTrackball: (id) => set((state) => ({ selectedTrackballId: id, selectedKeyId: id ? null : state.selectedKeyId })),
 
       setKeyboardData: (data) => set({ 
         data, 

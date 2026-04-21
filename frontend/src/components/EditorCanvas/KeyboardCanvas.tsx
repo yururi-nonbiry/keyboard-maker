@@ -6,18 +6,22 @@ import KeySwitch from './KeySwitch';
 import Plate from './Plate';
 import Case from './Case';
 import MicroController from './MicroController';
+import Trackball from './Trackball';
 
 import { calculateBoundingBox } from '../../utils/geometry';
 
 const KeyboardCanvas: React.FC = () => {
-  const { data, selectKey, selectedKeyId, gridVisible, gridSize } = useKeyboardStore();
+  const { data, selectKey, selectedKeyId, selectTrackball, selectedTrackballId, gridVisible, gridSize } = useKeyboardStore();
 
   const { typingAngle } = data.case_config;
-  const isEditing = selectedKeyId !== null;
+  const isEditing = selectedKeyId !== null || selectedTrackballId !== null;
 
   const { tentingAngle, splitRotation, splitGap } = data.case_config;
   const leftKeys = data.layout.filter(k => k.side === 'left' || !k.side);
   const rightKeys = data.layout.filter(k => k.side === 'right');
+
+  const leftTrackballs = (data.trackballs || []).filter(t => t.side === 'left' || !t.side);
+  const rightTrackballs = (data.trackballs || []).filter(t => t.side === 'right');
 
   const bbox = calculateBoundingBox(data.layout, data.case_config.keyPitch);
   const centerOffset = bbox ? [-bbox.centerX, 0, -bbox.centerY] : [0, 0, 0];
@@ -58,6 +62,9 @@ const KeyboardCanvas: React.FC = () => {
                 ))}
                 <Plate />
                 <Case />
+                {(data.trackballs || []).map((t) => (
+                  <Trackball key={t.id} config={t} />
+                ))}
                 <MicroController 
                   type={data.pcb_config.controllerType}
                   position={[0, -2, -60]} // Positioned behind the keys
@@ -78,6 +85,9 @@ const KeyboardCanvas: React.FC = () => {
                       ))}
                       <Plate side="left" />
                       <Case side="left" />
+                      {leftTrackballs.map((t) => (
+                        <Trackball key={t.id} config={t} />
+                      ))}
                       <MicroController 
                         type={data.pcb_config.controllerType}
                         position={[0, -2, -60]} 
@@ -99,6 +109,9 @@ const KeyboardCanvas: React.FC = () => {
                       ))}
                       <Plate side="right" />
                       <Case side="right" />
+                      {rightTrackballs.map((t) => (
+                        <Trackball key={t.id} config={t} />
+                      ))}
                       <MicroController 
                         type={data.pcb_config.controllerType}
                         position={[0, -2, -60]} 
@@ -148,7 +161,10 @@ const KeyboardCanvas: React.FC = () => {
       <mesh 
         rotation={[-Math.PI / 2, 0, 0]} 
         position={[0, -10, 0]} 
-        onClick={() => selectKey(null)}
+        onClick={() => {
+          selectKey(null);
+          selectTrackball(null);
+        }}
       >
         <planeGeometry args={[2000, 2000]} />
         <meshBasicMaterial visible={false} />
