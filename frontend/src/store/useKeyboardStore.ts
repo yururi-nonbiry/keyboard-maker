@@ -16,6 +16,14 @@ interface KeyboardState {
   updatePcbConfig: (config: Partial<PcbConfig>) => void;
   updateCaseConfig: (config: Partial<CaseConfig>) => void;
   setKeyboardData: (data: KeyboardData) => void;
+  
+  // Grid Settings
+  gridVisible: boolean;
+  gridSnapping: boolean;
+  gridSize: number;
+  toggleGridVisible: () => void;
+  toggleGridSnapping: () => void;
+  setGridSize: (size: number) => void;
 }
 
 const DEFAULT_METADATA: KeyboardMetadata = {
@@ -57,6 +65,13 @@ export const useKeyboardStore = create<KeyboardState>((set) => ({
   },
   selectedKeyId: null,
   collisions: {},
+  gridVisible: true,
+  gridSnapping: true,
+  gridSize: 19.05,
+
+  toggleGridVisible: () => set((state) => ({ gridVisible: !state.gridVisible })),
+  toggleGridSnapping: () => set((state) => ({ gridSnapping: !state.gridSnapping })),
+  setGridSize: (gridSize) => set({ gridSize }),
 
   updateMetadata: (metadata) =>
     set((state) => ({

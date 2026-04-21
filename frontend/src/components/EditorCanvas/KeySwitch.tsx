@@ -9,7 +9,7 @@ interface KeySwitchProps {
 }
 
 const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
-  const { selectedKeyId, selectKey, collisions, updateKey } = useKeyboardStore();
+  const { selectedKeyId, selectKey, collisions, updateKey, gridSnapping, gridSize } = useKeyboardStore();
   const groupRef = useRef<THREE.Group>(null);
   const isSelected = selectedKeyId === config.id;
   const hasCollision = collisions[config.id];
@@ -24,8 +24,10 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
       groupRef.current.getWorldQuaternion(quaternion);
       const euler = new THREE.Euler().setFromQuaternion(quaternion);
       
-      // We snap to 0.25mm for position and 1 degree for rotation by default
-      const snapVal = (val: number) => Math.round(val * 4) / 4;
+      // Determine snap increment
+      const snapIncrement = gridSnapping ? gridSize / 4 : 0.25;
+      const snapVal = (val: number) => Math.round(val / snapIncrement) * snapIncrement;
+      
       const rotationDeg = -euler.y * (180 / Math.PI);
 
       updateKey(config.id, {

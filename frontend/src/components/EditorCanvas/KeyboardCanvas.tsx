@@ -1,12 +1,12 @@
 import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, ContactShadows, Environment, Float } from '@react-three/drei';
+import { OrbitControls, ContactShadows, Environment, Float, Grid } from '@react-three/drei';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
 import KeySwitch from './KeySwitch';
 import Plate from './Plate';
 
 const KeyboardCanvas: React.FC = () => {
-  const { data, selectKey, selectedKeyId } = useKeyboardStore();
+  const { data, selectKey, selectedKeyId, gridVisible, gridSize } = useKeyboardStore();
   const isEditing = selectedKeyId !== null;
 
   return (
@@ -38,6 +38,19 @@ const KeyboardCanvas: React.FC = () => {
             <Plate />
           </group>
         </Float>
+
+        {gridVisible && (
+          <Grid
+            infiniteGrid
+            fadeDistance={400}
+            fadeStrength={5}
+            cellSize={gridSize / 4}
+            sectionSize={gridSize}
+            sectionColor="#4f46e5"
+            cellColor="#2e2e3a"
+            position={[0, -0.1, 0]}
+          />
+        )}
 
         <ContactShadows 
           opacity={0.4} 
