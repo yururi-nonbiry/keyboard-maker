@@ -25,11 +25,12 @@ const KeyboardCanvas: React.FC = () => {
       <fog attach="fog" args={['#0a0a0c', 200, 1000]} />
       
       <Suspense fallback={null}>
-        <ambientLight intensity={0.5} />
+        <ambientLight intensity={is2D ? 0.8 : 0.5} />
         <spotLight position={[100, 200, 100]} angle={0.15} penumbra={1} intensity={1} castShadow />
         <pointLight position={[-100, -100, -100]} intensity={0.5} />
+        {is2D && <directionalLight position={[0, 500, 0]} intensity={0.5} />}
         
-        {!is2D && <Environment preset="city" />}
+        <Environment preset="city" />
 
         <Float 
           speed={isEditing || is2D ? 0 : 1.5} 

@@ -31,7 +31,7 @@ interface KeyboardState {
 }
 
 const DEFAULT_METADATA: KeyboardMetadata = {
-  name: 'New Keyboard Project',
+  name: '新規キーボードプロジェクト',
   author: 'Anonymous',
   version: '1.0.0',
 };

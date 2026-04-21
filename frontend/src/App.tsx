@@ -19,7 +19,7 @@ function App() {
         <div className={styles.overlay}>
           <div className="glass" style={{ padding: '12px 20px', borderRadius: '12px' }}>
             <span style={{ color: 'var(--color-text-secondary)', fontSize: '0.875rem' }}>
-              Perspective View
+              パースビュー
             </span>
           </div>
         </div>

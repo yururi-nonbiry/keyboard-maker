@@ -44,7 +44,7 @@ const Toolbar: React.FC = () => {
         <button 
           className={`${styles.button} ${viewMode === '3D' ? styles.activeButton : ''}`} 
           onClick={() => setViewMode('3D')}
-          title="3D View Mode"
+          title="3D表示モード"
         >
           <Box size={18} />
           <span>3D</span>
@@ -52,7 +52,7 @@ const Toolbar: React.FC = () => {
         <button 
           className={`${styles.button} ${viewMode === '2D' ? styles.activeButton : ''}`} 
           onClick={() => setViewMode('2D')}
-          title="2D View Mode (Top Down)"
+          title="2D表示モード (俯瞰)"
         >
           <Square size={18} />
           <span>2D</span>
@@ -61,23 +61,23 @@ const Toolbar: React.FC = () => {
         <button 
           className={`${styles.button} ${gridVisible ? styles.activeButton : ''}`} 
           onClick={toggleGridVisible}
-          title="Toggle Grid Visibility"
+          title="グリッドの表示/非表示"
         >
           <Grid size={18} />
-          <span>Grid</span>
+          <span>グリッド</span>
         </button>
         <button 
           className={`${styles.button} ${gridSnapping ? styles.activeButton : ''}`} 
           onClick={toggleGridSnapping}
-          title="Toggle Grid Snapping"
+          title="グリッドスナップの有効/無効"
         >
           <Magnet size={18} />
-          <span>Snap</span>
+          <span>スナップ</span>
         </button>
         <div style={{ width: '1px', background: 'var(--color-border)', margin: '0 8px' }} />
         <button className={styles.button} onClick={handleLoad}>
           <FolderOpen size={18} />
-          <span>Open</span>
+          <span>開く</span>
         </button>
         <button className={styles.button} onClick={handleSave}>
           <Save size={18} />
@@ -85,7 +85,7 @@ const Toolbar: React.FC = () => {
         <div style={{ width: '1px', background: 'var(--color-border)', margin: '0 8px' }} />
         <button className={`${styles.button} ${styles.primaryButton}`} onClick={handleAddKey}>
           <Plus size={18} />
-          <span>Add Key</span>
+          <span>キーを追加</span>
         </button>
         <button className={styles.button}>
           <Download size={18} />
