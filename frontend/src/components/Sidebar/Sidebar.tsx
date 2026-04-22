@@ -3,6 +3,40 @@ import { useKeyboardStore } from '../../store/useKeyboardStore';
 import type { SwitchType, KeyboardType, ControllerType } from '../../types';
 import styles from './Sidebar.module.css';
 
+const CollapsibleSection: React.FC<{
+  title: string;
+  id: string;
+  isExpanded: boolean;
+  onToggle: (id: string) => void;
+  children: React.ReactNode;
+  badge?: React.ReactNode;
+}> = ({ title, id, isExpanded, onToggle, children, badge }) => {
+  return (
+    <div className={styles.section}>
+      <div className={styles.sectionHeader} onClick={() => onToggle(id)}>
+        <div className={styles.sectionHeaderMain}>
+          <svg 
+            className={`${styles.chevron} ${isExpanded ? styles.chevronExpanded : ''}`} 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="3" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          >
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+          <h3 className={styles.sectionTitle}>{title}</h3>
+        </div>
+        {badge}
+      </div>
+      <div className={`${styles.sectionContent} ${!isExpanded ? styles.sectionContentCollapsed : ''}`}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
 const Sidebar: React.FC = () => {
   const { 
     data, 
@@ -37,6 +71,29 @@ const Sidebar: React.FC = () => {
     updateBattery,
     removeBattery,
   } = useKeyboardStore();
+
+  const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({
+    project: true,
+    display: true,
+    case: true,
+    pcb: true,
+    selection: true,
+  });
+
+  // Auto-expand selection section when a new item is selected
+  React.useEffect(() => {
+    if (selectedKeyId || selectedTrackballId || selectedControllerId || selectedBatteryId) {
+      setExpandedSections(prev => ({ ...prev, selection: true }));
+    }
+  }, [selectedKeyId, selectedTrackballId, selectedControllerId, selectedBatteryId]);
+
+  const toggleSection = (id: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
   const selectedKey = data.layout.find(k => k.id === selectedKeyId);
   const selectedTrackball = (data.trackballs || []).find(t => t.id === selectedTrackballId);
   const selectedController = (data.controllers || []).find(c => c.id === selectedControllerId);
@@ -45,8 +102,12 @@ const Sidebar: React.FC = () => {
 
   return (
     <div className={`${styles.sidebar} glass`}>
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>プロジェクト情報</h3>
+      <CollapsibleSection 
+        id="project" 
+        title="プロジェクト情報" 
+        isExpanded={expandedSections.project} 
+        onToggle={toggleSection}
+      >
         <div className={styles.group}>
           <label className={styles.label}>キーボード名</label>
           <input
@@ -66,10 +127,14 @@ const Sidebar: React.FC = () => {
             <option value="split">分割型 (Split)</option>
           </select>
         </div>
-      </div>
+      </CollapsibleSection>
       
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>表示設定</h3>
+      <CollapsibleSection 
+        id="display" 
+        title="表示設定" 
+        isExpanded={expandedSections.display} 
+        onToggle={toggleSection}
+      >
         <div className={styles.checkboxGroup}>
           <label className={styles.checkboxLabel}>
             <input 
@@ -117,10 +182,14 @@ const Sidebar: React.FC = () => {
             カバー (Cover)
           </label>
         </div>
-      </div>
+      </CollapsibleSection>
 
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>ケース設定</h3>
+      <CollapsibleSection 
+        id="case" 
+        title="ケース設定" 
+        isExpanded={expandedSections.case} 
+        onToggle={toggleSection}
+      >
         <div className={styles.group}>
           <label className={styles.label}>ベース角度 (タイピング角): {typingAngle}°</label>
           <input
@@ -185,9 +254,14 @@ const Sidebar: React.FC = () => {
             onChange={(e) => updateCaseConfig({ keyPitch: parseFloat(e.target.value) || 19.05 })}
           />
         </div>
-      </div>
-      <div className={styles.section}>
-        <h3 className={styles.sectionTitle}>PCB/コントローラー設定</h3>
+      </CollapsibleSection>
+
+      <CollapsibleSection 
+        id="pcb" 
+        title="PCB/コントローラー設定" 
+        isExpanded={expandedSections.pcb} 
+        onToggle={toggleSection}
+      >
         <div className={styles.group}>
           <label className={styles.label}>マイクロコントローラー</label>
           <select
@@ -273,11 +347,15 @@ const Sidebar: React.FC = () => {
             バッテリーを追加
           </button>
         </div>
-      </div>
+      </CollapsibleSection>
 
       {selectedKey ? (
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>キー設定</h3>
+        <CollapsibleSection 
+          id="selection" 
+          title="キー設定" 
+          isExpanded={expandedSections.selection} 
+          onToggle={toggleSection}
+        >
           <div className={styles.group}>
             <label className={styles.label}>座標 (X, Y)</label>
             <div className={styles.row}>
@@ -346,10 +424,14 @@ const Sidebar: React.FC = () => {
               キーを削除
             </button>
           </div>
-        </div>
+        </CollapsibleSection>
       ) : selectedTrackball ? (
-        <div className={styles.section}>
-          <h3 className={styles.sectionTitle}>トラックボール設定</h3>
+        <CollapsibleSection 
+          id="selection" 
+          title="トラックボール設定" 
+          isExpanded={expandedSections.selection} 
+          onToggle={toggleSection}
+        >
           <div className={styles.group}>
             <label className={styles.label}>座標 (X, Y)</label>
             <div className={styles.row}>
@@ -443,17 +525,21 @@ const Sidebar: React.FC = () => {
               トラックボールを削除
             </button>
           </div>
-        </div>
+        </CollapsibleSection>
       ) : selectedController ? (
-        <div className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h3 className={styles.sectionTitle}>MCU設定</h3>
-            {data.type === 'split' && (
+        <CollapsibleSection 
+          id="selection" 
+          title="MCU設定" 
+          isExpanded={expandedSections.selection} 
+          onToggle={toggleSection}
+          badge={
+            data.type === 'split' && (
               <span className={`${styles.badge} ${selectedController.side === 'left' ? styles.badgeLeft : styles.badgeRight}`}>
                 {selectedController.side === 'left' ? 'LEFT' : 'RIGHT'}
               </span>
-            )}
-          </div>
+            )
+          }
+        >
           <div className={styles.group}>
             <label className={styles.label}>種類</label>
             <select
@@ -533,17 +619,21 @@ const Sidebar: React.FC = () => {
               MCUを削除
             </button>
           </div>
-        </div>
+        </CollapsibleSection>
       ) : selectedBattery ? (
-        <div className={styles.section}>
-          <div className={styles.sectionHeader}>
-            <h3 className={styles.sectionTitle}>バッテリー設定</h3>
-            {data.type === 'split' && (
+        <CollapsibleSection 
+          id="selection" 
+          title="バッテリー設定" 
+          isExpanded={expandedSections.selection} 
+          onToggle={toggleSection}
+          badge={
+            data.type === 'split' && (
               <span className={`${styles.badge} ${selectedBattery.side === 'left' ? styles.badgeLeft : styles.badgeRight}`}>
                 {selectedBattery.side === 'left' ? 'LEFT' : 'RIGHT'}
               </span>
-            )}
-          </div>
+            )
+          }
+        >
           <div className={styles.group}>
             <label className={styles.label}>座標 (X, Y)</label>
             <div className={styles.row}>
@@ -641,7 +731,7 @@ const Sidebar: React.FC = () => {
               バッテリーを削除
             </button>
           </div>
-        </div>
+        </CollapsibleSection>
       ) : (
         <div className={styles.section}>
           <p className={styles.label}>編集する項目を選択してください。</p>
