@@ -37,38 +37,71 @@ const KeyboardCanvas: React.FC = () => {
   const leftFullBbox = calculateFullBoundingBox3D(leftKeys, leftTrackballs, data.controllers?.filter(c => c.side === 'left'), leftBatteries, keyPitch);
   const rightFullBbox = calculateFullBoundingBox3D(rightKeys, rightTrackballs, data.controllers?.filter(c => c.side === 'right'), rightBatteries, keyPitch);
   
-  const getLiftOffset = (bbox: BoundingBox3D | null, angleDeg: number) => {
+  const getLiftOffset = (bbox: BoundingBox3D | null, tentingDeg: number, splitDeg: number, typingDeg: number) => {
     if (!bbox) return 0;
-    const angleRad = angleDeg * (Math.PI / 180);
+    const tent = tentingDeg * (Math.PI / 180);
+    const split = splitDeg * (Math.PI / 180);
+    const typing = typingDeg * (Math.PI / 180);
     
-    // Corners in X-Z plane (where Z is vertical height)
-    // Local coordinates relative to pivot (centerX, 0, centerY)
+    // Corners in local coordinate system
+    // Three.js coordinates: x=X, y=Height, z=Y
     const xMin = bbox.minX - bbox.centerX;
     const xMax = bbox.maxX - bbox.centerX;
-    const zMin = bbox.minZ;
-    const zMax = bbox.maxZ;
+    const yMin = bbox.minY - bbox.centerY; // Layout Y -> Three.js Z
+    const yMax = bbox.maxY - bbox.centerY; // Layout Y -> Three.js Z
+    const zMin = bbox.minZ; // Height -> Three.js Y
+    const zMax = bbox.maxZ; // Height -> Three.js Y
 
     const corners = [
-      { x: xMin, z: zMin },
-      { x: xMax, z: zMin },
-      { x: xMin, z: zMax },
-      { x: xMax, z: zMax },
+      { x: xMin, y: zMin, z: yMin },
+      { x: xMax, y: zMin, z: yMin },
+      { x: xMin, y: zMin, z: yMax },
+      { x: xMax, y: zMin, z: yMax },
+      { x: xMin, y: zMax, z: yMin },
+      { x: xMax, y: zMax, z: yMin },
+      { x: xMin, y: zMax, z: yMax },
+      { x: xMax, y: zMax, z: yMax },
     ];
 
-    let minWorldY = Infinity;
-    corners.forEach(c => {
-      // Rotation around Z axis (tenting)
-      // y_new = x * sin(theta) + z * cos(theta)
-      const y = c.x * Math.sin(angleRad) + c.z * Math.cos(angleRad);
-      if (y < minWorldY) minWorldY = y;
+    let minRelWorldY = Infinity;
+    corners.forEach(p => {
+      // Rotation order in Three.js (default XYZ):
+      // Rotation prop [0, split, tenting] means:
+      // Rotate X (0), then Y (split), then Z (tenting)
+      
+      // Rotate around Y (split)
+      const x1 = p.x * Math.cos(split) + p.z * Math.sin(split);
+      const y1 = p.y;
+      const z1 = -p.x * Math.sin(split) + p.z * Math.cos(split);
+      
+      // Rotate around Z (tenting)
+      const y2 = x1 * Math.sin(tent) + y1 * Math.cos(tent);
+      const z2 = z1;
+      
+      // Parent rotation: [typingAngle, 0, 0] (X)
+      // worldY = y2 * cos(typing) - z2 * sin(typing)
+      const relWorldY = y2 * Math.cos(typing) - z2 * Math.sin(typing);
+      if (relWorldY < minRelWorldY) minRelWorldY = relWorldY;
     });
 
-    // We want minWorldY + offset >= groundY
-    return Math.max(0, groundY - minWorldY);
+    // We want (lift + minRelWorldY_at_lift_0) * cos(typing) = groundY is NOT correct.
+    // The Lift is applied to the child group's position before parent rotation.
+    // Parent relative Y = lift + y2
+    // Parent relative Z = z2
+    // World Y = (lift + y2) * cos(typing) - z2 * sin(typing)
+    // World Y = lift * cos(typing) + (y2 * cos(typing) - z2 * sin(typing))
+    // We want min(World Y) = groundY
+    // lift * cos(typing) + minRelWorldY = groundY
+    // lift = (groundY - minRelWorldY) / cos(typing)
+    
+    return (groundY - minRelWorldY) / Math.cos(typing);
   };
 
-  const leftLift = getLiftOffset(leftFullBbox, tentingAngle);
-  const rightLift = getLiftOffset(rightFullBbox, -tentingAngle);
+  const leftLift = getLiftOffset(leftFullBbox, tentingAngle, splitRotation, typingAngle);
+  const rightLift = getLiftOffset(rightFullBbox, -tentingAngle, -splitRotation, typingAngle);
+  
+  const integratedBbox = calculateFullBoundingBox3D(data.layout, data.trackballs, data.controllers, data.batteries, keyPitch);
+  const integratedLift = getLiftOffset(integratedBbox, 0, 0, typingAngle);
 
   return (
     <Canvas
@@ -97,7 +130,7 @@ const KeyboardCanvas: React.FC = () => {
             position={[0, 0, 0]}
           >
             {data.type === 'integrated' ? (
-              <group position={centerOffset as [number, number, number]}>
+              <group position={[centerOffset[0], integratedLift, centerOffset[2]]}>
                 {data.layout.map((key) => (
                   <KeySwitch key={key.id} config={key} />
                 ))}
