@@ -52,11 +52,6 @@ const RealisticKeycap: React.FC<{
         />
       </mesh>
       
-      {/* Top Dish - a subtle indentation */}
-      <mesh position={[0, capHeight / 2, 0]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[width * topScale * 0.4, width * topScale * 0.45, 0.5, 32]} />
-        <meshStandardMaterial color={color} roughness={0.8} />
-      </mesh>
     </group>
   );
 };
