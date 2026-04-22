@@ -1,6 +1,6 @@
 import React from 'react';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
-import { calculateBoundingBox } from '../../utils/geometry';
+import { getComponentCorners, calculatePointsBoundingBox } from '../../utils/geometry';
 import type { KeyConfig } from '../../types';
 
 interface CaseProps {
@@ -9,19 +9,69 @@ interface CaseProps {
 
 /**
  * Renders a 3D case for the keyboard.
- * The case is modeled as a tray with a base and four walls surrounding the keys.
+ * The case is modeled as a tray with a base and four walls surrounding the keys and other components.
  */
 const Case: React.FC<CaseProps> = ({ side }) => {
   const { data } = useKeyboardStore();
-  const { wallThickness } = data.case_config;
+  const { wallThickness, keyPitch } = data.case_config;
 
-  const renderCase = (keys: KeyConfig[], id: string, useCenter: boolean = false) => {
-    const bbox = calculateBoundingBox(keys, wallThickness);
+  const renderCase = (keys: KeyConfig[], id: string) => {
+    // Collect corners from all components on this side
+    const allCorners: { x: number; y: number }[] = [];
+
+    // Keys
+    keys.forEach(key => {
+      allCorners.push(...getComponentCorners(
+        key.x,
+        key.y,
+        key.keycapSize.width * keyPitch,
+        key.keycapSize.height * keyPitch,
+        key.rotation
+      ));
+    });
+
+    // Trackballs
+    const sideTrackballs = (data.trackballs || []).filter(t => {
+      if (!side) return true; // integrated
+      return t.side === side || (!t.side && side === 'left');
+    });
+
+    sideTrackballs.forEach(t => {
+      // For trackballs, we use the diameter as both width and height
+      allCorners.push(...getComponentCorners(
+        t.x,
+        t.y,
+        t.diameter,
+        t.diameter,
+        0
+      ));
+    });
+
+    // Controllers
+    const sideControllers = (data.controllers || []).filter(c => {
+      if (!side) return true; // integrated
+      return c.side === side;
+    });
+
+    sideControllers.forEach(c => {
+      let dimensions = { width: 18, length: 33 };
+      switch (c.type) {
+        case 'xiao_rp2040': dimensions = { width: 18, length: 21 }; break;
+        case 'pico': dimensions = { width: 21, length: 51 }; break;
+        case 'bluepill': dimensions = { width: 23, length: 53 }; break;
+      }
+      
+      allCorners.push(...getComponentCorners(
+        c.x,
+        c.y,
+        dimensions.width,
+        dimensions.length,
+        c.rotation
+      ));
+    });
+
+    const bbox = calculatePointsBoundingBox(allCorners, wallThickness);
     if (!bbox) return null;
-
-    // Center of the case in the world (or relative to parent)
-    const x = useCenter ? 0 : bbox.centerX;
-    const z = useCenter ? 0 : bbox.minY + bbox.height / 2;
 
     // Dimensions
     const baseThickness = 4;
@@ -35,9 +85,9 @@ const Case: React.FC<CaseProps> = ({ side }) => {
     const wallCenterY = baseTopY - baseThickness + wallHeight / 2;
 
     return (
-      <group key={id} position={[x, 0, z]}>
+      <group key={id}>
         {/* Base Plate */}
-        <mesh position={[0, baseCenterY, 0]}>
+        <mesh position={[bbox.centerX, baseCenterY, bbox.centerY]}>
           <boxGeometry args={[bbox.width, baseThickness, bbox.height]} />
           <meshStandardMaterial 
             color="#1a1a24" 
@@ -48,22 +98,22 @@ const Case: React.FC<CaseProps> = ({ side }) => {
 
         {/* Walls */}
         {/* Front Wall */}
-        <mesh position={[0, wallCenterY, bbox.height / 2 - wallThickness / 2]}>
+        <mesh position={[bbox.centerX, wallCenterY, bbox.maxY - wallThickness / 2]}>
           <boxGeometry args={[bbox.width, wallHeight, wallThickness]} />
           <meshStandardMaterial color="#1a1a24" metalness={0.4} roughness={0.6} />
         </mesh>
         {/* Back Wall */}
-        <mesh position={[0, wallCenterY, -bbox.height / 2 + wallThickness / 2]}>
+        <mesh position={[bbox.centerX, wallCenterY, bbox.minY + wallThickness / 2]}>
           <boxGeometry args={[bbox.width, wallHeight, wallThickness]} />
           <meshStandardMaterial color="#1a1a24" metalness={0.4} roughness={0.6} />
         </mesh>
         {/* Left Wall */}
-        <mesh position={[-bbox.width / 2 + wallThickness / 2, wallCenterY, 0]}>
+        <mesh position={[bbox.minX + wallThickness / 2, wallCenterY, bbox.centerY]}>
           <boxGeometry args={[wallThickness, wallHeight, bbox.height]} />
           <meshStandardMaterial color="#1a1a24" metalness={0.4} roughness={0.6} />
         </mesh>
         {/* Right Wall */}
-        <mesh position={[bbox.width / 2 - wallThickness / 2, wallCenterY, 0]}>
+        <mesh position={[bbox.maxX - wallThickness / 2, wallCenterY, bbox.centerY]}>
           <boxGeometry args={[wallThickness, wallHeight, bbox.height]} />
           <meshStandardMaterial color="#1a1a24" metalness={0.4} roughness={0.6} />
         </mesh>
@@ -72,19 +122,19 @@ const Case: React.FC<CaseProps> = ({ side }) => {
   };
 
   if (data.type === 'integrated') {
-    return renderCase(data.layout, 'main-case', false);
+    return renderCase(data.layout, 'main-case');
   }
 
   const leftKeys = data.layout.filter(k => k.side === 'left' || !k.side);
   const rightKeys = data.layout.filter(k => k.side === 'right');
 
-  if (side === 'left') return renderCase(leftKeys, 'left-case', true);
-  if (side === 'right') return renderCase(rightKeys, 'right-case', true);
+  if (side === 'left') return renderCase(leftKeys, 'left-case');
+  if (side === 'right') return renderCase(rightKeys, 'right-case');
 
   return (
     <>
-      {renderCase(leftKeys, 'left-case', true)}
-      {renderCase(rightKeys, 'right-case', true)}
+      {renderCase(leftKeys, 'left-case')}
+      {renderCase(rightKeys, 'right-case')}
     </>
   );
 };

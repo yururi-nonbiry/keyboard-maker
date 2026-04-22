@@ -11,12 +11,19 @@ interface Point {
 }
 
 /**
- * Calculates the 4 corners of a keycap, accounting for rotation and an optional buffer.
+ * Calculates the 4 corners of a generic component, accounting for rotation.
  */
-const getCorners = (key: KeyConfig, unit: number, buffer: number = 0): Point[] => {
-  const w = key.keycapSize.width * unit - buffer;
-  const h = key.keycapSize.height * unit - buffer;
-  const angle = (key.rotation * Math.PI) / 180;
+export const getComponentCorners = (
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  rotation: number = 0,
+  buffer: number = 0
+): Point[] => {
+  const w = width - buffer;
+  const h = height - buffer;
+  const angle = (rotation * Math.PI) / 180;
   
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
@@ -34,9 +41,23 @@ const getCorners = (key: KeyConfig, unit: number, buffer: number = 0): Point[] =
   
   // Rotate and translate to absolute coordinates
   return corners.map(p => ({
-    x: key.x + p.x * cos - p.y * sin,
-    y: key.y + p.x * sin + p.y * cos
+    x: x + p.x * cos - p.y * sin,
+    y: y + p.x * sin + p.y * cos
   }));
+};
+
+/**
+ * Calculates the 4 corners of a keycap, accounting for rotation and an optional buffer.
+ */
+const getCorners = (key: KeyConfig, unit: number, buffer: number = 0): Point[] => {
+  return getComponentCorners(
+    key.x,
+    key.y,
+    key.keycapSize.width * unit,
+    key.keycapSize.height * unit,
+    key.rotation,
+    buffer
+  );
 };
 
 /**
@@ -146,6 +167,33 @@ export const calculateBoundingBox = (keys: KeyConfig[], keyPitch: number = 19.05
       minY = Math.min(minY, p.y);
       maxY = Math.max(maxY, p.y);
     });
+  });
+
+  return {
+    width: (maxX - minX) + padding * 2,
+    height: (maxY - minY) + padding * 2,
+    centerX: (maxX + minX) / 2,
+    centerY: (maxY + minY) / 2,
+    minX: minX - padding,
+    maxX: maxX + padding,
+    minY: minY - padding,
+    maxY: maxY + padding,
+  };
+};
+
+/**
+ * Calculates the bounding box for any set of points.
+ */
+export const calculatePointsBoundingBox = (points: Point[], padding: number = 0): BoundingBox | null => {
+  if (points.length === 0) return null;
+  
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+
+  points.forEach(p => {
+    minX = Math.min(minX, p.x);
+    maxX = Math.max(maxX, p.x);
+    minY = Math.min(minY, p.y);
+    maxY = Math.max(maxY, p.y);
   });
 
   return {
