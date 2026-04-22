@@ -12,8 +12,10 @@ interface CaseProps {
  * The case is modeled as a tray with a base and four walls surrounding the keys and other components.
  */
 const Case: React.FC<CaseProps> = ({ side }) => {
-  const { data } = useKeyboardStore();
+  const { data, showCaseBase, showCaseWalls } = useKeyboardStore();
   const { wallThickness, keyPitch } = data.case_config;
+
+  if (!showCaseBase && !showCaseWalls) return null;
 
   const renderCase = (keys: KeyConfig[], id: string) => {
     // Collect corners from all components on this side
@@ -82,36 +84,42 @@ const Case: React.FC<CaseProps> = ({ side }) => {
     return (
       <group key={id}>
         {/* Base Plate */}
-        <mesh position={[bbox.centerX, baseCenterY, bbox.centerY]}>
-          <boxGeometry args={[bbox.width, baseThickness, bbox.height]} />
-          <meshStandardMaterial 
-            color="#1a1a24" 
-            metalness={0.4} 
-            roughness={0.6} 
-          />
-        </mesh>
+        {showCaseBase && (
+          <mesh position={[bbox.centerX, baseCenterY, bbox.centerY]}>
+            <boxGeometry args={[bbox.width, baseThickness, bbox.height]} />
+            <meshStandardMaterial 
+              color="#1a1a24" 
+              metalness={0.4} 
+              roughness={0.6} 
+            />
+          </mesh>
+        )}
 
         {/* Walls */}
-        {/* Front Wall */}
-        <mesh position={[bbox.centerX, wallCenterY, bbox.maxY - wallThickness / 2]}>
-          <boxGeometry args={[bbox.width, wallHeight, wallThickness]} />
-          <meshStandardMaterial color="#1a1a24" metalness={0.4} roughness={0.6} />
-        </mesh>
-        {/* Back Wall */}
-        <mesh position={[bbox.centerX, wallCenterY, bbox.minY + wallThickness / 2]}>
-          <boxGeometry args={[bbox.width, wallHeight, wallThickness]} />
-          <meshStandardMaterial color="#1a1a24" metalness={0.4} roughness={0.6} />
-        </mesh>
-        {/* Left Wall */}
-        <mesh position={[bbox.minX + wallThickness / 2, wallCenterY, bbox.centerY]}>
-          <boxGeometry args={[wallThickness, wallHeight, bbox.height]} />
-          <meshStandardMaterial color="#1a1a24" metalness={0.4} roughness={0.6} />
-        </mesh>
-        {/* Right Wall */}
-        <mesh position={[bbox.maxX - wallThickness / 2, wallCenterY, bbox.centerY]}>
-          <boxGeometry args={[wallThickness, wallHeight, bbox.height]} />
-          <meshStandardMaterial color="#1a1a24" metalness={0.4} roughness={0.6} />
-        </mesh>
+        {showCaseWalls && (
+          <>
+            {/* Front Wall */}
+            <mesh position={[bbox.centerX, wallCenterY, bbox.maxY - wallThickness / 2]}>
+              <boxGeometry args={[bbox.width, wallHeight, wallThickness]} />
+              <meshStandardMaterial color="#1a1a24" metalness={0.4} roughness={0.6} />
+            </mesh>
+            {/* Back Wall */}
+            <mesh position={[bbox.centerX, wallCenterY, bbox.minY + wallThickness / 2]}>
+              <boxGeometry args={[bbox.width, wallHeight, wallThickness]} />
+              <meshStandardMaterial color="#1a1a24" metalness={0.4} roughness={0.6} />
+            </mesh>
+            {/* Left Wall */}
+            <mesh position={[bbox.minX + wallThickness / 2, wallCenterY, bbox.centerY]}>
+              <boxGeometry args={[wallThickness, wallHeight, bbox.height]} />
+              <meshStandardMaterial color="#1a1a24" metalness={0.4} roughness={0.6} />
+            </mesh>
+            {/* Right Wall */}
+            <mesh position={[bbox.maxX - wallThickness / 2, wallCenterY, bbox.centerY]}>
+              <boxGeometry args={[wallThickness, wallHeight, bbox.height]} />
+              <meshStandardMaterial color="#1a1a24" metalness={0.4} roughness={0.6} />
+            </mesh>
+          </>
+        )}
       </group>
     );
   };

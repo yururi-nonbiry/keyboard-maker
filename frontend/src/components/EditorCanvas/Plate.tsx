@@ -8,8 +8,10 @@ interface PlateProps {
 }
 
 const Plate: React.FC<PlateProps> = ({ side }) => {
-  const { data } = useKeyboardStore();
+  const { data, showPlate } = useKeyboardStore();
   const { plateThickness, keyPitch } = data.case_config;
+
+  if (!showPlate) return null;
 
   const renderPlate = (keys: KeyConfig[], id: string) => {
     // Collect corners from keys and trackballs

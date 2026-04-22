@@ -9,7 +9,7 @@ interface KeySwitchProps {
 }
 
 const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
-  const { data, selectedKeyId, selectKey, collisions, updateKey, gridSnapping, gridSize } = useKeyboardStore();
+  const { data, selectedKeyId, selectKey, collisions, updateKey, gridSnapping, gridSize, showKeycaps } = useKeyboardStore();
   const { keyPitch } = data.case_config;
   const groupRef = useRef<THREE.Group>(null);
   const meshGroupRef = useRef<THREE.Group>(null);
@@ -94,16 +94,18 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
           </mesh>
 
           {/* Keycap */}
-          <mesh position={[0, 10, 0]}>
-            <boxGeometry args={[keycapW, 8, keycapH]} />
-            <meshStandardMaterial 
-              color={hasCollision ? "#ef4444" : (isSelected ? "#6366f1" : "#1c1c21")} 
-              metalness={0.1} 
-              roughness={0.3} 
-              transparent 
-              opacity={0.9} 
-            />
-          </mesh>
+          {showKeycaps && (
+            <mesh position={[0, 10, 0]}>
+              <boxGeometry args={[keycapW, 8, keycapH]} />
+              <meshStandardMaterial 
+                color={hasCollision ? "#ef4444" : (isSelected ? "#6366f1" : "#1c1c21")} 
+                metalness={0.1} 
+                roughness={0.3} 
+                transparent 
+                opacity={0.9} 
+              />
+            </mesh>
+          )}
 
           {/* Selection Glow */}
           {isSelected && (

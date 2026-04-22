@@ -52,6 +52,16 @@ interface KeyboardState {
 
   selectedTrackballId: string | null;
   selectedControllerId: string | null;
+
+  // Visibility Settings
+  showKeycaps: boolean;
+  showPlate: boolean;
+  showCaseBase: boolean;
+  showCaseWalls: boolean;
+  toggleKeycapsVisible: () => void;
+  togglePlateVisible: () => void;
+  toggleCaseBaseVisible: () => void;
+  toggleCaseWallsVisible: () => void;
 }
 
 const DEFAULT_METADATA: KeyboardMetadata = {
@@ -112,6 +122,15 @@ export const useKeyboardStore = create<KeyboardState>()(
       viewMode: '3D',
       splitMode: false,
       tempSplitX: null,
+      showKeycaps: true,
+      showPlate: true,
+      showCaseBase: true,
+      showCaseWalls: true,
+
+      toggleKeycapsVisible: () => set((state) => ({ showKeycaps: !state.showKeycaps })),
+      togglePlateVisible: () => set((state) => ({ showPlate: !state.showPlate })),
+      toggleCaseBaseVisible: () => set((state) => ({ showCaseBase: !state.showCaseBase })),
+      toggleCaseWallsVisible: () => set((state) => ({ showCaseWalls: !state.showCaseWalls })),
 
       toggleSplitMode: () => set((state) => ({ splitMode: !state.splitMode })),
       setTempSplitX: (tempSplitX) => set({ tempSplitX }),

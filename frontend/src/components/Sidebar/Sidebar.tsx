@@ -20,7 +20,15 @@ const Sidebar: React.FC = () => {
     updateController,
     removeController,
     selectController,
-    addController
+    addController,
+    showKeycaps,
+    showPlate,
+    showCaseBase,
+    showCaseWalls,
+    toggleKeycapsVisible,
+    togglePlateVisible,
+    toggleCaseBaseVisible,
+    toggleCaseWallsVisible
   } = useKeyboardStore();
   const selectedKey = data.layout.find(k => k.id === selectedKeyId);
   const selectedTrackball = (data.trackballs || []).find(t => t.id === selectedTrackballId);
@@ -49,6 +57,48 @@ const Sidebar: React.FC = () => {
             <option value="integrated">一体型 (Integrated)</option>
             <option value="split">分割型 (Split)</option>
           </select>
+        </div>
+      </div>
+      
+      <div className={styles.section}>
+        <h3 className={styles.sectionTitle}>表示設定</h3>
+        <div className={styles.checkboxGroup}>
+          <label className={styles.checkboxLabel}>
+            <input 
+              type="checkbox" 
+              className={styles.checkbox} 
+              checked={showKeycaps} 
+              onChange={toggleKeycapsVisible} 
+            />
+            キーキャップ
+          </label>
+          <label className={styles.checkboxLabel}>
+            <input 
+              type="checkbox" 
+              className={styles.checkbox} 
+              checked={showPlate} 
+              onChange={togglePlateVisible} 
+            />
+            プレート (Plate)
+          </label>
+          <label className={styles.checkboxLabel}>
+            <input 
+              type="checkbox" 
+              className={styles.checkbox} 
+              checked={showCaseBase} 
+              onChange={toggleCaseBaseVisible} 
+            />
+            ベース (Base)
+          </label>
+          <label className={styles.checkboxLabel}>
+            <input 
+              type="checkbox" 
+              className={styles.checkbox} 
+              checked={showCaseWalls} 
+              onChange={toggleCaseWallsVisible} 
+            />
+            カバー (Cover)
+          </label>
         </div>
       </div>
 
