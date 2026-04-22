@@ -415,6 +415,42 @@ const Sidebar: React.FC = () => {
               </select>
             </div>
           )}
+          <div className={styles.group}>
+            <label className={styles.label}>キーサイズ (幅, 高さ)</label>
+            <div className={styles.row}>
+              <div className={styles.inputWrapper}>
+                <span className={styles.coordLabel}>W</span>
+                <input
+                  className={styles.input}
+                  type="number"
+                  step="0.05"
+                  value={selectedKey.keycapSize.width}
+                  onChange={(e) => updateKey(selectedKey.id, { keycapSize: { ...selectedKey.keycapSize, width: parseFloat(e.target.value) || 1 } })}
+                />
+              </div>
+              <div className={styles.inputWrapper}>
+                <span className={styles.coordLabel}>H</span>
+                <input
+                  className={styles.input}
+                  type="number"
+                  step="0.05"
+                  value={selectedKey.keycapSize.height}
+                  onChange={(e) => updateKey(selectedKey.id, { keycapSize: { ...selectedKey.keycapSize, height: parseFloat(e.target.value) || 1 } })}
+                />
+              </div>
+            </div>
+            <div className={styles.presetGrid}>
+              {[1, 1.25, 1.5, 1.75, 2, 2.25, 2.75, 6.25].map(w => (
+                <button
+                  key={w}
+                  className={`${styles.presetButton} ${selectedKey.keycapSize.width === w ? styles.presetButtonActive : ''}`}
+                  onClick={() => updateKey(selectedKey.id, { keycapSize: { ...selectedKey.keycapSize, width: w } })}
+                >
+                  {w}u
+                </button>
+              ))}
+            </div>
+          </div>
           <div style={{ marginTop: 'auto' }}>
             <button 
               className={styles.input} 
