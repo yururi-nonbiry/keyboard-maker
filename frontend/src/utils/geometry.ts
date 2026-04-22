@@ -153,7 +153,7 @@ export interface BoundingBox3D extends BoundingBox {
   minZ: number;
   maxZ: number;
   centerZ: number;
-  depth: number; // Rename height to depth for clarity in 3D? No, let's keep compatibility.
+  depth: number;
 }
 
 /**
@@ -166,7 +166,6 @@ export const calculateBoundingBox = (keys: KeyConfig[], keyPitch: number = 19.05
   const UNIT = keyPitch;
 
   keys.forEach(key => {
-    // Get actual rotated corners for bounding box calculation
     const corners = getCorners(key, UNIT, 0);
     corners.forEach(p => {
       minX = Math.min(minX, p.x);
@@ -230,13 +229,7 @@ export const getControllerDimensions = (type: ControllerType): { width: number; 
 };
 
 /**
- * Calculates a bounding box that encompasses all provided components.
- */
-/**
  * Calculates a 3D bounding box that encompasses all provided components.
- * In this system:
- * - X and Y are the 2D layout coordinates (horizontal and vertical on the desk).
- * - Z is the vertical height (perpendicular to the desk).
  */
 export const calculateFullBoundingBox3D = (
   keys: KeyConfig[],
@@ -252,38 +245,31 @@ export const calculateFullBoundingBox3D = (
   let minZ = 0;
   let maxZ = 0;
 
-  // Key heights (approximate)
   if (keys.length > 0) {
-    minZ = Math.min(minZ, -5); // Bottom of switch/PCB
-    maxZ = Math.max(maxZ, 12); // Top of keycap
+    minZ = Math.min(minZ, -5); 
+    maxZ = Math.max(maxZ, 12); 
   }
 
-  // Trackball heights
   trackballs.forEach(t => {
     const ballCenterZ = (t.z ?? -6.5) + (t.diameter / 2 - 2);
     const ballRadius = t.diameter / 2;
-    // PCB is at relative Z = -7 from ball center in the current Trackball.tsx
     const pcbZ = ballCenterZ - 7;
-    
-    minZ = Math.min(minZ, pcbZ - 2); // PCB bottom
-    maxZ = Math.max(maxZ, ballCenterZ + ballRadius); // Top of ball
+    minZ = Math.min(minZ, pcbZ - 2);
+    maxZ = Math.max(maxZ, ballCenterZ + ballRadius);
   });
 
-  // Controller heights
   controllers.forEach(c => {
     const baseZ = c.mountingSide === 'bottom' ? -4 : -2;
     minZ = Math.min(minZ, baseZ - 2);
     maxZ = Math.max(maxZ, baseZ + 3);
   });
 
-  // Battery heights
   batteries.forEach(b => {
     const baseZ = b.mountingSide === 'bottom' ? -4 : -2;
     minZ = Math.min(minZ, baseZ - b.thickness);
     maxZ = Math.max(maxZ, baseZ + b.thickness);
   });
 
-  // Case thickness
   minZ = Math.min(minZ, -9); 
 
   return {
@@ -305,7 +291,6 @@ export const calculateFullBoundingBox = (
 ): BoundingBox | null => {
   const allCorners: Point[] = [];
 
-  // Keys
   keys.forEach(key => {
     allCorners.push(...getComponentCorners(
       key.x,
@@ -316,40 +301,97 @@ export const calculateFullBoundingBox = (
     ));
   });
 
-  // Trackballs
   trackballs.forEach(t => {
-    allCorners.push(...getComponentCorners(
-      t.x,
-      t.y,
-      t.diameter,
-      t.diameter,
-      0
-    ));
+    allCorners.push(...getComponentCorners(t.x, t.y, t.diameter, t.diameter, 0));
   });
 
-  // Controllers
   controllers.forEach(c => {
     const dim = getControllerDimensions(c.type);
-    allCorners.push(...getComponentCorners(
-      c.x,
-      c.y,
-      dim.width,
-      dim.length,
-      c.rotation
-    ));
+    allCorners.push(...getComponentCorners(c.x, c.y, dim.width, dim.length, c.rotation));
   });
 
-  // Batteries
   batteries.forEach(b => {
-    allCorners.push(...getComponentCorners(
-      b.x,
-      b.y,
-      b.width,
-      b.height,
-      b.rotation
-    ));
+    allCorners.push(...getComponentCorners(b.x, b.y, b.width, b.height, b.rotation));
   });
 
   return calculatePointsBoundingBox(allCorners, padding);
 };
 
+/**
+ * Calculates the vertical lift required to keep the keyboard above the ground plane.
+ */
+export const calculateLift = (
+  bbox: BoundingBox3D | null,
+  groundY: number,
+  tentingDeg: number,
+  splitDeg: number,
+  typingDeg: number
+): number => {
+  if (!bbox) return 0;
+  const tent = tentingDeg * (Math.PI / 180);
+  const split = splitDeg * (Math.PI / 180);
+  const typing = typingDeg * (Math.PI / 180);
+  
+  const xMin = bbox.minX - bbox.centerX;
+  const xMax = bbox.maxX - bbox.centerX;
+  const yMin = bbox.minY - bbox.centerY;
+  const yMax = bbox.maxY - bbox.centerY;
+  const zMin = bbox.minZ;
+  const zMax = bbox.maxZ;
+
+  const corners = [
+    { x: xMin, y: zMin, z: yMin },
+    { x: xMax, y: zMin, z: yMin },
+    { x: xMin, y: zMin, z: yMax },
+    { x: xMax, y: zMin, z: yMax },
+    { x: xMin, y: zMax, z: yMin },
+    { x: xMax, y: zMax, z: yMin },
+    { x: xMin, y: zMax, z: yMax },
+    { x: xMax, y: zMax, z: yMax },
+  ];
+
+  let minRelWorldY = Infinity;
+  corners.forEach(p => {
+    const x1 = p.x * Math.cos(split) + p.z * Math.sin(split);
+    const y1 = p.y;
+    const z1 = -p.x * Math.sin(split) + p.z * Math.cos(split);
+    const y2 = x1 * Math.sin(tent) + y1 * Math.cos(tent);
+    const z2 = z1;
+    const relWorldY = y2 * Math.cos(typing) - z2 * Math.sin(typing);
+    if (relWorldY < minRelWorldY) minRelWorldY = relWorldY;
+  });
+
+  return (groundY - minRelWorldY) / Math.cos(typing);
+};
+
+/**
+ * Calculates the local Y coordinate for a point (x, z) to reach the ground plane.
+ */
+export const calculateGroundedY = (
+  x: number,
+  z: number,
+  groundY: number,
+  lift: number,
+  tentingDeg: number,
+  splitDeg: number,
+  typingDeg: number
+): number => {
+  const tent = tentingDeg * (Math.PI / 180);
+  const split = splitDeg * (Math.PI / 180);
+  const typing = typingDeg * (Math.PI / 180);
+  
+  const cosT = Math.cos(tent);
+  const sinT = Math.sin(tent);
+  const cosS = Math.cos(split);
+  const sinS = Math.sin(split);
+  const cosTy = Math.cos(typing);
+  const sinTy = Math.sin(typing);
+
+  const zDoublePrime = -x * sinS + z * cosS;
+  const xPrime = x * cosS + z * sinS;
+  
+  const term1 = (groundY + zDoublePrime * sinTy) / cosTy - lift;
+  const y = (term1 - xPrime * sinT) / cosT;
+  
+  return y;
+};
