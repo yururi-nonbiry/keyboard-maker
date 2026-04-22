@@ -28,7 +28,8 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
       ));
     });
 
-    // Trackballs
+    // Trackballs - Excluded from main PCB as they have modular PCBs
+    /*
     const sideTrackballs = (data.trackballs || []).filter(t => {
       if (!side) return true; // integrated
       return t.side === side || (!t.side && side === 'left');
@@ -43,6 +44,7 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
         0
       ));
     });
+    */
     
     // Controllers
     const sideControllers = (data.controllers || []).filter(c => {

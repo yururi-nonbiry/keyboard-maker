@@ -8,11 +8,106 @@ interface TrackballProps {
   config: TrackballConfig;
 }
 
+const TrackballPCB: React.FC<{ config: TrackballConfig }> = ({ config }) => {
+  const { showPCB } = useKeyboardStore();
+  if (!showPCB) return null;
+
+  // Typical sensor PCB size for PMW3360 breakout
+  const pcbWidth = 28;
+  const pcbHeight = 1.6;
+  const pcbLength = 28;
+
+  return (
+    <group 
+      rotation={[0, 0, THREE.MathUtils.degToRad(config.sensorAngle || 0)]}
+    >
+      <group 
+        position={[0, -(config.diameter / 2 + 5), 0]} 
+        rotation={[0, THREE.MathUtils.degToRad(config.sensorRotation || 0), 0]}
+      >
+        {/* PCB Board */}
+        <mesh position={[0, -pcbHeight / 2, 0]}>
+          <boxGeometry args={[pcbWidth, pcbHeight, pcbLength]} />
+          <meshStandardMaterial color="#111" metalness={0.5} roughness={0.3} />
+        </mesh>
+        
+        {/* Sensor Chip (e.g. PMW3360) */}
+        <mesh position={[0, 2, 0]}>
+          <boxGeometry args={[12, 4, 12]} />
+          <meshStandardMaterial color="#222" metalness={0.2} roughness={0.8} />
+        </mesh>
+
+        {/* Lens / Aperture */}
+        <mesh position={[0, 4, 0]}>
+          <cylinderGeometry args={[2, 2, 1, 16]} />
+          <meshStandardMaterial color="#444" transparent opacity={0.6} />
+        </mesh>
+
+        {/* Mounting Holes visual */}
+        {[[-10, -10], [10, -10], [-10, 10], [10, 10]].map(([x, z], i) => (
+          <mesh key={i} position={[x, -pcbHeight, z]}>
+            <cylinderGeometry args={[1.5, 1.5, 2, 16]} />
+            <meshStandardMaterial color="#ffd700" metalness={0.8} roughness={0.2} />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  );
+};
+
+const TrackballHolder: React.FC<{ config: TrackballConfig }> = ({ config }) => {
+  const { showCaseBase, showCaseWalls } = useKeyboardStore();
+  if (!showCaseBase && !showCaseWalls) return null;
+
+  const holderRadius = config.diameter / 2 + 4;
+  const holderHeight = config.diameter / 2 + 2;
+
+  return (
+    <group>
+      {/* Main Socket / Cup */}
+      <mesh position={[0, 0, 0]}>
+        <cylinderGeometry args={[holderRadius, holderRadius - 2, holderHeight, 32, 1, true]} />
+        <meshStandardMaterial color="#1a1a24" metalness={0.4} roughness={0.6} side={THREE.DoubleSide} />
+      </mesh>
+      
+      {/* Bottom Plate of the holder */}
+      <mesh position={[0, -holderHeight / 2, 0]}>
+        <cylinderGeometry args={[holderRadius - 2, holderRadius - 2, 2, 32]} />
+        <meshStandardMaterial color="#1a1a24" metalness={0.4} roughness={0.6} />
+      </mesh>
+
+      {/* Bearings (Typically 3 zirconium or ceramic bearings) */}
+      {[0, 120, 240].map((angle, i) => {
+        const rad = THREE.MathUtils.degToRad(angle);
+        const dist = config.diameter / 2 - 1;
+        return (
+          <mesh 
+            key={i} 
+            position={[
+              Math.cos(rad) * dist, 
+              0, 
+              Math.sin(rad) * dist
+            ]}
+          >
+            <sphereGeometry args={[2, 16, 16]} />
+            <meshStandardMaterial color="#fff" metalness={0.9} roughness={0.1} />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+};
+
 const Trackball: React.FC<TrackballProps> = ({ config }) => {
   const { selectedTrackballId, selectTrackball, updateTrackball, gridSnapping, gridSize } = useKeyboardStore();
   const groupRef = useRef<THREE.Group>(null);
   const meshGroupRef = useRef<THREE.Group>(null);
   const isSelected = selectedTrackballId === config.id;
+
+  // Ball is at y = 15 + diameter/2 - 5 in original, let's simplify to centered at y=0 
+  // and offset the group in KeyboardCanvas if needed. 
+  // Actually, let's keep the baseline at y=0 for the holder base.
+  const ballY = config.diameter / 2 - 2;
 
   const handleDragEnd = () => {
     if (groupRef.current && meshGroupRef.current) {
@@ -38,7 +133,7 @@ const Trackball: React.FC<TrackballProps> = ({ config }) => {
   return (
     <group 
       ref={groupRef}
-      position={[config.x, 0, config.y]} 
+      position={[config.x, 15, config.y]} // Raised to sit on the plate level
       onClick={(e) => {
         e.stopPropagation();
         selectTrackball(config.id);
@@ -59,37 +154,35 @@ const Trackball: React.FC<TrackballProps> = ({ config }) => {
         disableRotations
       >
         <group ref={meshGroupRef}>
-          {/* Trackball Sensor Housing rotated around ball center */}
-          <group 
-            position={[0, 15 + config.diameter / 2 - 5, 0]} 
-            rotation={[0, 0, THREE.MathUtils.degToRad(config.sensorAngle || 0)]}
-          >
-            <mesh position={[0, -(10 + config.diameter / 2), 0]} rotation={[0, THREE.MathUtils.degToRad(config.sensorRotation || 0), 0]}>
-              <boxGeometry args={[30, 10, 30]} />
-              <meshStandardMaterial color={isSelected ? "#4f46e5" : "#222"} metalness={0.5} roughness={0.5} />
+          {/* Internal components are relative to the center of the ball/socket */}
+          <group position={[0, ballY, 0]}>
+            {/* Ball */}
+            <mesh>
+              <sphereGeometry args={[config.diameter / 2, 32, 32]} />
+              <meshStandardMaterial 
+                color="#ef4444" 
+                metalness={0.8} 
+                roughness={0.2} 
+              />
             </mesh>
-          </group>
 
-          {/* Ball */}
-          <mesh position={[0, 15 + config.diameter / 2 - 5, 0]}>
-            <sphereGeometry args={[config.diameter / 2, 32, 32]} />
-            <meshStandardMaterial 
-              color="#ef4444" 
-              metalness={0.8} 
-              roughness={0.2} 
-            />
-          </mesh>
+            {/* Holder Case */}
+            <TrackballHolder config={config} />
+
+            {/* Sensor PCB */}
+            <TrackballPCB config={config} />
+          </group>
 
           {/* Selection Glow */}
           {isSelected && (
-            <mesh position={[0, 1, 0]}>
-              <cylinderGeometry args={[20, 20, 0.5, 32]} />
+            <mesh position={[0, -14, 0]}>
+              <cylinderGeometry args={[config.diameter / 2 + 10, config.diameter / 2 + 10, 0.5, 32]} />
               <meshStandardMaterial 
                 color="#6366f1" 
                 emissive="#6366f1" 
                 emissiveIntensity={2} 
                 transparent 
-                opacity={0.5} 
+                opacity={0.3} 
               />
             </mesh>
           )}
