@@ -145,12 +145,13 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
                 <boxGeometry args={[15, 3, 10]} />
                 <meshStandardMaterial color="#111" metalness={0.2} roughness={0.8} />
               </mesh>
-              {/* Contact points (metal) */}
-              <mesh position={[-3.81, 0, 2.54]}>
+              {/* Contact points (metal) - Aligned with pins at [-3.81, -2.54] and [2.54, -5.08] */}
+              {/* After 180deg rotation, positions are negated relative to parent */}
+              <mesh position={[3.81, 0, 2.54]}>
                 <boxGeometry args={[3, 1, 3]} />
                 <meshStandardMaterial color="#d4d4d8" metalness={0.9} roughness={0.1} />
               </mesh>
-              <mesh position={[2.54, 0, 5.08]}>
+              <mesh position={[-2.54, 0, 5.08]}>
                 <boxGeometry args={[3, 1, 3]} />
                 <meshStandardMaterial color="#d4d4d8" metalness={0.9} roughness={0.1} />
               </mesh>

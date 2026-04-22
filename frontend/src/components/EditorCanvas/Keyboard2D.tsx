@@ -27,7 +27,9 @@ const Keyboard2D: React.FC = () => {
     updateController,
     selectedBatteryId,
     selectBattery,
-    updateBattery
+    updateBattery,
+    showSwitches,
+    showSockets
   } = useKeyboardStore();
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -272,6 +274,34 @@ const Keyboard2D: React.FC = () => {
           stroke={hasCollision ? '#ef4444' : (isSelected ? '#60a5fa' : '#3b82f6')}
           strokeWidth={isSelected ? 2 : 1}
         />
+        
+        {/* Switch Footprint */}
+        {showSwitches && (
+          <g opacity={0.5}>
+            <circle r={2} fill="none" stroke="#60a5fa" strokeWidth={0.5} />
+            <circle cx={-5.08} cy={0} r={0.85} fill="none" stroke="#60a5fa" strokeWidth={0.5} />
+            <circle cx={5.08} cy={0} r={0.85} fill="none" stroke="#60a5fa" strokeWidth={0.5} />
+            <circle cx={-3.81} cy={-2.54} r={0.75} fill="#60a5fa" />
+            <circle cx={2.54} cy={-5.08} r={0.75} fill="#60a5fa" />
+          </g>
+        )}
+
+        {/* Hot-swap Socket Outline */}
+        {showSockets && (
+          <rect
+            x={-7.5}
+            y={-5}
+            width={15}
+            height={10}
+            rx={1}
+            fill="none"
+            stroke="rgba(255, 255, 255, 0.3)"
+            strokeWidth={0.5}
+            strokeDasharray="2,1"
+            transform="rotate(180)"
+          />
+        )}
+
         {/* Inner Detail */}
         <rect
           x={-w/2 + 2}
