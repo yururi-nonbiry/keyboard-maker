@@ -9,7 +9,7 @@ interface KeySwitchProps {
 }
 
 const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
-  const { data, selectedKeyId, selectKey, collisions, updateKey, gridSnapping, gridSize, showKeycaps } = useKeyboardStore();
+  const { data, selectedKeyId, selectKey, collisions, updateKey, gridSnapping, gridSize, showKeycaps, showSwitches } = useKeyboardStore();
   const { keyPitch } = data.case_config;
   const groupRef = useRef<THREE.Group>(null);
   const meshGroupRef = useRef<THREE.Group>(null);
@@ -81,17 +81,21 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
         disableScaling
       >
         <group ref={meshGroupRef}>
-          {/* Switch Base */}
-          <mesh position={[0, 2, 0]}>
-            <boxGeometry args={[14, 4, 14]} />
-            <meshStandardMaterial color={isSelected ? "#4f46e5" : "#333"} metalness={0.5} roughness={0.5} />
-          </mesh>
+          {showSwitches && (
+            <>
+              {/* Switch Base */}
+              <mesh position={[0, 2, 0]}>
+                <boxGeometry args={[14, 4, 14]} />
+                <meshStandardMaterial color={isSelected ? "#4f46e5" : "#333"} metalness={0.5} roughness={0.5} />
+              </mesh>
 
-          {/* Stem */}
-          <mesh position={[0, 5, 0]}>
-            <boxGeometry args={[4, 6, 4]} />
-            <meshStandardMaterial color="#ef4444" />
-          </mesh>
+              {/* Stem */}
+              <mesh position={[0, 5, 0]}>
+                <boxGeometry args={[4, 6, 4]} />
+                <meshStandardMaterial color="#ef4444" />
+              </mesh>
+            </>
+          )}
 
           {/* Keycap */}
           {showKeycaps && (

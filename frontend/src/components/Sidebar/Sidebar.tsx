@@ -60,11 +60,17 @@ const Sidebar: React.FC = () => {
     showCaseBase,
     showCaseWalls,
     showPCB,
+    showSwitches,
+    showTrackballs,
+    showControllers,
     toggleKeycapsVisible,
     togglePlateVisible,
     toggleCaseBaseVisible,
     toggleCaseWallsVisible,
     togglePCBVisible,
+    toggleSwitchesVisible,
+    toggleTrackballsVisible,
+    toggleControllersVisible,
     selectedBatteryId,
     selectBattery,
     addBattery,
@@ -180,6 +186,33 @@ const Sidebar: React.FC = () => {
               onChange={toggleCaseWallsVisible} 
             />
             カバー (Cover)
+          </label>
+          <label className={styles.checkboxLabel}>
+            <input 
+              type="checkbox" 
+              className={styles.checkbox} 
+              checked={showSwitches} 
+              onChange={toggleSwitchesVisible} 
+            />
+            キースイッチ
+          </label>
+          <label className={styles.checkboxLabel}>
+            <input 
+              type="checkbox" 
+              className={styles.checkbox} 
+              checked={showTrackballs} 
+              onChange={toggleTrackballsVisible} 
+            />
+            トラックボール
+          </label>
+          <label className={styles.checkboxLabel}>
+            <input 
+              type="checkbox" 
+              className={styles.checkbox} 
+              checked={showControllers} 
+              onChange={toggleControllersVisible} 
+            />
+            マイコン (MCU)
           </label>
         </div>
       </CollapsibleSection>

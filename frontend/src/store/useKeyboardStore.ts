@@ -66,11 +66,17 @@ interface KeyboardState {
   showCaseBase: boolean;
   showCaseWalls: boolean;
   showPCB: boolean;
+  showSwitches: boolean;
+  showTrackballs: boolean;
+  showControllers: boolean;
   toggleKeycapsVisible: () => void;
   togglePlateVisible: () => void;
   toggleCaseBaseVisible: () => void;
   toggleCaseWallsVisible: () => void;
   togglePCBVisible: () => void;
+  toggleSwitchesVisible: () => void;
+  toggleTrackballsVisible: () => void;
+  toggleControllersVisible: () => void;
 }
 
 const DEFAULT_METADATA: KeyboardMetadata = {
@@ -138,12 +144,18 @@ export const useKeyboardStore = create<KeyboardState>()(
       showCaseBase: true,
       showCaseWalls: true,
       showPCB: true,
+      showSwitches: true,
+      showTrackballs: true,
+      showControllers: true,
 
       toggleKeycapsVisible: () => set((state) => ({ showKeycaps: !state.showKeycaps })),
       togglePlateVisible: () => set((state) => ({ showPlate: !state.showPlate })),
       toggleCaseBaseVisible: () => set((state) => ({ showCaseBase: !state.showCaseBase })),
       toggleCaseWallsVisible: () => set((state) => ({ showCaseWalls: !state.showCaseWalls })),
       togglePCBVisible: () => set((state) => ({ showPCB: !state.showPCB })),
+      toggleSwitchesVisible: () => set((state) => ({ showSwitches: !state.showSwitches })),
+      toggleTrackballsVisible: () => set((state) => ({ showTrackballs: !state.showTrackballs })),
+      toggleControllersVisible: () => set((state) => ({ showControllers: !state.showControllers })),
 
       toggleSplitMode: () => set((state) => ({ splitMode: !state.splitMode })),
       setTempSplitX: (tempSplitX) => set({ tempSplitX }),

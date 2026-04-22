@@ -13,7 +13,7 @@ import Battery from './Battery';
 import { calculateBoundingBox, calculateFullBoundingBox3D, calculateLift } from '../../utils/geometry';
 
 const KeyboardCanvas: React.FC = () => {
-  const { data, selectKey, selectedKeyId, selectTrackball, selectedTrackballId, selectController, selectedControllerId, selectBattery, selectedBatteryId, gridVisible, gridSize } = useKeyboardStore();
+  const { data, selectKey, selectedKeyId, selectTrackball, selectedTrackballId, selectController, selectedControllerId, selectBattery, selectedBatteryId, gridVisible, gridSize, showTrackballs, showControllers } = useKeyboardStore();
 
   const groundY = -12;
   const { typingAngle, tentingAngle, splitRotation, splitGap } = data.case_config;
@@ -81,10 +81,10 @@ const KeyboardCanvas: React.FC = () => {
                   splitRotation={0}
                   typingAngle={typingAngle}
                 />
-                {(data.trackballs || []).map((t) => (
+                {showTrackballs && (data.trackballs || []).map((t) => (
                   <Trackball key={t.id} config={t} />
                 ))}
-                {(data.controllers || []).map((c) => (
+                {showControllers && (data.controllers || []).map((c) => (
                   <MicroController 
                     key={c.id}
                     type={c.type}
@@ -128,10 +128,10 @@ const KeyboardCanvas: React.FC = () => {
                         splitRotation={splitRotation}
                         typingAngle={typingAngle}
                       />
-                      {leftTrackballs.map((t) => (
+                      {showTrackballs && leftTrackballs.map((t) => (
                         <Trackball key={t.id} config={t} />
                       ))}
-                      {(data.controllers || []).filter(c => c.side === 'left' || !c.side).map((c) => (
+                      {showControllers && (data.controllers || []).filter(c => c.side === 'left' || !c.side).map((c) => (
                         <MicroController 
                           key={c.id}
                           type={c.type}
@@ -178,10 +178,10 @@ const KeyboardCanvas: React.FC = () => {
                         splitRotation={-splitRotation}
                         typingAngle={typingAngle}
                       />
-                      {rightTrackballs.map((t) => (
+                      {showTrackballs && rightTrackballs.map((t) => (
                         <Trackball key={t.id} config={t} />
                       ))}
-                      {(data.controllers || []).filter(c => c.side === 'right').map((c) => (
+                      {showControllers && (data.controllers || []).filter(c => c.side === 'right').map((c) => (
                         <MicroController 
                           key={c.id}
                           type={c.type}
