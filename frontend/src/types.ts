@@ -7,7 +7,7 @@ export interface KeyboardMetadata {
 
 export type SwitchType = 'mx' | 'choc' | 'choc_v2' | 'x_switch' | 'ec';
 
-export type ControllerType = 'pro_micro' | 'elite_c' | 'xiao_rp2040' | 'pico' | 'bluepill';
+export type ControllerType = 'pro_micro' | 'elite_c' | 'xiao_rp2040' | 'xiao_ble' | 'pico' | 'bluepill';
 
 export type KeyboardType = 'integrated' | 'split';
 

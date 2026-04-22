@@ -219,7 +219,8 @@ export const calculatePointsBoundingBox = (points: Point[], padding: number = 0)
  */
 export const getControllerDimensions = (type: ControllerType): { width: number; length: number } => {
   switch (type) {
-    case 'xiao_rp2040': return { width: 18, length: 21 };
+    case 'xiao_rp2040':
+    case 'xiao_ble': return { width: 18, length: 21 };
     case 'pico': return { width: 21, length: 51 };
     case 'bluepill': return { width: 23, length: 53 };
     case 'pro_micro':

@@ -272,6 +272,7 @@ const Sidebar: React.FC = () => {
             <option value="pro_micro">Pro Micro</option>
             <option value="elite_c">Elite-C</option>
             <option value="xiao_rp2040">XIAO RP2040</option>
+            <option value="xiao_ble">XIAO nRF52840 (BLE)</option>
             <option value="pico">Raspberry Pi Pico</option>
             <option value="bluepill">Bluepill (STM32)</option>
           </select>
@@ -607,6 +608,7 @@ const Sidebar: React.FC = () => {
               <option value="pro_micro">Pro Micro</option>
               <option value="elite_c">Elite-C</option>
               <option value="xiao_rp2040">XIAO RP2040</option>
+              <option value="xiao_ble">XIAO nRF52840 (BLE)</option>
               <option value="pico">Raspberry Pi Pico</option>
               <option value="bluepill">Bluepill (STM32)</option>
             </select>

@@ -18,6 +18,8 @@ const MicroController: React.FC<MicroControllerProps> = ({ type, position, rotat
         return { width: 18, length: 33, height: 4, color: type === 'elite_c' ? '#2e2e2e' : '#1e3a8a' };
       case 'xiao_rp2040':
         return { width: 18, length: 21, height: 4, color: '#312e81' };
+      case 'xiao_ble':
+        return { width: 18, length: 21, height: 4, color: '#d1d5db' }; // Silver/Gray for the shield
       case 'pico':
         return { width: 21, length: 51, height: 4, color: '#065f46' };
       case 'bluepill':
@@ -32,6 +34,7 @@ const MicroController: React.FC<MicroControllerProps> = ({ type, position, rotat
       case 'pro_micro': return 'Pro Micro';
       case 'elite_c': return 'Elite-C';
       case 'xiao_rp2040': return 'XIAO RP2040';
+      case 'xiao_ble': return 'XIAO BLE';
       case 'pico': return 'RPi Pico';
       case 'bluepill': return 'Bluepill';
       default: return 'MCU';

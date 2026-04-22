@@ -350,7 +350,8 @@ const Keyboard2D: React.FC = () => {
     
     let dimensions = { width: 18, length: 33 };
     switch (controller.type) {
-      case 'xiao_rp2040': dimensions = { width: 18, length: 21 }; break;
+      case 'xiao_rp2040':
+      case 'xiao_ble': dimensions = { width: 18, length: 21 }; break;
       case 'pico': dimensions = { width: 21, length: 51 }; break;
       case 'bluepill': dimensions = { width: 23, length: 53 }; break;
     }
