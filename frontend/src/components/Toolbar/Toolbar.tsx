@@ -46,6 +46,7 @@ const Toolbar: React.FC = () => {
       id: `trackball-${Date.now()}`,
       x: 0,
       y: 0,
+      z: -6.5,
       diameter: 34,
       sensorType: 'pmw3360' as const,
       sensorAngle: 0,

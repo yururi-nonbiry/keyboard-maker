@@ -504,6 +504,27 @@ const Sidebar: React.FC = () => {
             />
           </div>
           <div className={styles.group}>
+            <label className={styles.label}>高さ (Z): {selectedTrackball.z ?? -6.5}mm</label>
+            <div className={styles.row}>
+              <input
+                type="number"
+                step="0.5"
+                className={styles.input}
+                value={selectedTrackball.z ?? -6.5}
+                onChange={(e) => updateTrackball(selectedTrackball.id, { z: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+            <input
+              type="range"
+              min="-20"
+              max="40"
+              step="0.5"
+              className={styles.input}
+              value={selectedTrackball.z ?? -6.5}
+              onChange={(e) => updateTrackball(selectedTrackball.id, { z: parseFloat(e.target.value) || 0 })}
+            />
+          </div>
+          <div className={styles.group}>
             <label className={styles.label}>センサーの種類</label>
             <select
               className={styles.input}

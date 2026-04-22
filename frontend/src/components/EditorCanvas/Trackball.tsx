@@ -133,7 +133,7 @@ const Trackball: React.FC<TrackballProps> = ({ config }) => {
   return (
     <group 
       ref={groupRef}
-      position={[config.x, 15, config.y]} // Raised to sit on the plate level
+      position={[config.x, config.z ?? -6.5, config.y]} 
       onClick={(e) => {
         e.stopPropagation();
         selectTrackball(config.id);

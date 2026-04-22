@@ -49,6 +49,7 @@ export interface TrackballConfig {
   id: string;
   x: number; // in mm
   y: number; // in mm
+  z: number; // in mm, vertical offset
   diameter: number; // in mm, typically 34mm or 55mm
   sensorType: 'pmw3360' | 'pmw3389' | 'adns9800';
   sensorAngle?: number; // angle around the ball in degrees
