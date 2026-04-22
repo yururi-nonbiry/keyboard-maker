@@ -22,7 +22,7 @@ const TrackballPCB: React.FC<{ config: TrackballConfig }> = ({ config }) => {
       rotation={[0, 0, THREE.MathUtils.degToRad(config.sensorAngle || 0)]}
     >
       <group 
-        position={[0, -(config.diameter / 2 + 5), 0]} 
+        position={[0, -(config.diameter / 2 + 3), 0]} 
         rotation={[0, THREE.MathUtils.degToRad(config.sensorRotation || 0), 0]}
       >
         {/* PCB Board */}
@@ -133,7 +133,7 @@ const Trackball: React.FC<TrackballProps> = ({ config }) => {
   return (
     <group 
       ref={groupRef}
-      position={[config.x, config.z ?? -6.5, config.y]} 
+      position={[config.x, config.z ?? -5, config.y]} 
       onClick={(e) => {
         e.stopPropagation();
         selectTrackball(config.id);
@@ -175,7 +175,7 @@ const Trackball: React.FC<TrackballProps> = ({ config }) => {
 
           {/* Selection Glow */}
           {isSelected && (
-            <mesh position={[0, -14, 0]}>
+            <mesh position={[0, -8, 0]}>
               <cylinderGeometry args={[config.diameter / 2 + 10, config.diameter / 2 + 10, 0.5, 32]} />
               <meshStandardMaterial 
                 color="#6366f1" 

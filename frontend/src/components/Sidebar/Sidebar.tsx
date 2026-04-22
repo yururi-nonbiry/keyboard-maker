@@ -504,13 +504,13 @@ const Sidebar: React.FC = () => {
             />
           </div>
           <div className={styles.group}>
-            <label className={styles.label}>高さ (Z): {selectedTrackball.z ?? -6.5}mm</label>
+            <label className={styles.label}>高さ (Z): {selectedTrackball.z ?? -5}mm</label>
             <div className={styles.row}>
               <input
                 type="number"
                 step="0.5"
                 className={styles.input}
-                value={selectedTrackball.z ?? -6.5}
+                value={selectedTrackball.z ?? -5}
                 onChange={(e) => updateTrackball(selectedTrackball.id, { z: parseFloat(e.target.value) || 0 })}
               />
             </div>
@@ -520,7 +520,7 @@ const Sidebar: React.FC = () => {
               max="40"
               step="0.5"
               className={styles.input}
-              value={selectedTrackball.z ?? -6.5}
+              value={selectedTrackball.z ?? -5}
               onChange={(e) => updateTrackball(selectedTrackball.id, { z: parseFloat(e.target.value) || 0 })}
             />
           </div>

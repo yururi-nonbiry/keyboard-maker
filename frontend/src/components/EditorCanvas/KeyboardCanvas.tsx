@@ -10,15 +10,18 @@ import MicroController from './MicroController';
 import Trackball from './Trackball';
 import Battery from './Battery';
 
-import { calculateBoundingBox } from '../../utils/geometry';
+import type { BoundingBox3D } from '../../utils/geometry';
+import { calculateBoundingBox, calculateFullBoundingBox3D } from '../../utils/geometry';
 
 const KeyboardCanvas: React.FC = () => {
   const { data, selectKey, selectedKeyId, selectTrackball, selectedTrackballId, selectController, selectedControllerId, selectBattery, selectedBatteryId, gridVisible, gridSize } = useKeyboardStore();
 
-  const { typingAngle } = data.case_config;
+  const groundY = -12;
+  const { typingAngle, tentingAngle, splitRotation, splitGap } = data.case_config;
+  const keyPitch = data.case_config.keyPitch;
+  
   const isEditing = selectedKeyId !== null || selectedTrackballId !== null || selectedControllerId !== null || selectedBatteryId !== null;
 
-  const { tentingAngle, splitRotation, splitGap } = data.case_config;
   const leftKeys = data.layout.filter(k => k.side === 'left' || !k.side);
   const rightKeys = data.layout.filter(k => k.side === 'right');
 
@@ -28,11 +31,44 @@ const KeyboardCanvas: React.FC = () => {
   const leftBatteries = (data.batteries || []).filter(b => b.side === 'left' || !b.side);
   const rightBatteries = (data.batteries || []).filter(b => b.side === 'right');
 
-  const bbox = calculateBoundingBox(data.layout, data.case_config.keyPitch);
+  const bbox = calculateBoundingBox(data.layout, keyPitch);
   const centerOffset = bbox ? [-bbox.centerX, 0, -bbox.centerY] : [0, 0, 0];
 
-  const leftBbox = calculateBoundingBox(leftKeys, data.case_config.keyPitch);
-  const rightBbox = calculateBoundingBox(rightKeys, data.case_config.keyPitch);
+  const leftFullBbox = calculateFullBoundingBox3D(leftKeys, leftTrackballs, data.controllers?.filter(c => c.side === 'left'), leftBatteries, keyPitch);
+  const rightFullBbox = calculateFullBoundingBox3D(rightKeys, rightTrackballs, data.controllers?.filter(c => c.side === 'right'), rightBatteries, keyPitch);
+  
+  const getLiftOffset = (bbox: BoundingBox3D | null, angleDeg: number) => {
+    if (!bbox) return 0;
+    const angleRad = angleDeg * (Math.PI / 180);
+    
+    // Corners in X-Z plane (where Z is vertical height)
+    // Local coordinates relative to pivot (centerX, 0, centerY)
+    const xMin = bbox.minX - bbox.centerX;
+    const xMax = bbox.maxX - bbox.centerX;
+    const zMin = bbox.minZ;
+    const zMax = bbox.maxZ;
+
+    const corners = [
+      { x: xMin, z: zMin },
+      { x: xMax, z: zMin },
+      { x: xMin, z: zMax },
+      { x: xMax, z: zMax },
+    ];
+
+    let minWorldY = Infinity;
+    corners.forEach(c => {
+      // Rotation around Z axis (tenting)
+      // y_new = x * sin(theta) + z * cos(theta)
+      const y = c.x * Math.sin(angleRad) + c.z * Math.cos(angleRad);
+      if (y < minWorldY) minWorldY = y;
+    });
+
+    // We want minWorldY + offset >= groundY
+    return Math.max(0, groundY - minWorldY);
+  };
+
+  const leftLift = getLiftOffset(leftFullBbox, tentingAngle);
+  const rightLift = getLiftOffset(rightFullBbox, -tentingAngle);
 
   return (
     <Canvas
@@ -98,10 +134,10 @@ const KeyboardCanvas: React.FC = () => {
                 {/* Left Side */}
                 <group 
                   rotation={[0, splitRotation * (Math.PI / 180), tentingAngle * (Math.PI / 180)]}
-                  position={[-splitGap / 2, 0, 0]}
+                  position={[-splitGap / 2, leftLift, 0]}
                 >
-                  {leftBbox && (
-                    <group position={[-leftBbox.centerX, 0, -leftBbox.centerY]}>
+                  {leftFullBbox && (
+                    <group position={[-leftFullBbox.centerX, 0, -leftFullBbox.centerY]}>
                       {leftKeys.map((key) => (
                         <KeySwitch key={key.id} config={key} />
                       ))}
@@ -141,10 +177,10 @@ const KeyboardCanvas: React.FC = () => {
                 {/* Right Side */}
                 <group 
                   rotation={[0, -splitRotation * (Math.PI / 180), -tentingAngle * (Math.PI / 180)]}
-                  position={[splitGap / 2, 0, 0]}
+                  position={[splitGap / 2, rightLift, 0]}
                 >
-                  {rightBbox && (
-                    <group position={[-rightBbox.centerX, 0, -rightBbox.centerY]}>
+                  {rightFullBbox && (
+                    <group position={[-rightFullBbox.centerX, 0, -rightFullBbox.centerY]}>
                       {rightKeys.map((key) => (
                         <KeySwitch key={key.id} config={key} />
                       ))}
@@ -192,7 +228,7 @@ const KeyboardCanvas: React.FC = () => {
                 sectionSize={gridSize}
                 sectionColor="#4f46e5"
                 cellColor="#2e2e3a"
-                position={[0, -4.5, 0]} // Grid plane parallel to the keyboard base
+                position={[0, groundY + 0.1, 0]} // Grid slightly above shadow plane
               />
             )}
           </group>
@@ -202,10 +238,10 @@ const KeyboardCanvas: React.FC = () => {
           opacity={0.4} 
           scale={400} 
           blur={2} 
-          far={10} 
+          far={20} 
           resolution={256} 
           color="#000000" 
-          position={[0, -4.9, 0]}
+          position={[0, groundY, 0]}
         />
       </Suspense>
 

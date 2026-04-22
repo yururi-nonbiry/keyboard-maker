@@ -149,6 +149,13 @@ export interface BoundingBox {
   maxY: number;
 }
 
+export interface BoundingBox3D extends BoundingBox {
+  minZ: number;
+  maxZ: number;
+  centerZ: number;
+  depth: number; // Rename height to depth for clarity in 3D? No, let's keep compatibility.
+}
+
 /**
  * Calculates the bounding box for a set of keys, accounting for rotation.
  */
@@ -225,6 +232,69 @@ export const getControllerDimensions = (type: ControllerType): { width: number; 
 /**
  * Calculates a bounding box that encompasses all provided components.
  */
+/**
+ * Calculates a 3D bounding box that encompasses all provided components.
+ * In this system:
+ * - X and Y are the 2D layout coordinates (horizontal and vertical on the desk).
+ * - Z is the vertical height (perpendicular to the desk).
+ */
+export const calculateFullBoundingBox3D = (
+  keys: KeyConfig[],
+  trackballs: TrackballConfig[] = [],
+  controllers: ControllerConfig[] = [],
+  batteries: BatteryConfig[] = [],
+  keyPitch: number = 19.05,
+  padding: number = 0
+): BoundingBox3D | null => {
+  const bbox2d = calculateFullBoundingBox(keys, trackballs, controllers, batteries, keyPitch, padding);
+  if (!bbox2d) return null;
+
+  let minZ = 0;
+  let maxZ = 0;
+
+  // Key heights (approximate)
+  if (keys.length > 0) {
+    minZ = Math.min(minZ, -5); // Bottom of switch/PCB
+    maxZ = Math.max(maxZ, 12); // Top of keycap
+  }
+
+  // Trackball heights
+  trackballs.forEach(t => {
+    const ballCenterZ = (t.z ?? -6.5) + (t.diameter / 2 - 2);
+    const ballRadius = t.diameter / 2;
+    // PCB is at relative Z = -7 from ball center in the current Trackball.tsx
+    const pcbZ = ballCenterZ - 7;
+    
+    minZ = Math.min(minZ, pcbZ - 2); // PCB bottom
+    maxZ = Math.max(maxZ, ballCenterZ + ballRadius); // Top of ball
+  });
+
+  // Controller heights
+  controllers.forEach(c => {
+    const baseZ = c.mountingSide === 'bottom' ? -4 : -2;
+    minZ = Math.min(minZ, baseZ - 2);
+    maxZ = Math.max(maxZ, baseZ + 3);
+  });
+
+  // Battery heights
+  batteries.forEach(b => {
+    const baseZ = b.mountingSide === 'bottom' ? -4 : -2;
+    minZ = Math.min(minZ, baseZ - b.thickness);
+    maxZ = Math.max(maxZ, baseZ + b.thickness);
+  });
+
+  // Case thickness
+  minZ = Math.min(minZ, -9); 
+
+  return {
+    ...bbox2d,
+    minZ: minZ - padding,
+    maxZ: maxZ + padding,
+    centerZ: (minZ + maxZ) / 2,
+    depth: maxZ - minZ + padding * 2,
+  };
+};
+
 export const calculateFullBoundingBox = (
   keys: KeyConfig[],
   trackballs: TrackballConfig[] = [],
