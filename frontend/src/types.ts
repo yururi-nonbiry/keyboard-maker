@@ -66,12 +66,25 @@ export interface ControllerConfig {
   mountingSide: 'top' | 'bottom';
 }
 
+export interface BatteryConfig {
+  id: string;
+  x: number; // in mm
+  y: number; // in mm
+  width: number; // in mm
+  height: number; // in mm
+  thickness: number; // in mm
+  rotation: number; // in degrees
+  side: 'left' | 'right';
+  mountingSide: 'top' | 'bottom';
+}
+
 export interface KeyboardData {
   metadata: KeyboardMetadata;
   type: KeyboardType;
   layout: KeyConfig[];
-  trackballs?: TrackballConfig[];
-  controllers?: ControllerConfig[];
   pcb_config: PcbConfig;
   case_config: CaseConfig;
+  trackballs?: TrackballConfig[];
+  controllers?: ControllerConfig[];
+  batteries?: BatteryConfig[];
 }

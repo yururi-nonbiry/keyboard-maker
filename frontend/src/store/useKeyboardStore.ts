@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { KeyboardData, KeyConfig, KeyboardMetadata, PcbConfig, CaseConfig, SwitchType, KeyboardType, TrackballConfig, ControllerConfig } from '../types';
+import type { KeyboardData, KeyConfig, KeyboardMetadata, PcbConfig, CaseConfig, SwitchType, KeyboardType, TrackballConfig, ControllerConfig, BatteryConfig } from '../types';
 import { checkInterference, calculateBoundingBox } from '../utils/geometry';
 
 interface KeyboardState {
@@ -31,6 +31,12 @@ interface KeyboardState {
   removeController: (id: string) => void;
   selectController: (id: string | null) => void;
   
+  // Battery Actions
+  addBattery: (battery: BatteryConfig) => void;
+  updateBattery: (id: string, config: Partial<BatteryConfig>) => void;
+  removeBattery: (id: string) => void;
+  selectBattery: (id: string | null) => void;
+  
   // Grid Settings
   gridVisible: boolean;
   gridSnapping: boolean;
@@ -52,6 +58,7 @@ interface KeyboardState {
 
   selectedTrackballId: string | null;
   selectedControllerId: string | null;
+  selectedBatteryId: string | null;
 
   // Visibility Settings
   showKeycaps: boolean;
@@ -111,12 +118,14 @@ export const useKeyboardStore = create<KeyboardState>()(
         layout: INITIAL_LAYOUT,
         trackballs: [],
         controllers: [],
+        batteries: [],
         pcb_config: DEFAULT_PCB,
         case_config: DEFAULT_CASE,
       },
       selectedKeyId: null,
       selectedTrackballId: null,
       selectedControllerId: null,
+      selectedBatteryId: null,
       collisions: {},
       gridVisible: true,
       gridSnapping: true,
@@ -200,7 +209,8 @@ export const useKeyboardStore = create<KeyboardState>()(
       selectKey: (id) => set((state) => ({ 
         selectedKeyId: id, 
         selectedTrackballId: id ? null : state.selectedTrackballId,
-        selectedControllerId: id ? null : state.selectedControllerId 
+        selectedControllerId: id ? null : state.selectedControllerId,
+        selectedBatteryId: id ? null : state.selectedBatteryId
       })),
 
       updatePcbConfig: (pcb_config) =>
@@ -287,7 +297,8 @@ export const useKeyboardStore = create<KeyboardState>()(
       selectTrackball: (id) => set((state) => ({ 
         selectedTrackballId: id, 
         selectedKeyId: id ? null : state.selectedKeyId,
-        selectedControllerId: id ? null : state.selectedControllerId 
+        selectedControllerId: id ? null : state.selectedControllerId,
+        selectedBatteryId: id ? null : state.selectedBatteryId
       })),
 
       addController: (controller) =>
@@ -320,7 +331,42 @@ export const useKeyboardStore = create<KeyboardState>()(
       selectController: (id) => set((state) => ({ 
         selectedControllerId: id, 
         selectedKeyId: id ? null : state.selectedKeyId,
-        selectedTrackballId: id ? null : state.selectedTrackballId
+        selectedTrackballId: id ? null : state.selectedTrackballId,
+        selectedBatteryId: id ? null : state.selectedBatteryId
+      })),
+  
+      addBattery: (battery) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            batteries: [...(state.data.batteries || []), battery],
+          },
+        })),
+  
+      updateBattery: (id, config) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            batteries: (state.data.batteries || []).map((b) =>
+              b.id === id ? { ...b, ...config } : b
+            ),
+          },
+        })),
+  
+      removeBattery: (id) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            batteries: (state.data.batteries || []).filter((b) => b.id !== id),
+          },
+          selectedBatteryId: state.selectedBatteryId === id ? null : state.selectedBatteryId,
+        })),
+  
+      selectBattery: (id) => set((state) => ({ 
+        selectedBatteryId: id, 
+        selectedKeyId: id ? null : state.selectedKeyId,
+        selectedTrackballId: id ? null : state.selectedTrackballId,
+        selectedControllerId: id ? null : state.selectedControllerId
       })),
 
       setKeyboardData: (data) => set({ 

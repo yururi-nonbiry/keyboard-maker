@@ -1,4 +1,4 @@
-import type { KeyConfig, ControllerType, ControllerConfig, TrackballConfig } from '../types';
+import type { KeyConfig, ControllerType, ControllerConfig, TrackballConfig, BatteryConfig } from '../types';
 
 export interface CollisionResult {
   hasCollision: boolean;
@@ -229,6 +229,7 @@ export const calculateFullBoundingBox = (
   keys: KeyConfig[],
   trackballs: TrackballConfig[] = [],
   controllers: ControllerConfig[] = [],
+  batteries: BatteryConfig[] = [],
   keyPitch: number = 19.05,
   padding: number = 0
 ): BoundingBox | null => {
@@ -265,6 +266,17 @@ export const calculateFullBoundingBox = (
       dim.width,
       dim.length,
       c.rotation
+    ));
+  });
+
+  // Batteries
+  batteries.forEach(b => {
+    allCorners.push(...getComponentCorners(
+      b.x,
+      b.y,
+      b.width,
+      b.height,
+      b.rotation
     ));
   });
 

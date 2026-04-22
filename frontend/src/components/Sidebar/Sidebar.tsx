@@ -30,11 +30,17 @@ const Sidebar: React.FC = () => {
     togglePlateVisible,
     toggleCaseBaseVisible,
     toggleCaseWallsVisible,
-    togglePCBVisible
+    togglePCBVisible,
+    selectedBatteryId,
+    selectBattery,
+    addBattery,
+    updateBattery,
+    removeBattery,
   } = useKeyboardStore();
   const selectedKey = data.layout.find(k => k.id === selectedKeyId);
   const selectedTrackball = (data.trackballs || []).find(t => t.id === selectedTrackballId);
   const selectedController = (data.controllers || []).find(c => c.id === selectedControllerId);
+  const selectedBattery = (data.batteries || []).find(b => b.id === selectedBatteryId);
   const { typingAngle, tentingAngle, splitRotation } = data.case_config;
 
   return (
@@ -234,6 +240,37 @@ const Sidebar: React.FC = () => {
             }}
           >
             MCUを追加
+          </button>
+        </div>
+        <div className={styles.group}>
+          <button 
+            className={styles.input}
+            onClick={() => {
+              const id = `battery-${Date.now()}`;
+              let side: 'left' | 'right' = 'left';
+              
+              if (data.type === 'split') {
+                const hasLeft = (data.batteries || []).some(b => b.side === 'left');
+                const hasRight = (data.batteries || []).some(b => b.side === 'right');
+                if (hasLeft && !hasRight) side = 'right';
+                else if (!hasLeft) side = 'left';
+              }
+
+              addBattery({
+                id,
+                x: 0,
+                y: 60,
+                width: 30,
+                height: 50,
+                thickness: 4,
+                rotation: 0,
+                side,
+                mountingSide: 'bottom'
+              });
+              selectBattery(id);
+            }}
+          >
+            バッテリーを追加
           </button>
         </div>
       </div>
@@ -494,6 +531,114 @@ const Sidebar: React.FC = () => {
               onClick={() => removeController(selectedController.id)}
             >
               MCUを削除
+            </button>
+          </div>
+        </div>
+      ) : selectedBattery ? (
+        <div className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h3 className={styles.sectionTitle}>バッテリー設定</h3>
+            {data.type === 'split' && (
+              <span className={`${styles.badge} ${selectedBattery.side === 'left' ? styles.badgeLeft : styles.badgeRight}`}>
+                {selectedBattery.side === 'left' ? 'LEFT' : 'RIGHT'}
+              </span>
+            )}
+          </div>
+          <div className={styles.group}>
+            <label className={styles.label}>座標 (X, Y)</label>
+            <div className={styles.row}>
+              <div className={styles.inputWrapper}>
+                <span className={styles.coordLabel}>X</span>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={selectedBattery.x}
+                  onChange={(e) => updateBattery(selectedBattery.id, { x: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+              <div className={styles.inputWrapper}>
+                <span className={styles.coordLabel}>Y</span>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={selectedBattery.y}
+                  onChange={(e) => updateBattery(selectedBattery.id, { y: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+            </div>
+          </div>
+          <div className={styles.group}>
+            <label className={styles.label}>サイズ (幅 x 高さ x 厚み)</label>
+            <div className={styles.row}>
+              <div className={styles.inputWrapper}>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={selectedBattery.width}
+                  onChange={(e) => updateBattery(selectedBattery.id, { width: parseFloat(e.target.value) || 0 })}
+                  placeholder="幅"
+                />
+              </div>
+              <div className={styles.inputWrapper}>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={selectedBattery.height}
+                  onChange={(e) => updateBattery(selectedBattery.id, { height: parseFloat(e.target.value) || 0 })}
+                  placeholder="高さ"
+                />
+              </div>
+              <div className={styles.inputWrapper}>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={selectedBattery.thickness}
+                  onChange={(e) => updateBattery(selectedBattery.id, { thickness: parseFloat(e.target.value) || 0 })}
+                  placeholder="厚み"
+                />
+              </div>
+            </div>
+          </div>
+          <div className={styles.group}>
+            <label className={styles.label}>回転</label>
+            <input
+              className={styles.input}
+              type="number"
+              value={selectedBattery.rotation}
+              onChange={(e) => updateBattery(selectedBattery.id, { rotation: parseFloat(e.target.value) || 0 })}
+            />
+          </div>
+          <div className={styles.group}>
+            <label className={styles.label}>マウント面</label>
+            <select
+              className={styles.input}
+              value={selectedBattery.mountingSide}
+              onChange={(e) => updateBattery(selectedBattery.id, { mountingSide: e.target.value as 'top' | 'bottom' })}
+            >
+              <option value="top">表面 (Top)</option>
+              <option value="bottom">裏面 (Bottom)</option>
+            </select>
+          </div>
+          {data.type === 'split' && (
+            <div className={styles.group}>
+              <label className={styles.label}>配置サイド</label>
+              <select
+                className={styles.input}
+                value={selectedBattery.side || 'left'}
+                onChange={(e) => updateBattery(selectedBattery.id, { side: e.target.value as 'left' | 'right' })}
+              >
+                <option value="left">左手 (Left)</option>
+                <option value="right">右手 (Right)</option>
+              </select>
+            </div>
+          )}
+          <div style={{ marginTop: 'auto' }}>
+            <button 
+              className={styles.input} 
+              style={{ width: '100%', borderColor: 'var(--color-secondary)', color: 'var(--color-secondary)' }}
+              onClick={() => removeBattery(selectedBattery.id)}
+            >
+              バッテリーを削除
             </button>
           </div>
         </div>

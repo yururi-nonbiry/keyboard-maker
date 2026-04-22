@@ -8,14 +8,15 @@ import Case from './Case';
 import PCB from './PCB';
 import MicroController from './MicroController';
 import Trackball from './Trackball';
+import Battery from './Battery';
 
 import { calculateBoundingBox } from '../../utils/geometry';
 
 const KeyboardCanvas: React.FC = () => {
-  const { data, selectKey, selectedKeyId, selectTrackball, selectedTrackballId, selectController, selectedControllerId, gridVisible, gridSize } = useKeyboardStore();
+  const { data, selectKey, selectedKeyId, selectTrackball, selectedTrackballId, selectController, selectedControllerId, selectBattery, selectedBatteryId, gridVisible, gridSize } = useKeyboardStore();
 
   const { typingAngle } = data.case_config;
-  const isEditing = selectedKeyId !== null || selectedTrackballId !== null || selectedControllerId !== null;
+  const isEditing = selectedKeyId !== null || selectedTrackballId !== null || selectedControllerId !== null || selectedBatteryId !== null;
 
   const { tentingAngle, splitRotation, splitGap } = data.case_config;
   const leftKeys = data.layout.filter(k => k.side === 'left' || !k.side);
@@ -23,6 +24,9 @@ const KeyboardCanvas: React.FC = () => {
 
   const leftTrackballs = (data.trackballs || []).filter(t => t.side === 'left' || !t.side);
   const rightTrackballs = (data.trackballs || []).filter(t => t.side === 'right');
+
+  const leftBatteries = (data.batteries || []).filter(b => b.side === 'left' || !b.side);
+  const rightBatteries = (data.batteries || []).filter(b => b.side === 'right');
 
   const bbox = calculateBoundingBox(data.layout, data.case_config.keyPitch);
   const centerOffset = bbox ? [-bbox.centerX, 0, -bbox.centerY] : [0, 0, 0];
@@ -76,6 +80,18 @@ const KeyboardCanvas: React.FC = () => {
                     mountingSide={c.mountingSide}
                   />
                 ))}
+                {(data.batteries || []).map((b) => (
+                  <Battery 
+                    key={b.id}
+                    id={b.id}
+                    width={b.width}
+                    height={b.height}
+                    thickness={b.thickness}
+                    position={[b.x, b.mountingSide === 'bottom' ? -4 : -2, b.y]}
+                    rotation={[b.mountingSide === 'bottom' ? Math.PI : 0, 0, (b.rotation * Math.PI) / 180]}
+                    mountingSide={b.mountingSide}
+                  />
+                ))}
               </group>
             ) : (
               <>
@@ -102,6 +118,19 @@ const KeyboardCanvas: React.FC = () => {
                           position={[c.x, c.mountingSide === 'bottom' ? -4 : -2, c.y]}
                           rotation={[c.mountingSide === 'bottom' ? Math.PI : 0, 0, (c.rotation * Math.PI) / 180]}
                           mountingSide={c.mountingSide}
+                          side="left"
+                        />
+                      ))}
+                      {leftBatteries.map((b) => (
+                        <Battery 
+                          key={b.id}
+                          id={b.id}
+                          width={b.width}
+                          height={b.height}
+                          thickness={b.thickness}
+                          position={[b.x, b.mountingSide === 'bottom' ? -4 : -2, b.y]}
+                          rotation={[b.mountingSide === 'bottom' ? Math.PI : 0, 0, (b.rotation * Math.PI) / 180]}
+                          mountingSide={b.mountingSide}
                           side="left"
                         />
                       ))}
@@ -132,6 +161,19 @@ const KeyboardCanvas: React.FC = () => {
                           position={[c.x, c.mountingSide === 'bottom' ? -4 : -2, c.y]}
                           rotation={[c.mountingSide === 'bottom' ? Math.PI : 0, 0, (c.rotation * Math.PI) / 180]}
                           mountingSide={c.mountingSide}
+                          side="right"
+                        />
+                      ))}
+                      {rightBatteries.map((b) => (
+                        <Battery 
+                          key={b.id}
+                          id={b.id}
+                          width={b.width}
+                          height={b.height}
+                          thickness={b.thickness}
+                          position={[b.x, b.mountingSide === 'bottom' ? -4 : -2, b.y]}
+                          rotation={[b.mountingSide === 'bottom' ? Math.PI : 0, 0, (b.rotation * Math.PI) / 180]}
+                          mountingSide={b.mountingSide}
                           side="right"
                         />
                       ))}
@@ -183,6 +225,7 @@ const KeyboardCanvas: React.FC = () => {
           selectKey(null);
           selectTrackball(null);
           selectController(null);
+          selectBattery(null);
         }}
       >
         <planeGeometry args={[2000, 2000]} />

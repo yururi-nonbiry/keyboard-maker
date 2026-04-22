@@ -67,6 +67,22 @@ const Case: React.FC<CaseProps> = ({ side }) => {
       ));
     });
 
+    // Batteries
+    const sideBatteries = (data.batteries || []).filter(b => {
+      if (!side) return true; // integrated
+      return b.side === side || (!b.side && side === 'left');
+    });
+
+    sideBatteries.forEach(b => {
+      allCorners.push(...getComponentCorners(
+        b.x,
+        b.y,
+        b.width,
+        b.height,
+        b.rotation
+      ));
+    });
+
     const bbox = calculatePointsBoundingBox(allCorners, wallThickness);
     if (!bbox) return null;
 

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
 import { calculateFullBoundingBox } from '../../utils/geometry';
-import type { KeyConfig, TrackballConfig, ControllerConfig } from '../../types';
+import type { KeyConfig, TrackballConfig, ControllerConfig, BatteryConfig } from '../../types';
 
 const UNIT = 19.05; // Standard key pitch
 
@@ -24,13 +24,17 @@ const Keyboard2D: React.FC = () => {
     updateTrackball,
     selectedControllerId,
     selectController,
-    updateController
+    updateController,
+    selectedBatteryId,
+    selectBattery,
+    updateBattery
   } = useKeyboardStore();
 
   const svgRef = useRef<SVGSVGElement>(null);
   const [draggingKeyId, setDraggingKeyId] = useState<string | null>(null);
   const [draggingTrackballId, setDraggingTrackballId] = useState<string | null>(null);
   const [draggingControllerId, setDraggingControllerId] = useState<string | null>(null);
+  const [draggingBatteryId, setDraggingBatteryId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [viewBox, setViewBox] = useState({ x: -250, y: -200, width: 500, height: 400 });
   const [isPanning, setIsPanning] = useState(false);
@@ -47,10 +51,12 @@ const Keyboard2D: React.FC = () => {
   const rightTrackballs = useMemo(() => (data.trackballs || []).filter(t => t.side === 'right'), [data.trackballs]);
   const leftControllers = useMemo(() => (data.controllers || []).filter(c => c.side === 'left' || !c.side), [data.controllers]);
   const rightControllers = useMemo(() => (data.controllers || []).filter(c => c.side === 'right'), [data.controllers]);
+  const leftBatteries = useMemo(() => (data.batteries || []).filter(b => b.side === 'left' || !b.side), [data.batteries]);
+  const rightBatteries = useMemo(() => (data.batteries || []).filter(b => b.side === 'right'), [data.batteries]);
 
-  const leftBbox = useMemo(() => calculateFullBoundingBox(leftKeys, leftTrackballs, leftControllers, case_config.keyPitch), [leftKeys, leftTrackballs, leftControllers, case_config.keyPitch]);
-  const rightBbox = useMemo(() => calculateFullBoundingBox(rightKeys, rightTrackballs, rightControllers, case_config.keyPitch), [rightKeys, rightTrackballs, rightControllers, case_config.keyPitch]);
-  const fullBbox = useMemo(() => calculateFullBoundingBox(layout, data.trackballs || [], data.controllers || [], case_config.keyPitch), [layout, data.trackballs, data.controllers, case_config.keyPitch]);
+  const leftBbox = useMemo(() => calculateFullBoundingBox(leftKeys, leftTrackballs, leftControllers, leftBatteries, case_config.keyPitch), [leftKeys, leftTrackballs, leftControllers, leftBatteries, case_config.keyPitch]);
+  const rightBbox = useMemo(() => calculateFullBoundingBox(rightKeys, rightTrackballs, rightControllers, rightBatteries, case_config.keyPitch), [rightKeys, rightTrackballs, rightControllers, rightBatteries, case_config.keyPitch]);
+  const fullBbox = useMemo(() => calculateFullBoundingBox(layout, data.trackballs || [], data.controllers || [], data.batteries || [], case_config.keyPitch), [layout, data.trackballs, data.controllers, data.batteries, case_config.keyPitch]);
 
   // Adjust viewBox to fit the keyboard initialy or when layout changes significantly
   useEffect(() => {
@@ -120,6 +126,21 @@ const Keyboard2D: React.FC = () => {
     }
   };
 
+  const handleBatteryMouseDown = (e: React.MouseEvent, batteryId: string) => {
+    e.stopPropagation();
+    selectBattery(batteryId);
+    setDraggingBatteryId(batteryId);
+    
+    const battery = (data.batteries || []).find(b => b.id === batteryId);
+    if (battery) {
+      const mousePos = getMousePos(e);
+      setDragOffset({
+        x: mousePos.x - battery.x,
+        y: mousePos.y - battery.y
+      });
+    }
+  };
+
   const handleMouseMove = (e: React.MouseEvent) => {
     if (draggingKeyId) {
       const mousePos = getMousePos(e);
@@ -157,6 +178,18 @@ const Keyboard2D: React.FC = () => {
         x: snap(newX),
         y: snap(newY)
       });
+    } else if (draggingBatteryId) {
+      const mousePos = getMousePos(e);
+      const newX = mousePos.x - dragOffset.x;
+      const newY = mousePos.y - dragOffset.y;
+      
+      const snapIncrement = gridSnapping ? gridSize / 4 : 0.25;
+      const snap = (val: number) => Math.round(val / snapIncrement) * snapIncrement;
+
+      updateBattery(draggingBatteryId, {
+        x: snap(newX),
+        y: snap(newY)
+      });
     } else if (isPanning) {
       const dx = (e.clientX - panStart.x) * (viewBox.width / (svgRef.current?.clientWidth || 1));
       const dy = (e.clientY - panStart.y) * (viewBox.height / (svgRef.current?.clientHeight || 1));
@@ -183,6 +216,7 @@ const Keyboard2D: React.FC = () => {
     setDraggingKeyId(null);
     setDraggingTrackballId(null);
     setDraggingControllerId(null);
+    setDraggingBatteryId(null);
     setIsPanning(false);
   };
 
@@ -387,6 +421,51 @@ const Keyboard2D: React.FC = () => {
     );
   };
 
+  const renderBattery = (battery: BatteryConfig) => {
+    const isSelected = selectedBatteryId === battery.id;
+    const { width: w, height: h } = battery;
+
+    return (
+      <g 
+        key={battery.id}
+        transform={`translate(${battery.x}, ${battery.y}) rotate(${-battery.rotation})`}
+        onMouseDown={(e) => !splitMode && handleBatteryMouseDown(e, battery.id)}
+        onClick={(e) => e.stopPropagation()}
+        style={{ cursor: splitMode ? 'default' : 'move' }}
+      >
+        <rect
+          x={-w/2}
+          y={-h/2}
+          width={w}
+          height={h}
+          rx={2}
+          fill={isSelected ? 'rgba(71, 85, 105, 0.4)' : 'rgba(71, 85, 105, 0.6)'}
+          stroke={isSelected ? '#94a3b8' : '#64748b'}
+          strokeWidth={isSelected ? 2 : 1}
+        />
+        <text
+          y={2}
+          textAnchor="middle"
+          fontSize={5}
+          fontWeight="bold"
+          fill="#fff"
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+          BATTERY
+        </text>
+        <text
+          y={8}
+          textAnchor="middle"
+          fontSize={3}
+          fill="rgba(255, 255, 255, 0.8)"
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+          {`${battery.width}x${battery.height}x${battery.thickness}mm`}
+        </text>
+      </g>
+    );
+  };
+
   const renderHalf = (keys: KeyConfig[], bbox: any, side: 'left' | 'right') => {
     if (!bbox) return null;
 
@@ -411,6 +490,7 @@ const Keyboard2D: React.FC = () => {
           {keys.map(renderKey)}
           {(side === 'left' ? leftTrackballs : rightTrackballs).map(renderTrackball)}
           {(side === 'left' ? leftControllers : rightControllers).map(renderController)}
+          {(side === 'left' ? leftBatteries : rightBatteries).map(renderBattery)}
         </g>
       </g>
     );
@@ -434,6 +514,7 @@ const Keyboard2D: React.FC = () => {
             selectKey(null);
             selectTrackball(null);
             selectController(null);
+            selectBattery(null);
           }
         }}
       >
@@ -474,6 +555,7 @@ const Keyboard2D: React.FC = () => {
                {layout.map(renderKey)}
               {(data.trackballs || []).map(renderTrackball)}
               {(data.controllers || []).map(renderController)}
+              {(data.batteries || []).map(renderBattery)}
             </g>
           ) : (
             <>
