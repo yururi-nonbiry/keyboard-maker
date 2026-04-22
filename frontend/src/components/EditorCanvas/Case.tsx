@@ -23,7 +23,6 @@ interface CaseProps {
  */
 const GroundedBox: React.FC<{
   width: number;
-  height: number;
   depth: number;
   centerX: number;
   centerY: number;
@@ -150,12 +149,18 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
     const wallHeight = 12;
     const wallTopY = baseTopY + wallHeight - 4;
 
+    // To prevent Z-fighting (flickering), we ensure that the base and walls do not overlap.
+    // If walls are shown, the base is shrunk to the inner area.
+    // Walls are also adjusted so they don't overlap at the corners.
+    const innerWidth = bbox.width - wallThickness * 2;
+    const innerHeight = bbox.height - wallThickness * 2;
+
     return (
       <group key={id}>
         {showCaseBase && (
           <GroundedBox 
-            width={bbox.width}
-            depth={bbox.height}
+            width={showCaseWalls ? innerWidth : bbox.width}
+            depth={showCaseWalls ? innerHeight : bbox.height}
             centerX={bbox.centerX}
             centerY={bbox.centerY}
             topY={baseTopY}
@@ -169,6 +174,7 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
 
         {showCaseWalls && (
           <>
+            {/* Top Wall (Full width) */}
             <GroundedBox 
               width={bbox.width}
               depth={wallThickness}
@@ -181,6 +187,7 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
               splitRotation={splitRotation}
               typingAngle={typingAngle}
             />
+            {/* Bottom Wall (Full width) */}
             <GroundedBox 
               width={bbox.width}
               depth={wallThickness}
@@ -193,9 +200,10 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
               splitRotation={splitRotation}
               typingAngle={typingAngle}
             />
+            {/* Left Wall (Inner height to avoid corner overlap) */}
             <GroundedBox 
               width={wallThickness}
-              depth={bbox.height}
+              depth={innerHeight}
               centerX={bbox.minX + wallThickness / 2}
               centerY={bbox.centerY}
               topY={wallTopY}
@@ -205,9 +213,10 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
               splitRotation={splitRotation}
               typingAngle={typingAngle}
             />
+            {/* Right Wall (Inner height to avoid corner overlap) */}
             <GroundedBox 
               width={wallThickness}
-              depth={bbox.height}
+              depth={innerHeight}
               centerX={bbox.maxX - wallThickness / 2}
               centerY={bbox.centerY}
               topY={wallTopY}
