@@ -298,6 +298,21 @@ const Sidebar: React.FC = () => {
             onChange={(e) => updateCaseConfig({ keyPitch: parseFloat(e.target.value) || 19.05 })}
           />
         </div>
+        <div className={styles.group}>
+          <label className={styles.label}>キーキャップのプロファイル (全体)</label>
+          <select
+            className={styles.input}
+            value={data.case_config.defaultKeycapProfile}
+            onChange={(e) => updateCaseConfig({ defaultKeycapProfile: e.target.value as any })}
+          >
+            <option value="cherry">Cherry</option>
+            <option value="oem">OEM</option>
+            <option value="dsa">DSA</option>
+            <option value="xda">XDA</option>
+            <option value="choc">Choc</option>
+            <option value="mbk">MBK</option>
+          </select>
+        </div>
       </CollapsibleSection>
 
       <CollapsibleSection 
@@ -445,6 +460,22 @@ const Sidebar: React.FC = () => {
               <option value="choc_v2">Choc V2</option>
               <option value="x_switch">X Switch</option>
               <option value="ec">静電容量無接点方式 (Topre)</option>
+            </select>
+          </div>
+          <div className={styles.group}>
+            <label className={styles.label}>キーキャップのプロファイル</label>
+            <select
+              className={styles.input}
+              value={selectedKey.keycapProfile || ''}
+              onChange={(e) => updateKey(selectedKey.id, { keycapProfile: (e.target.value || undefined) as any })}
+            >
+              <option value="">デフォルト (Default)</option>
+              <option value="cherry">Cherry</option>
+              <option value="oem">OEM</option>
+              <option value="dsa">DSA</option>
+              <option value="xda">XDA</option>
+              <option value="choc">Choc</option>
+              <option value="mbk">MBK</option>
             </select>
           </div>
           {data.type === 'split' && (

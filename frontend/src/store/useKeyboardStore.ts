@@ -105,6 +105,7 @@ const DEFAULT_CASE: CaseConfig = {
   splitRotation: 0,
   splitGap: 40,
   keyPitch: 19.05,
+  defaultKeycapProfile: 'cherry',
 };
 
 const INITIAL_LAYOUT: KeyConfig[] = Array.from({ length: 9 }, (_, i) => ({

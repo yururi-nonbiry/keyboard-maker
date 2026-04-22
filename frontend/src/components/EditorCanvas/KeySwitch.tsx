@@ -8,13 +8,68 @@ interface KeySwitchProps {
   config: KeyConfig;
 }
 
+const RealisticKeycap: React.FC<{
+  width: number;
+  height: number;
+  profile: string;
+  isSelected: boolean;
+  hasCollision: boolean;
+}> = ({ width, height, profile, isSelected, hasCollision }) => {
+  const color = hasCollision ? "#ef4444" : (isSelected ? "#6366f1" : "#1c1c21");
+  
+  let capHeight = 8;
+  let topScale = 0.75;
+  
+  if (profile === 'choc' || profile === 'mbk') {
+    capHeight = 3.5;
+    topScale = 0.9;
+  } else if (profile === 'dsa' || profile === 'xda') {
+    capHeight = 7.5;
+    topScale = 0.7;
+  }
+
+  return (
+    <group position={[0, capHeight / 2, 0]}>
+      {/* Main tapered body */}
+      <mesh>
+        <boxGeometry args={[width, capHeight, height]} />
+        <meshStandardMaterial 
+          color={color} 
+          metalness={0.1} 
+          roughness={0.3}
+          onBeforeCompile={(shader) => {
+            shader.vertexShader = shader.vertexShader.replace(
+              '#include <begin_vertex>',
+              `
+              vec3 transformed = vec3( position );
+              if (position.y > 0.0) {
+                transformed.x *= ${topScale.toFixed(2)};
+                transformed.z *= ${topScale.toFixed(2)};
+              }
+              `
+            );
+          }}
+        />
+      </mesh>
+      
+      {/* Top Dish - a subtle indentation */}
+      <mesh position={[0, capHeight / 2, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[width * topScale * 0.4, width * topScale * 0.45, 0.5, 32]} />
+        <meshStandardMaterial color={color} roughness={0.8} />
+      </mesh>
+    </group>
+  );
+};
+
 const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
   const { data, selectedKeyId, selectKey, collisions, updateKey, gridSnapping, gridSize, showKeycaps, showSwitches, showSockets } = useKeyboardStore();
-  const { keyPitch } = data.case_config;
+  const { keyPitch, defaultKeycapProfile } = data.case_config;
   const groupRef = useRef<THREE.Group>(null);
   const meshGroupRef = useRef<THREE.Group>(null);
   const isSelected = selectedKeyId === config.id;
   const hasCollision = collisions[config.id];
+  const profile = config.keycapProfile || defaultKeycapProfile;
+  const isLowProfile = config.switchType.startsWith('choc') || profile === 'choc' || profile === 'mbk';
 
   const handleDragEnd = () => {
     if (groupRef.current && meshGroupRef.current) {
@@ -59,7 +114,7 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
   const pcbY = -4.0;
   const pcbThickness = 1.6;
   const pcbBottom = pcbY - (pcbThickness / 2);
-  const socketY = pcbBottom - 1.5; // Centered 1.5mm below PCB bottom
+  const socketY = pcbBottom - 1.5;
 
   return (
     <group 
@@ -87,29 +142,45 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
         <group ref={meshGroupRef}>
           {showSwitches && (
             <group position={[0, plateTop, 0]}>
-              {/* Switch Bottom Housing (Part above plate) */}
-              <mesh position={[0, 1.5, 0]}>
-                <boxGeometry args={[15, 3, 15]} />
-                <meshStandardMaterial color={isSelected ? "#4f46e5" : "#222"} metalness={0.6} roughness={0.4} />
-              </mesh>
-              
-              {/* Part through plate */}
-              <mesh position={[0, -0.75, 0]}>
-                <boxGeometry args={[14, 1.5, 14]} />
-                <meshStandardMaterial color="#111" />
-              </mesh>
-
-              {/* Switch Top Housing (semi-transparent) */}
-              <mesh position={[0, 4.5, 0]}>
-                <boxGeometry args={[14, 3, 14]} />
-                <meshStandardMaterial color="#fff" transparent opacity={0.4} metalness={0.1} roughness={0.1} />
-              </mesh>
-
-              {/* Stem */}
-              <mesh position={[0, 6, 0]}>
-                <boxGeometry args={[4, 5, 4]} />
-                <meshStandardMaterial color="#ef4444" />
-              </mesh>
+              {isLowProfile ? (
+                // Choc Switch
+                <>
+                  {/* Housing */}
+                  <mesh position={[0, 1.5, 0]}>
+                    <boxGeometry args={[14, 3, 14]} />
+                    <meshStandardMaterial color={isSelected ? "#4f46e5" : "#111"} metalness={0.4} roughness={0.6} />
+                  </mesh>
+                  {/* Stem (Choc style) */}
+                  <mesh position={[0, 3.5, 0]}>
+                    <boxGeometry args={[10, 2, 3]} />
+                    <meshStandardMaterial color="#fff" />
+                  </mesh>
+                </>
+              ) : (
+                // MX Switch
+                <>
+                  {/* Switch Bottom Housing */}
+                  <mesh position={[0, 1.5, 0]}>
+                    <boxGeometry args={[15, 3, 15]} />
+                    <meshStandardMaterial color={isSelected ? "#4f46e5" : "#222"} metalness={0.6} roughness={0.4} />
+                  </mesh>
+                  {/* Part through plate */}
+                  <mesh position={[0, -0.75, 0]}>
+                    <boxGeometry args={[14, 1.5, 14]} />
+                    <meshStandardMaterial color="#111" />
+                  </mesh>
+                  {/* Switch Top Housing */}
+                  <mesh position={[0, 4.5, 0]}>
+                    <boxGeometry args={[14, 3, 14]} />
+                    <meshStandardMaterial color="#fff" transparent opacity={0.4} metalness={0.1} roughness={0.1} />
+                  </mesh>
+                  {/* Stem */}
+                  <mesh position={[0, 6, 0]}>
+                    <boxGeometry args={[4, 5, 4]} />
+                    <meshStandardMaterial color="#ef4444" />
+                  </mesh>
+                </>
+              )}
 
               {/* Metal Pins */}
               <mesh position={[-3.81, -2.5, -2.54]}>
@@ -140,13 +211,10 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
           {/* Hot-swap Socket */}
           {showSockets && (
             <group position={[0, socketY, 0]} rotation={[0, Math.PI, 0]}>
-              {/* Socket Body */}
               <mesh position={[0, 0, 0]}>
                 <boxGeometry args={[15, 3, 10]} />
                 <meshStandardMaterial color="#111" metalness={0.2} roughness={0.8} />
               </mesh>
-              {/* Contact points (metal) - Aligned with pins at [-3.81, -2.54] and [2.54, -5.08] */}
-              {/* After 180deg rotation, positions are negated relative to parent */}
               <mesh position={[3.81, 0, 2.54]}>
                 <boxGeometry args={[3, 1, 3]} />
                 <meshStandardMaterial color="#d4d4d8" metalness={0.9} roughness={0.1} />
@@ -160,16 +228,15 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
 
           {/* Keycap */}
           {showKeycaps && (
-            <mesh position={[0, 9, 0]}>
-              <boxGeometry args={[keycapW, 8, keycapH]} />
-              <meshStandardMaterial 
-                color={hasCollision ? "#ef4444" : (isSelected ? "#6366f1" : "#1c1c21")} 
-                metalness={0.1} 
-                roughness={0.3} 
-                transparent 
-                opacity={0.9} 
+            <group position={[0, isLowProfile ? 4 : 9, 0]}>
+              <RealisticKeycap 
+                width={keycapW} 
+                height={keycapH} 
+                profile={profile} 
+                isSelected={isSelected}
+                hasCollision={hasCollision}
               />
-            </mesh>
+            </group>
           )}
 
           {/* Selection Glow */}

@@ -11,12 +11,15 @@ export type ControllerType = 'pro_micro' | 'elite_c' | 'xiao_rp2040' | 'xiao_ble
 
 export type KeyboardType = 'integrated' | 'split';
 
+export type KeycapProfile = 'cherry' | 'oem' | 'dsa' | 'xda' | 'choc' | 'mbk';
+
 export interface KeyConfig {
   id: string;
   x: number; // in mm
   y: number; // in mm
   rotation: number; // in degrees
   switchType: SwitchType;
+  keycapProfile?: KeycapProfile;
   keycapSize: {
     width: number; // in units (e.g. 1u, 1.25u)
     height: number;
@@ -43,6 +46,7 @@ export interface CaseConfig {
   splitRotation: number; // in degrees
   splitGap: number; // in mm
   keyPitch: number; // in mm
+  defaultKeycapProfile: KeycapProfile;
 }
 
 export interface TrackballConfig {
