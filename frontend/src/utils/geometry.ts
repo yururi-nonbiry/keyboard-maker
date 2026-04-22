@@ -1,4 +1,4 @@
-import type { KeyConfig } from '../types';
+import type { KeyConfig, ControllerType, ControllerConfig, TrackballConfig } from '../types';
 
 export interface CollisionResult {
   hasCollision: boolean;
@@ -206,5 +206,68 @@ export const calculatePointsBoundingBox = (points: Point[], padding: number = 0)
     minY: minY - padding,
     maxY: maxY + padding,
   };
+};
+
+/**
+ * Returns dimensions (width, length) for a given controller type.
+ */
+export const getControllerDimensions = (type: ControllerType): { width: number; length: number } => {
+  switch (type) {
+    case 'xiao_rp2040': return { width: 18, length: 21 };
+    case 'pico': return { width: 21, length: 51 };
+    case 'bluepill': return { width: 23, length: 53 };
+    case 'pro_micro':
+    case 'elite_c':
+    default: return { width: 18, length: 33 };
+  }
+};
+
+/**
+ * Calculates a bounding box that encompasses all provided components.
+ */
+export const calculateFullBoundingBox = (
+  keys: KeyConfig[],
+  trackballs: TrackballConfig[] = [],
+  controllers: ControllerConfig[] = [],
+  keyPitch: number = 19.05,
+  padding: number = 0
+): BoundingBox | null => {
+  const allCorners: Point[] = [];
+
+  // Keys
+  keys.forEach(key => {
+    allCorners.push(...getComponentCorners(
+      key.x,
+      key.y,
+      key.keycapSize.width * keyPitch,
+      key.keycapSize.height * keyPitch,
+      key.rotation
+    ));
+  });
+
+  // Trackballs
+  trackballs.forEach(t => {
+    allCorners.push(...getComponentCorners(
+      t.x,
+      t.y,
+      t.diameter,
+      t.diameter,
+      0
+    ));
+  });
+
+  // Controllers
+  controllers.forEach(c => {
+    const dim = getControllerDimensions(c.type);
+    allCorners.push(...getComponentCorners(
+      c.x,
+      c.y,
+      dim.width,
+      dim.length,
+      c.rotation
+    ));
+  });
+
+  return calculatePointsBoundingBox(allCorners, padding);
 };
 

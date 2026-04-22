@@ -1,6 +1,6 @@
 import React from 'react';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
-import { getComponentCorners, calculatePointsBoundingBox } from '../../utils/geometry';
+import { getComponentCorners, calculatePointsBoundingBox, getControllerDimensions } from '../../utils/geometry';
 import type { KeyConfig } from '../../types';
 
 interface PlateProps {
@@ -39,6 +39,24 @@ const Plate: React.FC<PlateProps> = ({ side }) => {
         t.diameter,
         t.diameter,
         0
+      ));
+    });
+    
+    // Controllers
+    const sideControllers = (data.controllers || []).filter(c => {
+      if (!side) return true; // integrated
+      return c.side === side;
+    });
+
+    sideControllers.forEach(c => {
+      const dimensions = getControllerDimensions(c.type);
+      
+      allCorners.push(...getComponentCorners(
+        c.x,
+        c.y,
+        dimensions.width,
+        dimensions.length,
+        c.rotation
       ));
     });
 

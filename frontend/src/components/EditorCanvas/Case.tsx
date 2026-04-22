@@ -1,6 +1,6 @@
 import React from 'react';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
-import { getComponentCorners, calculatePointsBoundingBox } from '../../utils/geometry';
+import { getComponentCorners, calculatePointsBoundingBox, getControllerDimensions } from '../../utils/geometry';
 import type { KeyConfig } from '../../types';
 
 interface CaseProps {
@@ -54,12 +54,7 @@ const Case: React.FC<CaseProps> = ({ side }) => {
     });
 
     sideControllers.forEach(c => {
-      let dimensions = { width: 18, length: 33 };
-      switch (c.type) {
-        case 'xiao_rp2040': dimensions = { width: 18, length: 21 }; break;
-        case 'pico': dimensions = { width: 21, length: 51 }; break;
-        case 'bluepill': dimensions = { width: 23, length: 53 }; break;
-      }
+      const dimensions = getControllerDimensions(c.type);
       
       allCorners.push(...getComponentCorners(
         c.x,

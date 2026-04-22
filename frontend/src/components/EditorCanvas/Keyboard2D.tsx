@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
-import { calculateBoundingBox } from '../../utils/geometry';
+import { calculateFullBoundingBox } from '../../utils/geometry';
 import type { KeyConfig, TrackballConfig, ControllerConfig } from '../../types';
 
 const UNIT = 19.05; // Standard key pitch
@@ -48,9 +48,9 @@ const Keyboard2D: React.FC = () => {
   const leftControllers = useMemo(() => (data.controllers || []).filter(c => c.side === 'left' || !c.side), [data.controllers]);
   const rightControllers = useMemo(() => (data.controllers || []).filter(c => c.side === 'right'), [data.controllers]);
 
-  const leftBbox = useMemo(() => calculateBoundingBox(leftKeys, case_config.keyPitch), [leftKeys, case_config.keyPitch]);
-  const rightBbox = useMemo(() => calculateBoundingBox(rightKeys, case_config.keyPitch), [rightKeys, case_config.keyPitch]);
-  const fullBbox = useMemo(() => calculateBoundingBox(layout, case_config.keyPitch), [layout, case_config.keyPitch]);
+  const leftBbox = useMemo(() => calculateFullBoundingBox(leftKeys, leftTrackballs, leftControllers, case_config.keyPitch), [leftKeys, leftTrackballs, leftControllers, case_config.keyPitch]);
+  const rightBbox = useMemo(() => calculateFullBoundingBox(rightKeys, rightTrackballs, rightControllers, case_config.keyPitch), [rightKeys, rightTrackballs, rightControllers, case_config.keyPitch]);
+  const fullBbox = useMemo(() => calculateFullBoundingBox(layout, data.trackballs || [], data.controllers || [], case_config.keyPitch), [layout, data.trackballs, data.controllers, case_config.keyPitch]);
 
   // Adjust viewBox to fit the keyboard initialy or when layout changes significantly
   useEffect(() => {
