@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import * as THREE from 'three';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
 import { getComponentCorners, calculatePointsBoundingBox, getControllerDimensions } from '../../utils/geometry';
 import type { KeyConfig } from '../../types';
@@ -27,24 +28,6 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
         key.rotation
       ));
     });
-
-    // Trackballs - Excluded from main PCB as they have modular PCBs
-    /*
-    const sideTrackballs = (data.trackballs || []).filter(t => {
-      if (!side) return true; // integrated
-      return t.side === side || (!t.side && side === 'left');
-    });
-
-    sideTrackballs.forEach(t => {
-      allCorners.push(...getComponentCorners(
-        t.x,
-        t.y,
-        t.diameter,
-        t.diameter,
-        0
-      ));
-    });
-    */
     
     // Controllers
     const sideControllers = (data.controllers || []).filter(c => {
@@ -70,13 +53,65 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
     // Standard PCB thickness is 1.6mm
     const pcbThickness = 1.6;
     // Position it below the plate (which is at y=-1)
-    // Plate is 1.5mm thick, so bottom of plate is at -2.5.
-    // Let's place PCB at -4.0 (giving some space for switch pins)
     const pcbY = -4.0;
 
+    // Use useMemo to avoid regenerating geometry on every render
+    const geometry = useMemo(() => {
+      const shape = new THREE.Shape();
+      const hw = bbox.width / 2;
+      const hh = bbox.height / 2;
+
+      // Outer boundary
+      shape.moveTo(-hw, -hh);
+      shape.lineTo(hw, -hh);
+      shape.lineTo(hw, hh);
+      shape.lineTo(-hw, hh);
+      shape.closePath();
+
+      // Holes for keys
+      keys.forEach(key => {
+        const relX = key.x - bbox.centerX;
+        const relY = key.y - bbox.centerY;
+        const rot = -key.rotation * (Math.PI / 180);
+        const cos = Math.cos(rot);
+        const sin = Math.sin(rot);
+
+        // Standard MX PCB footprint holes
+        const holePositions = [
+          { x: 0, y: 0, r: 2.0 },        // Center post (4mm dia)
+          { x: 5.08, y: 0, r: 0.85 },    // PCB mount pin 1 (1.7mm dia)
+          { x: -5.08, y: 0, r: 0.85 },   // PCB mount pin 2 (1.7mm dia)
+          { x: -3.81, y: -2.54, r: 0.75 }, // Metal pin 1 (1.5mm dia)
+          { x: 2.54, y: -5.08, r: 0.75 }   // Metal pin 2 (1.5mm dia)
+        ];
+
+        holePositions.forEach(pos => {
+          const path = new THREE.Path();
+          const rotatedX = relX + pos.x * cos - pos.y * sin;
+          const rotatedY = relY + pos.x * sin + pos.y * cos;
+          path.absarc(rotatedX, rotatedY, pos.r, 0, Math.PI * 2, true);
+          shape.holes.push(path);
+        });
+      });
+
+      const extrudeSettings = {
+        depth: pcbThickness,
+        bevelEnabled: false,
+      };
+
+      const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+      // Center the geometry relative to its thickness
+      geo.translate(0, 0, -pcbThickness / 2);
+      return geo;
+    }, [keys, bbox, pcbThickness]);
+
     return (
-      <mesh key={id} position={[bbox.centerX, pcbY, bbox.centerY]}>
-        <boxGeometry args={[bbox.width, pcbThickness, bbox.height]} />
+      <mesh 
+        key={id} 
+        position={[bbox.centerX, pcbY, bbox.centerY]}
+        rotation={[Math.PI / 2, 0, 0]} // Rotate to lay flat in XZ plane
+        geometry={geometry}
+      >
         <meshStandardMaterial 
           color="#1b4d2e" // Classic green PCB color
           metalness={0.3} 
