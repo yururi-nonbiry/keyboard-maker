@@ -104,10 +104,11 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
 
   // Vertical positions (matching Plate.tsx and PCB.tsx)
   const plateY = -1;
-  const plateThickness = 1.5;
+  const plateThickness = data.case_config.plateThickness || 1.5;
   const plateTop = plateY + (plateThickness / 2);
   const pcbY = -4.0;
   const pcbThickness = 1.6;
+  const pcbTop = pcbY + (pcbThickness / 2);
   const pcbBottom = pcbY - (pcbThickness / 2);
   const socketY = pcbBottom - 1.5;
 
@@ -140,10 +141,15 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
               {isLowProfile ? (
                 // Choc Switch
                 <>
-                  {/* Housing */}
+                  {/* Housing Above Plate */}
                   <mesh position={[0, 1.5, 0]}>
                     <boxGeometry args={[14, 3, 14]} />
                     <meshStandardMaterial color={isSelected ? "#4f46e5" : "#111"} metalness={0.4} roughness={0.6} />
+                  </mesh>
+                  {/* Housing Through Plate and down to PCB */}
+                  <mesh position={[0, (pcbTop - plateTop) / 2, 0]}>
+                    <boxGeometry args={[14, plateTop - pcbTop, 14]} />
+                    <meshStandardMaterial color="#111" />
                   </mesh>
                   {/* Stem (Choc style) */}
                   <mesh position={[0, 3.5, 0]}>
@@ -154,14 +160,14 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
               ) : (
                 // MX Switch
                 <>
-                  {/* Switch Bottom Housing */}
+                  {/* Switch Bottom Housing (Above Plate part) */}
                   <mesh position={[0, 1.5, 0]}>
                     <boxGeometry args={[15, 3, 15]} />
                     <meshStandardMaterial color={isSelected ? "#4f46e5" : "#222"} metalness={0.6} roughness={0.4} />
                   </mesh>
-                  {/* Part through plate */}
-                  <mesh position={[0, -0.75, 0]}>
-                    <boxGeometry args={[14, 1.5, 14]} />
+                  {/* Part through plate and down to PCB */}
+                  <mesh position={[0, (pcbTop - plateTop) / 2, 0]}>
+                    <boxGeometry args={[14, plateTop - pcbTop, 14]} />
                     <meshStandardMaterial color="#111" />
                   </mesh>
                   {/* Switch Top Housing */}
@@ -178,26 +184,26 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
               )}
 
               {/* Metal Pins */}
-              <mesh position={[-3.81, -2.5, -2.54]}>
-                <cylinderGeometry args={[0.4, 0.4, 3]} />
+              <mesh position={[-3.81, (pcbBottom - plateTop) / 2 - 0.5, -2.54]}>
+                <cylinderGeometry args={[0.4, 0.4, plateTop - pcbBottom + 1]} />
                 <meshStandardMaterial color="#a1a1aa" metalness={0.8} roughness={0.2} />
               </mesh>
-              <mesh position={[2.54, -2.5, -5.08]}>
-                <cylinderGeometry args={[0.4, 0.4, 3]} />
+              <mesh position={[2.54, (pcbBottom - plateTop) / 2 - 0.5, -5.08]}>
+                <cylinderGeometry args={[0.4, 0.4, plateTop - pcbBottom + 1]} />
                 <meshStandardMaterial color="#a1a1aa" metalness={0.8} roughness={0.2} />
               </mesh>
 
               {/* PCB Mounting Pins */}
-              <mesh position={[-5.08, -2.0, 0]}>
-                <cylinderGeometry args={[0.8, 0.8, 2.5]} />
+              <mesh position={[-5.08, (pcbBottom - plateTop) / 2 - 0.2, 0]}>
+                <cylinderGeometry args={[0.8, 0.8, plateTop - pcbBottom + 0.4]} />
                 <meshStandardMaterial color="#222" />
               </mesh>
-              <mesh position={[5.08, -2.0, 0]}>
-                <cylinderGeometry args={[0.8, 0.8, 2.5]} />
+              <mesh position={[5.08, (pcbBottom - plateTop) / 2 - 0.2, 0]}>
+                <cylinderGeometry args={[0.8, 0.8, plateTop - pcbBottom + 0.4]} />
                 <meshStandardMaterial color="#222" />
               </mesh>
-              <mesh position={[0, -2.0, 0]}>
-                <cylinderGeometry args={[1.9, 1.9, 2.5]} />
+              <mesh position={[0, (pcbBottom - plateTop) / 2 - 0.2, 0]}>
+                <cylinderGeometry args={[1.9, 1.9, plateTop - pcbBottom + 0.4]} />
                 <meshStandardMaterial color="#222" />
               </mesh>
             </group>
@@ -236,8 +242,8 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
 
           {/* Selection Glow */}
           {isSelected && (
-            <mesh position={[0, 0.5, 0]}>
-              <boxGeometry args={[keyPitch, 0.5, keyPitch]} />
+            <mesh position={[0, 0.05, 0]}>
+              <boxGeometry args={[keyPitch, 0.05, keyPitch]} />
               <meshStandardMaterial 
                 color="#6366f1" 
                 emissive="#6366f1" 
