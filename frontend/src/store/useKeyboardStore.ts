@@ -69,6 +69,7 @@ interface KeyboardState {
   showSwitches: boolean;
   showTrackballs: boolean;
   showControllers: boolean;
+  showSockets: boolean;
   toggleKeycapsVisible: () => void;
   togglePlateVisible: () => void;
   toggleCaseBaseVisible: () => void;
@@ -77,6 +78,7 @@ interface KeyboardState {
   toggleSwitchesVisible: () => void;
   toggleTrackballsVisible: () => void;
   toggleControllersVisible: () => void;
+  toggleSocketsVisible: () => void;
 }
 
 const DEFAULT_METADATA: KeyboardMetadata = {
@@ -147,6 +149,7 @@ export const useKeyboardStore = create<KeyboardState>()(
       showSwitches: true,
       showTrackballs: true,
       showControllers: true,
+      showSockets: true,
 
       toggleKeycapsVisible: () => set((state) => ({ showKeycaps: !state.showKeycaps })),
       togglePlateVisible: () => set((state) => ({ showPlate: !state.showPlate })),
@@ -156,6 +159,7 @@ export const useKeyboardStore = create<KeyboardState>()(
       toggleSwitchesVisible: () => set((state) => ({ showSwitches: !state.showSwitches })),
       toggleTrackballsVisible: () => set((state) => ({ showTrackballs: !state.showTrackballs })),
       toggleControllersVisible: () => set((state) => ({ showControllers: !state.showControllers })),
+      toggleSocketsVisible: () => set((state) => ({ showSockets: !state.showSockets })),
 
       toggleSplitMode: () => set((state) => ({ splitMode: !state.splitMode })),
       setTempSplitX: (tempSplitX) => set({ tempSplitX }),

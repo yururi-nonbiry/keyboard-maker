@@ -63,6 +63,7 @@ const Sidebar: React.FC = () => {
     showSwitches,
     showTrackballs,
     showControllers,
+    showSockets,
     toggleKeycapsVisible,
     togglePlateVisible,
     toggleCaseBaseVisible,
@@ -71,6 +72,7 @@ const Sidebar: React.FC = () => {
     toggleSwitchesVisible,
     toggleTrackballsVisible,
     toggleControllersVisible,
+    toggleSocketsVisible,
     selectedBatteryId,
     selectBattery,
     addBattery,
@@ -213,6 +215,15 @@ const Sidebar: React.FC = () => {
               onChange={toggleControllersVisible} 
             />
             マイコン (MCU)
+          </label>
+          <label className={styles.checkboxLabel}>
+            <input 
+              type="checkbox" 
+              className={styles.checkbox} 
+              checked={showSockets} 
+              onChange={toggleSocketsVisible} 
+            />
+            ホットスワップソケット
           </label>
         </div>
       </CollapsibleSection>

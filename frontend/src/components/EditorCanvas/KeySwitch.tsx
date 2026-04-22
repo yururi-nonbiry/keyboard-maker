@@ -9,7 +9,7 @@ interface KeySwitchProps {
 }
 
 const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
-  const { data, selectedKeyId, selectKey, collisions, updateKey, gridSnapping, gridSize, showKeycaps, showSwitches } = useKeyboardStore();
+  const { data, selectedKeyId, selectKey, collisions, updateKey, gridSnapping, gridSize, showKeycaps, showSwitches, showSockets } = useKeyboardStore();
   const { keyPitch } = data.case_config;
   const groupRef = useRef<THREE.Group>(null);
   const meshGroupRef = useRef<THREE.Group>(null);
@@ -18,19 +18,15 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
 
   const handleDragEnd = () => {
     if (groupRef.current && meshGroupRef.current) {
-      // 1. Get world position and rotation of the meshes (after drag)
       const worldPos = new THREE.Vector3();
       meshGroupRef.current.getWorldPosition(worldPos);
       
       const worldQuat = new THREE.Quaternion();
       meshGroupRef.current.getWorldQuaternion(worldQuat);
       
-      // 2. Get the keyboard container (parent of groupRef)
       const container = groupRef.current.parent;
       if (!container) return;
 
-      // 3. Convert world coordinates to local coordinates relative to the container
-      // This bypasses any animation/rotation from parent components like <Float />
       const containerWorldMatrixInverse = container.matrixWorld.clone().invert();
       const localPos = worldPos.applyMatrix4(containerWorldMatrixInverse);
       
@@ -40,7 +36,6 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
       
       const euler = new THREE.Euler().setFromQuaternion(localQuat);
       
-      // 4. Determine snap increment
       const snapIncrement = gridSnapping ? gridSize / 4 : 0.25;
       const snapVal = (val: number) => Math.round(val / snapIncrement) * snapIncrement;
       
@@ -57,6 +52,15 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
   const keycapW = (keyPitch - 1.05) * config.keycapSize.width;
   const keycapH = (keyPitch - 1.05) * config.keycapSize.height;
 
+  // Vertical positions (matching Plate.tsx and PCB.tsx)
+  const plateY = -1;
+  const plateThickness = 1.5;
+  const plateTop = plateY + (plateThickness / 2);
+  const pcbY = -4.0;
+  const pcbThickness = 1.6;
+  const pcbBottom = pcbY - (pcbThickness / 2);
+  const socketY = pcbBottom - 1.5; // Centered 1.5mm below PCB bottom
+
   return (
     <group 
       ref={groupRef}
@@ -70,9 +74,9 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
       onPointerUp={(e) => e.stopPropagation()}
     >
       <PivotControls
-        key={isSelected ? 'active' : 'inactive'} // Force reset matrix when selection changes
+        key={isSelected ? 'active' : 'inactive'}
         visible={isSelected}
-        activeAxes={[true, false, true]} // X and Z for horizontal movement
+        activeAxes={[true, false, true]}
         depthTest={false}
         anchor={[0, 0, 0]}
         scale={isSelected ? 30 : 0}
@@ -82,24 +86,80 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
       >
         <group ref={meshGroupRef}>
           {showSwitches && (
-            <>
-              {/* Switch Base */}
-              <mesh position={[0, 2, 0]}>
-                <boxGeometry args={[14, 4, 14]} />
-                <meshStandardMaterial color={isSelected ? "#4f46e5" : "#333"} metalness={0.5} roughness={0.5} />
+            <group position={[0, plateTop, 0]}>
+              {/* Switch Bottom Housing (Part above plate) */}
+              <mesh position={[0, 1.5, 0]}>
+                <boxGeometry args={[15, 3, 15]} />
+                <meshStandardMaterial color={isSelected ? "#4f46e5" : "#222"} metalness={0.6} roughness={0.4} />
+              </mesh>
+              
+              {/* Part through plate */}
+              <mesh position={[0, -0.75, 0]}>
+                <boxGeometry args={[14, 1.5, 14]} />
+                <meshStandardMaterial color="#111" />
+              </mesh>
+
+              {/* Switch Top Housing (semi-transparent) */}
+              <mesh position={[0, 4.5, 0]}>
+                <boxGeometry args={[14, 3, 14]} />
+                <meshStandardMaterial color="#fff" transparent opacity={0.4} metalness={0.1} roughness={0.1} />
               </mesh>
 
               {/* Stem */}
-              <mesh position={[0, 5, 0]}>
-                <boxGeometry args={[4, 6, 4]} />
+              <mesh position={[0, 6, 0]}>
+                <boxGeometry args={[4, 5, 4]} />
                 <meshStandardMaterial color="#ef4444" />
               </mesh>
-            </>
+
+              {/* Metal Pins */}
+              <mesh position={[-3.81, -2.5, -2.54]}>
+                <cylinderGeometry args={[0.4, 0.4, 3]} />
+                <meshStandardMaterial color="#a1a1aa" metalness={0.8} roughness={0.2} />
+              </mesh>
+              <mesh position={[2.54, -2.5, -5.08]}>
+                <cylinderGeometry args={[0.4, 0.4, 3]} />
+                <meshStandardMaterial color="#a1a1aa" metalness={0.8} roughness={0.2} />
+              </mesh>
+
+              {/* PCB Mounting Pins */}
+              <mesh position={[-5.08, -2.0, 0]}>
+                <cylinderGeometry args={[0.8, 0.8, 2.5]} />
+                <meshStandardMaterial color="#222" />
+              </mesh>
+              <mesh position={[5.08, -2.0, 0]}>
+                <cylinderGeometry args={[0.8, 0.8, 2.5]} />
+                <meshStandardMaterial color="#222" />
+              </mesh>
+              <mesh position={[0, -2.0, 0]}>
+                <cylinderGeometry args={[1.9, 1.9, 2.5]} />
+                <meshStandardMaterial color="#222" />
+              </mesh>
+            </group>
+          )}
+
+          {/* Hot-swap Socket */}
+          {showSockets && (
+            <group position={[0, socketY, 0]} rotation={[0, Math.PI, 0]}>
+              {/* Socket Body */}
+              <mesh position={[0, 0, 0]}>
+                <boxGeometry args={[15, 3, 10]} />
+                <meshStandardMaterial color="#111" metalness={0.2} roughness={0.8} />
+              </mesh>
+              {/* Contact points (metal) */}
+              <mesh position={[-3.81, 0, 2.54]}>
+                <boxGeometry args={[3, 1, 3]} />
+                <meshStandardMaterial color="#d4d4d8" metalness={0.9} roughness={0.1} />
+              </mesh>
+              <mesh position={[2.54, 0, 5.08]}>
+                <boxGeometry args={[3, 1, 3]} />
+                <meshStandardMaterial color="#d4d4d8" metalness={0.9} roughness={0.1} />
+              </mesh>
+            </group>
           )}
 
           {/* Keycap */}
           {showKeycaps && (
-            <mesh position={[0, 10, 0]}>
+            <mesh position={[0, 9, 0]}>
               <boxGeometry args={[keycapW, 8, keycapH]} />
               <meshStandardMaterial 
                 color={hasCollision ? "#ef4444" : (isSelected ? "#6366f1" : "#1c1c21")} 
@@ -113,7 +173,7 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
 
           {/* Selection Glow */}
           {isSelected && (
-            <mesh position={[0, 1, 0]}>
+            <mesh position={[0, 0.5, 0]}>
               <boxGeometry args={[keyPitch, 0.5, keyPitch]} />
               <meshStandardMaterial 
                 color="#6366f1" 
