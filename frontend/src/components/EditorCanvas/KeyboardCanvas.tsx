@@ -1,4 +1,5 @@
 import React, { Suspense } from 'react';
+import * as THREE from 'three';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, ContactShadows, Environment, Float, Grid } from '@react-three/drei';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
@@ -44,7 +45,7 @@ const KeyboardCanvas: React.FC = () => {
 
   return (
     <Canvas
-      shadows
+      shadows={{ type: THREE.PCFShadowMap }}
       camera={{ position: [150, 200, 250], fov: 45, up: [0, 1, 0], near: 0.1, far: 2000 }}
       style={{ height: '100%', width: '100%' }}
     >
@@ -103,6 +104,10 @@ const KeyboardCanvas: React.FC = () => {
                     position={[b.x, b.mountingSide === 'bottom' ? -4 : -2, b.y]}
                     rotation={[b.mountingSide === 'bottom' ? Math.PI : 0, 0, (b.rotation * Math.PI) / 180]}
                     mountingSide={b.mountingSide}
+                    connectorEnabled={b.connectorEnabled}
+                    connectorX={b.connectorX}
+                    connectorY={b.connectorY}
+                    connectorMountingSide={b.connectorMountingSide}
                   />
                 ))}
               </group>
@@ -152,6 +157,10 @@ const KeyboardCanvas: React.FC = () => {
                           rotation={[b.mountingSide === 'bottom' ? Math.PI : 0, 0, (b.rotation * Math.PI) / 180]}
                           mountingSide={b.mountingSide}
                           side="left"
+                          connectorEnabled={b.connectorEnabled}
+                          connectorX={b.connectorX}
+                          connectorY={b.connectorY}
+                          connectorMountingSide={b.connectorMountingSide}
                         />
                       ))}
                     </group>
@@ -202,6 +211,10 @@ const KeyboardCanvas: React.FC = () => {
                           rotation={[b.mountingSide === 'bottom' ? Math.PI : 0, 0, (b.rotation * Math.PI) / 180]}
                           mountingSide={b.mountingSide}
                           side="right"
+                          connectorEnabled={b.connectorEnabled}
+                          connectorX={b.connectorX}
+                          connectorY={b.connectorY}
+                          connectorMountingSide={b.connectorMountingSide}
                         />
                       ))}
                     </group>

@@ -77,6 +77,10 @@ export interface BatteryConfig {
   rotation: number; // in degrees
   side: 'left' | 'right';
   mountingSide: 'top' | 'bottom';
+  connectorEnabled?: boolean;
+  connectorX?: number;
+  connectorY?: number;
+  connectorMountingSide?: 'top' | 'bottom';
 }
 
 export interface KeyboardData {

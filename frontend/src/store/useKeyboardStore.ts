@@ -351,7 +351,16 @@ export const useKeyboardStore = create<KeyboardState>()(
         set((state) => ({
           data: {
             ...state.data,
-            batteries: [...(state.data.batteries || []), battery],
+            batteries: [
+              ...(state.data.batteries || []),
+              {
+                ...battery,
+                connectorEnabled: false,
+                connectorX: battery.x,
+                connectorY: battery.y + 10,
+                connectorMountingSide: battery.mountingSide
+              }
+            ],
           },
         })),
   

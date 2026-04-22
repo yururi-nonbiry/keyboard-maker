@@ -814,6 +814,59 @@ const Sidebar: React.FC = () => {
               </select>
             </div>
           )}
+
+          <div className={styles.divider} />
+          
+          <div className={styles.group}>
+            <label className={styles.checkboxLabel}>
+              <input 
+                type="checkbox" 
+                className={styles.checkbox} 
+                checked={selectedBattery.connectorEnabled || false} 
+                onChange={(e) => updateBattery(selectedBattery.id, { connectorEnabled: e.target.checked })} 
+              />
+              コネクタを有効化
+            </label>
+          </div>
+
+          {selectedBattery.connectorEnabled && (
+            <>
+              <div className={styles.group}>
+                <label className={styles.label}>コネクタ座標 (X, Y)</label>
+                <div className={styles.row}>
+                  <div className={styles.inputWrapper}>
+                    <span className={styles.coordLabel}>X</span>
+                    <input
+                      className={styles.input}
+                      type="number"
+                      value={selectedBattery.connectorX ?? selectedBattery.x}
+                      onChange={(e) => updateBattery(selectedBattery.id, { connectorX: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className={styles.inputWrapper}>
+                    <span className={styles.coordLabel}>Y</span>
+                    <input
+                      className={styles.input}
+                      type="number"
+                      value={selectedBattery.connectorY ?? (selectedBattery.y + 10)}
+                      onChange={(e) => updateBattery(selectedBattery.id, { connectorY: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className={styles.group}>
+                <label className={styles.label}>コネクタ マウント面</label>
+                <select
+                  className={styles.input}
+                  value={selectedBattery.connectorMountingSide || selectedBattery.mountingSide}
+                  onChange={(e) => updateBattery(selectedBattery.id, { connectorMountingSide: e.target.value as 'top' | 'bottom' })}
+                >
+                  <option value="top">表面 (Top)</option>
+                  <option value="bottom">裏面 (Bottom)</option>
+                </select>
+              </div>
+            </>
+          )}
           <div style={{ marginTop: 'auto' }}>
             <button 
               className={styles.input} 

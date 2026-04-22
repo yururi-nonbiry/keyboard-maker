@@ -198,6 +198,12 @@
   color: var(--color-text-primary);
 }
 
+.divider {
+  height: 1px;
+  background: var(--glass-border);
+  margin: 4px 0;
+}
+
 .presetButtonActive {
   background: var(--color-primary);
   border-color: var(--color-primary);

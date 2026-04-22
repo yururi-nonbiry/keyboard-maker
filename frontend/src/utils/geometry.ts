@@ -269,6 +269,12 @@ export const calculateFullBoundingBox3D = (
     const baseZ = b.mountingSide === 'bottom' ? -4 : -2;
     minZ = Math.min(minZ, baseZ - b.thickness);
     maxZ = Math.max(maxZ, baseZ + b.thickness);
+
+    if (b.connectorEnabled && b.connectorMountingSide) {
+      const connZ = b.connectorMountingSide === 'bottom' ? -4 : -2;
+      minZ = Math.min(minZ, connZ - 2);
+      maxZ = Math.max(maxZ, connZ + 4);
+    }
   });
 
   minZ = Math.min(minZ, -9); 
@@ -313,6 +319,10 @@ export const calculateFullBoundingBox = (
 
   batteries.forEach(b => {
     allCorners.push(...getComponentCorners(b.x, b.y, b.width, b.height, b.rotation));
+    if (b.connectorEnabled && b.connectorX !== undefined && b.connectorY !== undefined) {
+      // Connector size approx 6x5mm
+      allCorners.push(...getComponentCorners(b.connectorX, b.connectorY, 6, 5, 0));
+    }
   });
 
   return calculatePointsBoundingBox(allCorners, padding);
