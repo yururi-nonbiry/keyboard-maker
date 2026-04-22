@@ -29,6 +29,16 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
       ));
     });
     
+    // Trackballs
+    const sideTrackballs = (data.trackballs || []).filter(t => {
+      if (!side) return true; // integrated
+      return t.side === side;
+    });
+
+    sideTrackballs.forEach(t => {
+      allCorners.push(...getComponentCorners(t.x, t.y, t.diameter, t.diameter, 0));
+    });
+
     // Controllers
     const sideControllers = (data.controllers || []).filter(c => {
       if (!side) return true; // integrated
@@ -47,7 +57,7 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
       ));
     });
 
-    const bbox = calculatePointsBoundingBox(allCorners, 1); // Small padding for the PCB
+    const bbox = calculatePointsBoundingBox(allCorners, 2); // Slightly larger padding for the PCB
     if (!bbox) return null;
 
     // Standard PCB thickness is 1.6mm
@@ -94,6 +104,86 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
         });
       });
 
+      // Holes for Trackballs
+      sideTrackballs.forEach(t => {
+        const relX = t.x - bbox.centerX;
+        const relY = t.y - bbox.centerY;
+        
+        // Sensor aperture
+        const aperturePath = new THREE.Path();
+        aperturePath.absarc(relX, relY, 5, 0, Math.PI * 2, true);
+        shape.holes.push(aperturePath);
+
+        // Mounting holes
+        const mountingHoles = [
+          { x: -10, y: -10, r: 1.5 },
+          { x: 10, y: -10, r: 1.5 },
+          { x: -10, y: 10, r: 1.5 },
+          { x: 10, y: 10, r: 1.5 }
+        ];
+
+        mountingHoles.forEach(pos => {
+          const path = new THREE.Path();
+          path.absarc(relX + pos.x, relY + pos.y, pos.r, 0, Math.PI * 2, true);
+          shape.holes.push(path);
+        });
+      });
+
+      // Holes for Controllers
+      sideControllers.forEach(c => {
+        const relX = c.x - bbox.centerX;
+        const relY = c.y - bbox.centerY;
+        const rot = -c.rotation * (Math.PI / 180);
+        const cos = Math.cos(rot);
+        const sin = Math.sin(rot);
+
+        let pinsPerSide = 12;
+        let rowSpacing = 15.24;
+        const pinPitch = 2.54;
+
+        switch (c.type) {
+          case 'xiao_rp2040':
+          case 'xiao_ble':
+            pinsPerSide = 7;
+            rowSpacing = 15.24;
+            break;
+          case 'pico':
+            pinsPerSide = 20;
+            rowSpacing = 17.78;
+            break;
+          case 'bluepill':
+            pinsPerSide = 20;
+            rowSpacing = 15.24;
+            break;
+          case 'pro_micro':
+          case 'elite_c':
+          default:
+            pinsPerSide = 12;
+            rowSpacing = 15.24;
+            break;
+        }
+
+        for (let i = 0; i < pinsPerSide; i++) {
+          const pinY = (i - (pinsPerSide - 1) / 2) * pinPitch;
+          
+          // Left row
+          const posL = { x: -rowSpacing / 2, y: pinY, r: 0.5 };
+          const pathL = new THREE.Path();
+          const rotatedXL = relX + posL.x * cos - posL.y * sin;
+          const rotatedYL = relY + posL.x * sin + posL.y * cos;
+          pathL.absarc(rotatedXL, rotatedYL, posL.r, 0, Math.PI * 2, true);
+          shape.holes.push(pathL);
+
+          // Right row
+          const posR = { x: rowSpacing / 2, y: pinY, r: 0.5 };
+          const pathR = new THREE.Path();
+          const rotatedXR = relX + posR.x * cos - posR.y * sin;
+          const rotatedYR = relY + posR.x * sin + posR.y * cos;
+          pathR.absarc(rotatedXR, rotatedYR, posR.r, 0, Math.PI * 2, true);
+          shape.holes.push(pathR);
+        }
+      });
+
       const extrudeSettings = {
         depth: pcbThickness,
         bevelEnabled: false,
@@ -103,7 +193,7 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
       // Center the geometry relative to its thickness
       geo.translate(0, 0, -pcbThickness / 2);
       return geo;
-    }, [keys, bbox, pcbThickness]);
+    }, [keys, sideTrackballs, sideControllers, bbox, pcbThickness]);
 
     return (
       <mesh 
