@@ -58,10 +58,12 @@ interface KeyboardState {
   showPlate: boolean;
   showCaseBase: boolean;
   showCaseWalls: boolean;
+  showPCB: boolean;
   toggleKeycapsVisible: () => void;
   togglePlateVisible: () => void;
   toggleCaseBaseVisible: () => void;
   toggleCaseWallsVisible: () => void;
+  togglePCBVisible: () => void;
 }
 
 const DEFAULT_METADATA: KeyboardMetadata = {
@@ -126,11 +128,13 @@ export const useKeyboardStore = create<KeyboardState>()(
       showPlate: true,
       showCaseBase: true,
       showCaseWalls: true,
+      showPCB: true,
 
       toggleKeycapsVisible: () => set((state) => ({ showKeycaps: !state.showKeycaps })),
       togglePlateVisible: () => set((state) => ({ showPlate: !state.showPlate })),
       toggleCaseBaseVisible: () => set((state) => ({ showCaseBase: !state.showCaseBase })),
       toggleCaseWallsVisible: () => set((state) => ({ showCaseWalls: !state.showCaseWalls })),
+      togglePCBVisible: () => set((state) => ({ showPCB: !state.showPCB })),
 
       toggleSplitMode: () => set((state) => ({ splitMode: !state.splitMode })),
       setTempSplitX: (tempSplitX) => set({ tempSplitX }),

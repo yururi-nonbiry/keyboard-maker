@@ -5,6 +5,7 @@ import { useKeyboardStore } from '../../store/useKeyboardStore';
 import KeySwitch from './KeySwitch';
 import Plate from './Plate';
 import Case from './Case';
+import PCB from './PCB';
 import MicroController from './MicroController';
 import Trackball from './Trackball';
 
@@ -61,6 +62,7 @@ const KeyboardCanvas: React.FC = () => {
                   <KeySwitch key={key.id} config={key} />
                 ))}
                 <Plate />
+                <PCB />
                 <Case />
                 {(data.trackballs || []).map((t) => (
                   <Trackball key={t.id} config={t} />
@@ -88,6 +90,7 @@ const KeyboardCanvas: React.FC = () => {
                         <KeySwitch key={key.id} config={key} />
                       ))}
                       <Plate side="left" />
+                      <PCB side="left" />
                       <Case side="left" />
                       {leftTrackballs.map((t) => (
                         <Trackball key={t.id} config={t} />
@@ -117,6 +120,7 @@ const KeyboardCanvas: React.FC = () => {
                         <KeySwitch key={key.id} config={key} />
                       ))}
                       <Plate side="right" />
+                      <PCB side="right" />
                       <Case side="right" />
                       {rightTrackballs.map((t) => (
                         <Trackball key={t.id} config={t} />

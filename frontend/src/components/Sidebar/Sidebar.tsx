@@ -25,10 +25,12 @@ const Sidebar: React.FC = () => {
     showPlate,
     showCaseBase,
     showCaseWalls,
+    showPCB,
     toggleKeycapsVisible,
     togglePlateVisible,
     toggleCaseBaseVisible,
-    toggleCaseWallsVisible
+    toggleCaseWallsVisible,
+    togglePCBVisible
   } = useKeyboardStore();
   const selectedKey = data.layout.find(k => k.id === selectedKeyId);
   const selectedTrackball = (data.trackballs || []).find(t => t.id === selectedTrackballId);
@@ -80,6 +82,15 @@ const Sidebar: React.FC = () => {
               onChange={togglePlateVisible} 
             />
             プレート (Plate)
+          </label>
+          <label className={styles.checkboxLabel}>
+            <input 
+              type="checkbox" 
+              className={styles.checkbox} 
+              checked={showPCB} 
+              onChange={togglePCBVisible} 
+            />
+            基板 (PCB)
           </label>
           <label className={styles.checkboxLabel}>
             <input 
