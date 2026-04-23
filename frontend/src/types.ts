@@ -28,10 +28,21 @@ export interface KeyConfig {
   side?: 'left' | 'right';
 }
 
+export interface DiodeConfig {
+  id: string;
+  keyId?: string; // Optional reference to the key it belongs to
+  x: number; // in mm
+  y: number; // in mm
+  rotation: number; // in degrees
+  side: 'left' | 'right';
+  mountingSide: 'top' | 'bottom';
+}
+
 export interface PcbConfig {
   controllerType: ControllerType;
   controllerPosition: { x: number; y: number; rotation: number };
   diodeDirection: 'col2row' | 'row2col';
+  autoDiodeOffset: { x: number; y: number; rotation: number };
   footprintAttributes: Record<string, string>;
 }
 
@@ -98,4 +109,5 @@ export interface KeyboardData {
   trackballs?: TrackballConfig[];
   controllers?: ControllerConfig[];
   batteries?: BatteryConfig[];
+  diodes?: DiodeConfig[];
 }

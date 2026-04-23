@@ -10,17 +10,18 @@ import PCB from './PCB';
 import MicroController from './MicroController';
 import Trackball from './Trackball';
 import Battery from './Battery';
+import Diode from './Diode';
 
 import { calculateBoundingBox, calculateFullBoundingBox3D, calculateLift } from '../../utils/geometry';
 
 const KeyboardCanvas: React.FC = () => {
-  const { data, selectKey, selectedKeyId, selectTrackball, selectedTrackballId, selectController, selectedControllerId, selectBattery, selectedBatteryId, gridVisible, gridSize, showTrackballs, showControllers } = useKeyboardStore();
+  const { data, selectKey, selectedKeyId, selectTrackball, selectedTrackballId, selectController, selectedControllerId, selectBattery, selectedBatteryId, selectDiode, selectedDiodeId, gridVisible, gridSize, showTrackballs, showControllers, showDiodes } = useKeyboardStore();
 
   const groundY = -12;
   const { typingAngle, tentingAngle, splitRotation, splitGap } = data.case_config;
   const keyPitch = data.case_config.keyPitch;
   
-  const isEditing = selectedKeyId !== null || selectedTrackballId !== null || selectedControllerId !== null || selectedBatteryId !== null;
+  const isEditing = selectedKeyId !== null || selectedTrackballId !== null || selectedControllerId !== null || selectedBatteryId !== null || selectedDiodeId !== null;
 
   const leftKeys = data.layout.filter(k => k.side === 'left' || !k.side);
   const rightKeys = data.layout.filter(k => k.side === 'right');
@@ -30,6 +31,9 @@ const KeyboardCanvas: React.FC = () => {
 
   const leftBatteries = (data.batteries || []).filter(b => b.side === 'left' || !b.side);
   const rightBatteries = (data.batteries || []).filter(b => b.side === 'right');
+
+  const leftDiodes = (data.diodes || []).filter(d => d.side === 'left' || !d.side);
+  const rightDiodes = (data.diodes || []).filter(d => d.side === 'right');
 
   const bbox = calculateBoundingBox(data.layout, keyPitch);
   const centerOffset = bbox ? [-bbox.centerX, 0, -bbox.centerY] : [0, 0, 0];
@@ -58,7 +62,7 @@ const KeyboardCanvas: React.FC = () => {
         <pointLight position={[-100, -100, -100]} intensity={0.5} />
         
         <Environment preset="city" />
-
+ 
         <Float 
           speed={isEditing ? 0 : 1.5} 
           rotationIntensity={isEditing ? 0 : 0.2} 
@@ -109,6 +113,9 @@ const KeyboardCanvas: React.FC = () => {
                     connectorY={b.connectorY}
                     connectorMountingSide={b.connectorMountingSide}
                   />
+                ))}
+                {showDiodes && (data.diodes || []).map((d) => (
+                  <Diode key={d.id} config={d} />
                 ))}
               </group>
             ) : (
@@ -163,10 +170,13 @@ const KeyboardCanvas: React.FC = () => {
                           connectorMountingSide={b.connectorMountingSide}
                         />
                       ))}
+                      {showDiodes && leftDiodes.map((d) => (
+                        <Diode key={d.id} config={d} />
+                      ))}
                     </group>
                   )}
                 </group>
-
+ 
                 {/* Right Side */}
                 <group 
                   rotation={[0, -splitRotation * (Math.PI / 180), -tentingAngle * (Math.PI / 180)]}
@@ -217,12 +227,15 @@ const KeyboardCanvas: React.FC = () => {
                           connectorMountingSide={b.connectorMountingSide}
                         />
                       ))}
+                      {showDiodes && rightDiodes.map((d) => (
+                        <Diode key={d.id} config={d} />
+                      ))}
                     </group>
                   )}
                 </group>
               </>
             )}
-
+ 
             {gridVisible && (
               <Grid
                 infiniteGrid
@@ -237,7 +250,7 @@ const KeyboardCanvas: React.FC = () => {
             )}
           </group>
         </Float>
-
+ 
         <ContactShadows 
           opacity={0.4} 
           scale={400} 
@@ -248,7 +261,7 @@ const KeyboardCanvas: React.FC = () => {
           position={[0, groundY, 0]}
         />
       </Suspense>
-
+ 
       <OrbitControls 
         target={[0, 0, 0]} 
         enablePan={true} 
@@ -256,7 +269,7 @@ const KeyboardCanvas: React.FC = () => {
         enableRotate={true}
         makeDefault 
       />
-
+ 
       <mesh 
         rotation={[-Math.PI / 2, 0, 0]} 
         position={[0, -10, 0]} 
@@ -265,6 +278,7 @@ const KeyboardCanvas: React.FC = () => {
           selectTrackball(null);
           selectController(null);
           selectBattery(null);
+          selectDiode(null);
         }}
       >
         <planeGeometry args={[2000, 2000]} />

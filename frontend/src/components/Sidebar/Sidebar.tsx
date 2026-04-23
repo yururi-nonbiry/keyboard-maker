@@ -64,6 +64,7 @@ const Sidebar: React.FC = () => {
     showTrackballs,
     showControllers,
     showSockets,
+    showDiodes,
     toggleKeycapsVisible,
     togglePlateVisible,
     toggleCaseBaseVisible,
@@ -73,11 +74,16 @@ const Sidebar: React.FC = () => {
     toggleTrackballsVisible,
     toggleControllersVisible,
     toggleSocketsVisible,
+    toggleDiodesVisible,
     selectedBatteryId,
     selectBattery,
     addBattery,
     updateBattery,
     removeBattery,
+    selectedDiodeId,
+    updateDiode,
+    removeDiode,
+    autoPlaceDiodes,
   } = useKeyboardStore();
 
   const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({
@@ -90,10 +96,10 @@ const Sidebar: React.FC = () => {
 
   // Auto-expand selection section when a new item is selected
   React.useEffect(() => {
-    if (selectedKeyId || selectedTrackballId || selectedControllerId || selectedBatteryId) {
+    if (selectedKeyId || selectedTrackballId || selectedControllerId || selectedBatteryId || selectedDiodeId) {
       setExpandedSections(prev => ({ ...prev, selection: true }));
     }
-  }, [selectedKeyId, selectedTrackballId, selectedControllerId, selectedBatteryId]);
+  }, [selectedKeyId, selectedTrackballId, selectedControllerId, selectedBatteryId, selectedDiodeId]);
 
   const toggleSection = (id: string) => {
     setExpandedSections(prev => ({
@@ -106,6 +112,7 @@ const Sidebar: React.FC = () => {
   const selectedTrackball = (data.trackballs || []).find(t => t.id === selectedTrackballId);
   const selectedController = (data.controllers || []).find(c => c.id === selectedControllerId);
   const selectedBattery = (data.batteries || []).find(b => b.id === selectedBatteryId);
+  const selectedDiode = (data.diodes || []).find(d => d.id === selectedDiodeId);
   const { typingAngle, tentingAngle, splitRotation } = data.case_config;
 
   return (
@@ -224,6 +231,15 @@ const Sidebar: React.FC = () => {
               onChange={toggleSocketsVisible} 
             />
             ホットスワップソケット
+          </label>
+          <label className={styles.checkboxLabel}>
+            <input 
+              type="checkbox" 
+              className={styles.checkbox} 
+              checked={showDiodes} 
+              onChange={toggleDiodesVisible} 
+            />
+            ダイオード
           </label>
         </div>
       </CollapsibleSection>
@@ -371,6 +387,47 @@ const Sidebar: React.FC = () => {
             <option value="row2col">Row to Col</option>
           </select>
         </div>
+
+        <div className={styles.divider} />
+        <div className={styles.group}>
+          <label className={styles.label}>ダイオード自動配置オフセット (X, Y, Rotation)</label>
+          <div className={styles.row}>
+            <input
+              className={styles.input}
+              type="number"
+              step="0.5"
+              value={data.pcb_config.autoDiodeOffset.x}
+              onChange={(e) => updatePcbConfig({ autoDiodeOffset: { ...data.pcb_config.autoDiodeOffset, x: parseFloat(e.target.value) || 0 } })}
+              placeholder="X"
+            />
+            <input
+              className={styles.input}
+              type="number"
+              step="0.5"
+              value={data.pcb_config.autoDiodeOffset.y}
+              onChange={(e) => updatePcbConfig({ autoDiodeOffset: { ...data.pcb_config.autoDiodeOffset, y: parseFloat(e.target.value) || 0 } })}
+              placeholder="Y"
+            />
+            <input
+              className={styles.input}
+              type="number"
+              step="1"
+              value={data.pcb_config.autoDiodeOffset.rotation}
+              onChange={(e) => updatePcbConfig({ autoDiodeOffset: { ...data.pcb_config.autoDiodeOffset, rotation: parseFloat(e.target.value) || 0 } })}
+              placeholder="Rot"
+            />
+          </div>
+          <button 
+            className={`${styles.input} ${styles.primaryButton}`}
+            style={{ marginTop: '8px' }}
+            onClick={autoPlaceDiodes}
+          >
+            ダイオードを自動配置
+          </button>
+        </div>
+
+        <div className={styles.divider} />
+
         <div className={styles.group}>
           <button 
             className={styles.input}
@@ -940,6 +997,86 @@ const Sidebar: React.FC = () => {
               onClick={() => removeBattery(selectedBattery.id)}
             >
               バッテリーを削除
+            </button>
+          </div>
+        </CollapsibleSection>
+      ) : selectedDiode ? (
+        <CollapsibleSection 
+          id="selection" 
+          title="ダイオード設定" 
+          isExpanded={expandedSections.selection} 
+          onToggle={toggleSection}
+          badge={
+            data.type === 'split' && (
+              <span className={`${styles.badge} ${selectedDiode.side === 'left' ? styles.badgeLeft : styles.badgeRight}`}>
+                {selectedDiode.side === 'left' ? 'LEFT' : 'RIGHT'}
+              </span>
+            )
+          }
+        >
+          <div className={styles.group}>
+            <label className={styles.label}>座標 (X, Y)</label>
+            <div className={styles.row}>
+              <div className={styles.inputWrapper}>
+                <span className={styles.coordLabel}>X</span>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={selectedDiode.x}
+                  onChange={(e) => updateDiode(selectedDiode.id, { x: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+              <div className={styles.inputWrapper}>
+                <span className={styles.coordLabel}>Y</span>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={selectedDiode.y}
+                  onChange={(e) => updateDiode(selectedDiode.id, { y: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+            </div>
+          </div>
+          <div className={styles.group}>
+            <label className={styles.label}>回転</label>
+            <input
+              className={styles.input}
+              type="number"
+              value={selectedDiode.rotation}
+              onChange={(e) => updateDiode(selectedDiode.id, { rotation: parseFloat(e.target.value) || 0 })}
+            />
+          </div>
+          <div className={styles.group}>
+            <label className={styles.label}>マウント面</label>
+            <select
+              className={styles.input}
+              value={selectedDiode.mountingSide}
+              onChange={(e) => updateDiode(selectedDiode.id, { mountingSide: e.target.value as 'top' | 'bottom' })}
+            >
+              <option value="top">表面 (Top)</option>
+              <option value="bottom">裏面 (Bottom)</option>
+            </select>
+          </div>
+          {data.type === 'split' && (
+            <div className={styles.group}>
+              <label className={styles.label}>配置サイド</label>
+              <select
+                className={styles.input}
+                value={selectedDiode.side || 'left'}
+                onChange={(e) => updateDiode(selectedDiode.id, { side: e.target.value as 'left' | 'right' })}
+              >
+                <option value="left">左手 (Left)</option>
+                <option value="right">右手 (Right)</option>
+              </select>
+            </div>
+          )}
+          <div style={{ marginTop: 'auto' }}>
+            <button 
+              className={styles.input} 
+              style={{ width: '100%', borderColor: 'var(--color-secondary)', color: 'var(--color-secondary)' }}
+              onClick={() => removeDiode(selectedDiode.id)}
+            >
+              ダイオードを削除
             </button>
           </div>
         </CollapsibleSection>

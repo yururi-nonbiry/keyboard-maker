@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { KeyboardData, KeyConfig, KeyboardMetadata, PcbConfig, CaseConfig, SwitchType, KeyboardType, TrackballConfig, ControllerConfig, BatteryConfig } from '../types';
+import type { KeyboardData, KeyConfig, KeyboardMetadata, PcbConfig, CaseConfig, SwitchType, KeyboardType, TrackballConfig, ControllerConfig, BatteryConfig, DiodeConfig } from '../types';
 import { checkInterference, calculateBoundingBox } from '../utils/geometry';
 
 interface KeyboardState {
@@ -36,6 +36,13 @@ interface KeyboardState {
   updateBattery: (id: string, config: Partial<BatteryConfig>) => void;
   removeBattery: (id: string) => void;
   selectBattery: (id: string | null) => void;
+
+  // Diode Actions
+  addDiode: (diode: DiodeConfig) => void;
+  updateDiode: (id: string, config: Partial<DiodeConfig>) => void;
+  removeDiode: (id: string) => void;
+  selectDiode: (id: string | null) => void;
+  autoPlaceDiodes: () => void;
   
   // Grid Settings
   gridVisible: boolean;
@@ -59,6 +66,7 @@ interface KeyboardState {
   selectedTrackballId: string | null;
   selectedControllerId: string | null;
   selectedBatteryId: string | null;
+  selectedDiodeId: string | null;
 
   // Visibility Settings
   showKeycaps: boolean;
@@ -70,6 +78,7 @@ interface KeyboardState {
   showTrackballs: boolean;
   showControllers: boolean;
   showSockets: boolean;
+  showDiodes: boolean;
   toggleKeycapsVisible: () => void;
   togglePlateVisible: () => void;
   toggleCaseBaseVisible: () => void;
@@ -79,6 +88,7 @@ interface KeyboardState {
   toggleTrackballsVisible: () => void;
   toggleControllersVisible: () => void;
   toggleSocketsVisible: () => void;
+  toggleDiodesVisible: () => void;
 }
 
 const DEFAULT_METADATA: KeyboardMetadata = {
@@ -91,6 +101,7 @@ const DEFAULT_PCB: PcbConfig = {
   controllerType: 'pro_micro',
   controllerPosition: { x: 0, y: 0, rotation: 0 },
   diodeDirection: 'col2row',
+  autoDiodeOffset: { x: 0, y: 8, rotation: 0 },
   footprintAttributes: {},
 };
 
@@ -130,6 +141,7 @@ export const useKeyboardStore = create<KeyboardState>()(
         trackballs: [],
         controllers: [],
         batteries: [],
+        diodes: [],
         pcb_config: DEFAULT_PCB,
         case_config: DEFAULT_CASE,
       },
@@ -137,6 +149,7 @@ export const useKeyboardStore = create<KeyboardState>()(
       selectedTrackballId: null,
       selectedControllerId: null,
       selectedBatteryId: null,
+      selectedDiodeId: null,
       collisions: {},
       gridVisible: true,
       gridSnapping: true,
@@ -153,6 +166,7 @@ export const useKeyboardStore = create<KeyboardState>()(
       showTrackballs: true,
       showControllers: true,
       showSockets: true,
+      showDiodes: true,
 
       toggleKeycapsVisible: () => set((state) => ({ showKeycaps: !state.showKeycaps })),
       togglePlateVisible: () => set((state) => ({ showPlate: !state.showPlate })),
@@ -163,6 +177,7 @@ export const useKeyboardStore = create<KeyboardState>()(
       toggleTrackballsVisible: () => set((state) => ({ showTrackballs: !state.showTrackballs })),
       toggleControllersVisible: () => set((state) => ({ showControllers: !state.showControllers })),
       toggleSocketsVisible: () => set((state) => ({ showSockets: !state.showSockets })),
+      toggleDiodesVisible: () => set((state) => ({ showDiodes: !state.showDiodes })),
 
       toggleSplitMode: () => set((state) => ({ splitMode: !state.splitMode })),
       setTempSplitX: (tempSplitX) => set({ tempSplitX }),
@@ -229,7 +244,8 @@ export const useKeyboardStore = create<KeyboardState>()(
         selectedKeyId: id, 
         selectedTrackballId: id ? null : state.selectedTrackballId,
         selectedControllerId: id ? null : state.selectedControllerId,
-        selectedBatteryId: id ? null : state.selectedBatteryId
+        selectedBatteryId: id ? null : state.selectedBatteryId,
+        selectedDiodeId: id ? null : state.selectedDiodeId
       })),
 
       updatePcbConfig: (pcb_config) =>
@@ -317,7 +333,8 @@ export const useKeyboardStore = create<KeyboardState>()(
         selectedTrackballId: id, 
         selectedKeyId: id ? null : state.selectedKeyId,
         selectedControllerId: id ? null : state.selectedControllerId,
-        selectedBatteryId: id ? null : state.selectedBatteryId
+        selectedBatteryId: id ? null : state.selectedBatteryId,
+        selectedDiodeId: id ? null : state.selectedDiodeId
       })),
 
       addController: (controller) =>
@@ -351,7 +368,8 @@ export const useKeyboardStore = create<KeyboardState>()(
         selectedControllerId: id, 
         selectedKeyId: id ? null : state.selectedKeyId,
         selectedTrackballId: id ? null : state.selectedTrackballId,
-        selectedBatteryId: id ? null : state.selectedBatteryId
+        selectedBatteryId: id ? null : state.selectedBatteryId,
+        selectedDiodeId: id ? null : state.selectedDiodeId
       })),
   
       addBattery: (battery) =>
@@ -394,8 +412,81 @@ export const useKeyboardStore = create<KeyboardState>()(
         selectedBatteryId: id, 
         selectedKeyId: id ? null : state.selectedKeyId,
         selectedTrackballId: id ? null : state.selectedTrackballId,
-        selectedControllerId: id ? null : state.selectedControllerId
+        selectedControllerId: id ? null : state.selectedControllerId,
+        selectedDiodeId: id ? null : state.selectedDiodeId
       })),
+
+      addDiode: (diode) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            diodes: [...(state.data.diodes || []), diode],
+          },
+        })),
+
+      updateDiode: (id, config) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            diodes: (state.data.diodes || []).map((d) =>
+              d.id === id ? { ...d, ...config } : d
+            ),
+          },
+        })),
+
+      removeDiode: (id) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            diodes: (state.data.diodes || []).filter((d) => d.id !== id),
+          },
+          selectedDiodeId: state.selectedDiodeId === id ? null : state.selectedDiodeId,
+        })),
+
+      selectDiode: (id) => set((state) => ({ 
+        selectedDiodeId: id, 
+        selectedKeyId: id ? null : state.selectedKeyId,
+        selectedTrackballId: id ? null : state.selectedTrackballId,
+        selectedControllerId: id ? null : state.selectedControllerId,
+        selectedBatteryId: id ? null : state.selectedBatteryId
+      })),
+
+      autoPlaceDiodes: () => set((state) => {
+        const { layout, pcb_config } = state.data;
+        const { autoDiodeOffset } = pcb_config;
+        
+        const newDiodes: DiodeConfig[] = layout.map((key) => {
+          // Calculate diode position relative to key position and rotation
+          const rad = (key.rotation * Math.PI) / 180;
+          const cos = Math.cos(rad);
+          const sin = Math.sin(rad);
+          
+          // Apply offset in key's local coordinate system
+          const localX = autoDiodeOffset.x;
+          const localY = autoDiodeOffset.y;
+          
+          // Rotate offset
+          const rotatedX = localX * cos - localY * sin;
+          const rotatedY = localX * sin + localY * cos;
+          
+          return {
+            id: `diode-${key.id}`,
+            keyId: key.id,
+            x: key.x + rotatedX,
+            y: key.y + rotatedY,
+            rotation: key.rotation + autoDiodeOffset.rotation,
+            side: key.side || 'left',
+            mountingSide: 'bottom', // Diodes are usually on the bottom
+          };
+        });
+        
+        return {
+          data: {
+            ...state.data,
+            diodes: newDiodes,
+          }
+        };
+      }),
 
       setKeyboardData: (data) => set({ 
         data, 
