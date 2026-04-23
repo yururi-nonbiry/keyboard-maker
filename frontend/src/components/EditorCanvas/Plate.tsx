@@ -115,13 +115,34 @@ const Plate: React.FC<PlateProps> = ({ side }) => {
       return t.side === side || (!t.side && side === 'left');
     });
 
+    // Calculate layout center for bridge direction
+    let avgX = 0, avgY = 0;
+    if (keys.length > 0) {
+      keys.forEach(k => { avgX += k.x; avgY += k.y; });
+      avgX /= keys.length;
+      avgY /= keys.length;
+    }
+
+    const cutouts: { centerX: number; centerY: number; radius: number }[] = [];
+    const bridges: { centerX: number; centerY: number; width: number; height: number; angle: number }[] = [];
+
     sideTrackballs.forEach(t => {
-      footprints.push({
+      // Circle cutout for the ball assembly
+      cutouts.push({
         centerX: t.x,
         centerY: t.y,
-        width: t.diameter + margin * 2,
-        height: t.diameter + margin * 2,
-        angle: 0
+        radius: t.diameter / 2 + margin
+      });
+
+      // Bridge tab to connect trackball area to main plate
+      const angle = Math.atan2(avgY - t.y, avgX - t.x);
+      const bridgeLength = t.diameter / 2 + margin + 10;
+      bridges.push({
+        centerX: t.x + Math.cos(angle) * (bridgeLength / 2),
+        centerY: t.y + Math.sin(angle) * (bridgeLength / 2),
+        width: 12,
+        height: bridgeLength,
+        angle: angle + Math.PI / 2
       });
     });
 
@@ -142,7 +163,7 @@ const Plate: React.FC<PlateProps> = ({ side }) => {
       });
     });
 
-    const boundaryPoints = getGridBoundary(footprints, 1.0);
+    const boundaryPoints = getGridBoundary(footprints, cutouts, bridges, 1.0);
     if (boundaryPoints.length === 0) return null;
 
     // Calculate bbox for centering

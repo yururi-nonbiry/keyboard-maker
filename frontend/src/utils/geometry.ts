@@ -412,25 +412,33 @@ export const calculateGroundedY = (
  * Useful for generating PCB and Plate outlines that follow component silhouettes.
  */
 export const getGridBoundary = (
-  rects: { centerX: number; centerY: number; width: number; height: number; angle: number }[], 
+  addRects: { centerX: number; centerY: number; width: number; height: number; angle: number }[], 
+  subShapes: { centerX: number; centerY: number; radius: number }[] = [],
+  bridgeRects: { centerX: number; centerY: number; width: number; height: number; angle: number }[] = [],
   resolution: number = 1.0
 ): { x: number; y: number }[] => {
-  if (rects.length === 0) return [];
+  if (addRects.length === 0) return [];
 
   // 1. Calculate Bounding Box
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  rects.forEach(r => {
+  [...addRects, ...bridgeRects].forEach(r => {
     const diag = Math.sqrt(r.width * r.width + r.height * r.height) / 2;
     minX = Math.min(minX, r.centerX - diag);
     maxX = Math.max(maxX, r.centerX + diag);
     minY = Math.min(minY, r.centerY - diag);
     maxY = Math.max(maxY, r.centerY + diag);
   });
+  subShapes.forEach(s => {
+    minX = Math.min(minX, s.centerX - s.radius);
+    maxX = Math.max(maxX, s.centerX + s.radius);
+    minY = Math.min(minY, s.centerY - s.radius);
+    maxY = Math.max(maxY, s.centerY + s.radius);
+  });
 
-  minX -= resolution * 2;
-  minY -= resolution * 2;
-  maxX += resolution * 2;
-  maxY += resolution * 2;
+  minX -= resolution * 3;
+  minY -= resolution * 3;
+  maxX += resolution * 3;
+  maxY += resolution * 3;
 
   const width = Math.ceil((maxX - minX) / resolution);
   const height = Math.ceil((maxY - minY) / resolution);
@@ -451,16 +459,42 @@ export const getGridBoundary = (
     for (let x = 0; x < width; x++) {
       const px = minX + x * resolution;
       const py = minY + y * resolution;
-      for (const r of rects) {
+      
+      // Additive
+      let occupied = false;
+      for (const r of addRects) {
         if (isPointInRect(px, py, r)) {
-          grid[y * width + x] = 1;
+          occupied = true;
           break;
         }
       }
+
+      // Subtractive
+      if (occupied) {
+        for (const s of subShapes) {
+          const distSq = (px - s.centerX) ** 2 + (py - s.centerY) ** 2;
+          if (distSq <= s.radius ** 2) {
+            occupied = false;
+            break;
+          }
+        }
+      }
+
+      // Bridges (always additive, even over cutouts)
+      if (!occupied) {
+        for (const r of bridgeRects) {
+          if (isPointInRect(px, py, r)) {
+            occupied = true;
+            break;
+          }
+        }
+      }
+
+      if (occupied) grid[y * width + x] = 1;
     }
   }
 
-  // 3. Boundary Tracing (Moore Neighborhood)
+  // 3. Boundary Tracing
   const get = (x: number, y: number) => {
     if (x < 0 || x >= width || y < 0 || y >= height) return 0;
     return grid[y * width + x];
@@ -486,7 +520,7 @@ export const getGridBoundary = (
   const dxs = [0, 1, 1, 1, 0, -1, -1, -1];
   const dys = [-1, -1, 0, 1, 1, 1, 0, -1];
 
-  let limit = 5000; // Larger safety break for complex plates
+  let limit = 8000; 
   do {
     boundary.push({ x: minX + currX * resolution, y: minY + currY * resolution });
     
@@ -531,3 +565,4 @@ export const getGridBoundary = (
 
   return simplified;
 };
+
