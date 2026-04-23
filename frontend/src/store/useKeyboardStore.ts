@@ -500,6 +500,13 @@ export const useKeyboardStore = create<KeyboardState>()(
       onRehydrateStorage: () => {
         return (rehydratedState) => {
           if (rehydratedState) {
+            // Ensure new fields are initialized for existing storage
+            if (!rehydratedState.data.pcb_config.autoDiodeOffset) {
+              rehydratedState.data.pcb_config.autoDiodeOffset = { x: 0, y: 8, rotation: 0 };
+            }
+            if (!rehydratedState.data.diodes) {
+              rehydratedState.data.diodes = [];
+            }
             rehydratedState.collisions = checkInterference(rehydratedState.data.layout, rehydratedState.data.case_config.keyPitch);
           }
         };

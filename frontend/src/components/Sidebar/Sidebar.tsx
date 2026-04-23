@@ -396,24 +396,24 @@ const Sidebar: React.FC = () => {
               className={styles.input}
               type="number"
               step="0.5"
-              value={data.pcb_config.autoDiodeOffset.x}
-              onChange={(e) => updatePcbConfig({ autoDiodeOffset: { ...data.pcb_config.autoDiodeOffset, x: parseFloat(e.target.value) || 0 } })}
+              value={data.pcb_config.autoDiodeOffset?.x ?? 0}
+              onChange={(e) => updatePcbConfig({ autoDiodeOffset: { ...(data.pcb_config.autoDiodeOffset || { x: 0, y: 8, rotation: 0 }), x: parseFloat(e.target.value) || 0 } })}
               placeholder="X"
             />
             <input
               className={styles.input}
               type="number"
               step="0.5"
-              value={data.pcb_config.autoDiodeOffset.y}
-              onChange={(e) => updatePcbConfig({ autoDiodeOffset: { ...data.pcb_config.autoDiodeOffset, y: parseFloat(e.target.value) || 0 } })}
+              value={data.pcb_config.autoDiodeOffset?.y ?? 8}
+              onChange={(e) => updatePcbConfig({ autoDiodeOffset: { ...(data.pcb_config.autoDiodeOffset || { x: 0, y: 8, rotation: 0 }), y: parseFloat(e.target.value) || 0 } })}
               placeholder="Y"
             />
             <input
               className={styles.input}
               type="number"
               step="1"
-              value={data.pcb_config.autoDiodeOffset.rotation}
-              onChange={(e) => updatePcbConfig({ autoDiodeOffset: { ...data.pcb_config.autoDiodeOffset, rotation: parseFloat(e.target.value) || 0 } })}
+              value={data.pcb_config.autoDiodeOffset?.rotation ?? 0}
+              onChange={(e) => updatePcbConfig({ autoDiodeOffset: { ...(data.pcb_config.autoDiodeOffset || { x: 0, y: 8, rotation: 0 }), rotation: parseFloat(e.target.value) || 0 } })}
               placeholder="Rot"
             />
           </div>
