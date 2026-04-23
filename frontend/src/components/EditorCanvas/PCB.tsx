@@ -10,24 +10,20 @@ interface PCBProps {
 
 interface PCBMeshProps {
   keys: KeyConfig[];
-  sideTrackballs: any[];
-  sideControllers: any[];
+  sideControllers: any[]; // Changed from any to any for now to avoid cascading type errors if I don't have the exact type
   pcbThickness: number;
   boundaryPoints: { x: number; y: number }[];
   bbox: { centerX: number; centerY: number; width: number; height: number };
   pcbY: number;
-  keyPitch: number;
 }
 
 const PCBMesh: React.FC<PCBMeshProps> = ({ 
   keys, 
-  sideTrackballs, 
   sideControllers, 
   pcbThickness, 
   boundaryPoints, 
   bbox, 
-  pcbY,
-  keyPitch
+  pcbY
 }) => {
   const geometry = useMemo(() => {
     const shape = new THREE.Shape();
@@ -144,7 +140,7 @@ const PCBMesh: React.FC<PCBMeshProps> = ({
     const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
     geo.translate(0, 0, -pcbThickness / 2);
     return geo;
-  }, [keys, sideTrackballs, sideControllers, boundaryPoints, bbox, pcbThickness, keyPitch]);
+  }, [keys, sideControllers, boundaryPoints, bbox, pcbThickness]);
 
   return (
     <mesh 
@@ -183,22 +179,6 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
       });
     });
     
-    // Trackballs - Temporarily excluded from calculation
-    /*
-    const sideTrackballs = (data.trackballs || []).filter(t => {
-      if (!side) return true;
-      return t.side === side;
-    });
-    */
-
-    // Calculate layout center for bridge direction
-    let avgX = 0, avgY = 0;
-    if (keys.length > 0) {
-      keys.forEach(k => { avgX += k.x; avgY += k.y; });
-      avgX /= keys.length;
-      avgY /= keys.length;
-    }
-
     const cutouts: { centerX: number; centerY: number; radius: number }[] = [];
     const bridges: { centerX: number; centerY: number; width: number; height: number; angle: number }[] = [];
 
@@ -275,13 +255,11 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
     return (
       <PCBMesh 
         keys={keys}
-        sideTrackballs={[]}
         sideControllers={sideControllers}
         pcbThickness={pcbThickness}
         boundaryPoints={boundaryPoints}
         bbox={bbox}
         pcbY={pcbY}
-        keyPitch={keyPitch}
       />
     );
   };

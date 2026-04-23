@@ -117,14 +117,6 @@ const Plate: React.FC<PlateProps> = ({ side }) => {
     });
     */
 
-    // Calculate layout center for bridge direction
-    let avgX = 0, avgY = 0;
-    if (keys.length > 0) {
-      keys.forEach(k => { avgX += k.x; avgY += k.y; });
-      avgX /= keys.length;
-      avgY /= keys.length;
-    }
-
     const cutouts: { centerX: number; centerY: number; radius: number }[] = [];
     const bridges: { centerX: number; centerY: number; width: number; height: number; angle: number }[] = [];
 
