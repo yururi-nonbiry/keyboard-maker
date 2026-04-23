@@ -1,12 +1,130 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
-import { getComponentCorners, calculatePointsBoundingBox, getControllerDimensions } from '../../utils/geometry';
+import { getControllerDimensions } from '../../utils/geometry';
 import type { KeyConfig } from '../../types';
 
 interface PCBProps {
   side?: 'left' | 'right';
 }
+
+const getGridBoundary = (rects: any[], resolution: number = 1.0) => {
+  if (rects.length === 0) return [];
+
+  // 1. Calculate Bounding Box
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  rects.forEach(r => {
+    const diag = Math.sqrt(r.width * r.width + r.height * r.height) / 2;
+    minX = Math.min(minX, r.centerX - diag);
+    maxX = Math.max(maxX, r.centerX + diag);
+    minY = Math.min(minY, r.centerY - diag);
+    maxY = Math.max(maxY, r.centerY + diag);
+  });
+
+  minX -= resolution * 2;
+  minY -= resolution * 2;
+  maxX += resolution * 2;
+  maxY += resolution * 2;
+
+  const width = Math.ceil((maxX - minX) / resolution);
+  const height = Math.ceil((maxY - minY) / resolution);
+
+  // 2. Fill Grid
+  const grid = new Uint8Array(width * height);
+  const isPointInRect = (px: number, py: number, r: any) => {
+    const dx = px - r.centerX;
+    const dy = py - r.centerY;
+    const cos = Math.cos(-r.angle);
+    const sin = Math.sin(-r.angle);
+    const rx = dx * cos - dy * sin;
+    const ry = dx * sin + dy * cos;
+    return Math.abs(rx) <= r.width / 2 && Math.abs(ry) <= r.height / 2;
+  };
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const px = minX + x * resolution;
+      const py = minY + y * resolution;
+      for (const r of rects) {
+        if (isPointInRect(px, py, r)) {
+          grid[y * width + x] = 1;
+          break;
+        }
+      }
+    }
+  }
+
+  // 3. Boundary Tracing (Moore Neighborhood)
+  const get = (x: number, y: number) => {
+    if (x < 0 || x >= width || y < 0 || y >= height) return 0;
+    return grid[y * width + x];
+  };
+
+  let startX = -1, startY = -1;
+  outer: for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (get(x, y)) {
+        startX = x;
+        startY = y;
+        break outer;
+      }
+    }
+  }
+
+  if (startX === -1) return [];
+
+  const boundary: {x: number, y: number}[] = [];
+  let currX = startX, currY = startY;
+  let prevX = startX - 1, prevY = startY; // Start from the left
+
+  const dxs = [0, 1, 1, 1, 0, -1, -1, -1];
+  const dys = [-1, -1, 0, 1, 1, 1, 0, -1];
+
+  let limit = 2000; // Safety break
+  do {
+    boundary.push({ x: minX + currX * resolution, y: minY + currY * resolution });
+    
+    let dir = 0;
+    for (let d = 0; d < 8; d++) {
+      if (currX + dxs[d] === prevX && currY + dys[d] === prevY) {
+        dir = d;
+        break;
+      }
+    }
+
+    let found = false;
+    for (let i = 1; i <= 8; i++) {
+      const nextDir = (dir + i) % 8;
+      const nx = currX + dxs[nextDir];
+      const ny = currY + dys[nextDir];
+      if (get(nx, ny)) {
+        prevX = currX + dxs[(nextDir + 7) % 8]; 
+        prevY = currY + dys[(nextDir + 7) % 8];
+        currX = nx;
+        currY = ny;
+        found = true;
+        break;
+      }
+    }
+    if (!found || --limit < 0) break;
+  } while (currX !== startX || currY !== startY);
+
+  // 4. Simplify Path
+  if (boundary.length < 3) return boundary;
+  const simplified: {x: number, y: number}[] = [boundary[0]];
+  for (let i = 1; i < boundary.length; i++) {
+    const prev = simplified[simplified.length - 1];
+    const curr = boundary[i];
+    const next = boundary[(i + 1) % boundary.length];
+    
+    const cross = (curr.x - prev.x) * (next.y - curr.y) - (curr.y - prev.y) * (next.x - curr.x);
+    if (Math.abs(cross) > 0.001) {
+      simplified.push(curr);
+    }
+  }
+
+  return simplified;
+};
 
 const PCB: React.FC<PCBProps> = ({ side }) => {
   const { data, showPCB } = useKeyboardStore();
@@ -15,18 +133,21 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
   if (!showPCB) return null;
 
   const renderPCB = (keys: KeyConfig[], id: string) => {
-    // Collect corners from keys, trackballs, and controllers
-    const allCorners: { x: number; y: number }[] = [];
+    // Margin around components for the PCB edge
+    const margin = 3.0;
+
+    // Component footprints (with margin)
+    const footprints: { centerX: number; centerY: number; width: number; height: number; angle: number }[] = [];
 
     // Keys
     keys.forEach(key => {
-      allCorners.push(...getComponentCorners(
-        key.x,
-        key.y,
-        key.keycapSize.width * keyPitch,
-        key.keycapSize.height * keyPitch,
-        key.rotation
-      ));
+      footprints.push({
+        centerX: key.x,
+        centerY: key.y,
+        width: key.keycapSize.width * keyPitch + margin * 2,
+        height: key.keycapSize.height * keyPitch + margin * 2,
+        angle: -key.rotation * (Math.PI / 180)
+      });
     });
     
     // Trackballs
@@ -36,7 +157,13 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
     });
 
     sideTrackballs.forEach(t => {
-      allCorners.push(...getComponentCorners(t.x, t.y, t.diameter, t.diameter, 0));
+      footprints.push({
+        centerX: t.x,
+        centerY: t.y,
+        width: t.diameter + margin * 2,
+        height: t.diameter + margin * 2,
+        angle: 0
+      });
     });
 
     // Controllers
@@ -47,18 +174,32 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
 
     sideControllers.forEach(c => {
       const dimensions = getControllerDimensions(c.type);
-      
-      allCorners.push(...getComponentCorners(
-        c.x,
-        c.y,
-        dimensions.width,
-        dimensions.length,
-        c.rotation
-      ));
+      footprints.push({
+        centerX: c.x,
+        centerY: c.y,
+        width: dimensions.width + margin * 2,
+        height: dimensions.length + margin * 2,
+        angle: -c.rotation * (Math.PI / 180)
+      });
     });
 
-    const bbox = calculatePointsBoundingBox(allCorners, 2); // Slightly larger padding for the PCB
-    if (!bbox) return null;
+    const boundaryPoints = getGridBoundary(footprints, 1.0);
+    if (boundaryPoints.length === 0) return null;
+
+    // Calculate bbox for centering the shape
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    boundaryPoints.forEach(p => {
+      minX = Math.min(minX, p.x);
+      maxX = Math.max(maxX, p.x);
+      minY = Math.min(minY, p.y);
+      maxY = Math.max(maxY, p.y);
+    });
+    const bbox = {
+      centerX: (minX + maxX) / 2,
+      centerY: (minY + maxY) / 2,
+      width: maxX - minX,
+      height: maxY - minY
+    };
 
     // Standard PCB thickness is 1.6mm
     const pcbThickness = 1.6;
@@ -68,14 +209,12 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
     // Use useMemo to avoid regenerating geometry on every render
     const geometry = useMemo(() => {
       const shape = new THREE.Shape();
-      const hw = bbox.width / 2;
-      const hh = bbox.height / 2;
-
-      // Outer boundary
-      shape.moveTo(-hw, -hh);
-      shape.lineTo(hw, -hh);
-      shape.lineTo(hw, hh);
-      shape.lineTo(-hw, hh);
+      
+      const first = boundaryPoints[0];
+      shape.moveTo(first.x - bbox.centerX, first.y - bbox.centerY);
+      for (let i = 1; i < boundaryPoints.length; i++) {
+        shape.lineTo(boundaryPoints[i].x - bbox.centerX, boundaryPoints[i].y - bbox.centerY);
+      }
       shape.closePath();
 
       // Holes for keys
@@ -193,7 +332,7 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
       // Center the geometry relative to its thickness
       geo.translate(0, 0, -pcbThickness / 2);
       return geo;
-    }, [keys, sideTrackballs, sideControllers, bbox, pcbThickness]);
+    }, [keys, sideTrackballs, sideControllers, bbox, pcbThickness, boundaryPoints]);
 
     return (
       <mesh 
