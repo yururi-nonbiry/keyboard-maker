@@ -444,7 +444,7 @@ export const calculateLift = (
     if (relWorldY < minRelWorldY) minRelWorldY = relWorldY;
   });
 
-  return (groundY - minRelWorldY) / Math.cos(typing);
+  return (groundY - minRelWorldY) / (Math.cos(tent) * Math.cos(typing));
 };
 
 /**
@@ -479,8 +479,8 @@ export const calculateGroundedY = (
   const zDoublePrime = -rx * sinS + rz * cosS;
   const xPrime = rx * cosS + rz * sinS;
   
-  const term1 = (groundY + zDoublePrime * sinTy) / cosTy - lift;
-  const y = (term1 - xPrime * sinT) / cosT;
+  const y2 = (groundY + zDoublePrime * sinTy) / cosTy;
+  const y = (y2 - xPrime * sinT) / cosT - lift;
   
   return y;
 };
