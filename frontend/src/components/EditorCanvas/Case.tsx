@@ -92,6 +92,81 @@ const GroundedBox: React.FC<{
 };
 
 /**
+ * A component that renders a grounded box with holes.
+ */
+const GroundedHoleyBox: React.FC<{
+  width: number;
+  depth: number;
+  centerX: number;
+  centerY: number;
+  topY: number;
+  groundY: number;
+  lift: number;
+  tentingAngle: number;
+  splitRotation: number;
+  typingAngle: number;
+  mountingHoles: any[];
+  color?: string;
+}> = ({ width, depth, centerX, centerY, topY, groundY, lift, tentingAngle, splitRotation, typingAngle, mountingHoles, color = "#1a1a24" }) => {
+  const geometry = useMemo(() => {
+    const shape = new THREE.Shape();
+    const hw = width / 2;
+    const hd = depth / 2;
+
+    shape.moveTo(-hw, -hd);
+    shape.lineTo(hw, -hd);
+    shape.lineTo(hw, hd);
+    shape.lineTo(-hw, hd);
+    shape.closePath();
+
+    mountingHoles.forEach(hole => {
+      const relX = hole.x - centerX;
+      const relY = hole.y - centerY;
+      // Only add hole if it's within the box area
+      if (Math.abs(relX) < hw && Math.abs(relY) < hd) {
+        const path = new THREE.Path();
+        path.absarc(relX, relY, hole.diameter / 2, 0, Math.PI * 2, true);
+        shape.holes.push(path);
+      }
+    });
+
+    const thickness = 2; // Nominal thickness for extrusion before vertex adjustment
+    const extrudeSettings = { depth: thickness, bevelEnabled: false };
+    const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+    
+    // ExtrudeGeometry extrudes along Z. We want it on the X-Z plane.
+    geo.rotateX(Math.PI / 2);
+    
+    const pos = geo.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const vx = pos.getX(i) + centerX;
+      const vz = pos.getZ(i) + centerY;
+      const vy = pos.getY(i);
+      
+      if (vy > -0.01) { // "Top" face of the extrusion (which is at Y=0 after rotateX)
+        pos.setY(i, topY);
+      } else { // "Bottom" face
+        const groundedY = calculateGroundedY(vx, vz, groundY, lift, tentingAngle, splitRotation, typingAngle);
+        pos.setY(i, groundedY);
+      }
+    }
+    pos.needsUpdate = true;
+    geo.computeVertexNormals();
+    return geo;
+  }, [width, depth, centerX, centerY, topY, groundY, lift, tentingAngle, splitRotation, typingAngle, mountingHoles]);
+
+  return (
+    <mesh geometry={geometry}>
+      <meshStandardMaterial 
+        color={color} 
+        metalness={0.4} 
+        roughness={0.6} 
+      />
+    </mesh>
+  );
+};
+
+/**
  * Renders a 3D case for the keyboard.
  */
 const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRotation, typingAngle }) => {
@@ -144,6 +219,11 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
       allCorners.push(...getComponentCorners(b.x, b.y, b.width, b.height, b.rotation));
     });
 
+    const sideMountingHoles = (data.mountingHoles || []).filter(h => {
+      if (!side) return true;
+      return h.side === side;
+    });
+
     const bbox = calculatePointsBoundingBox(allCorners, wallThickness);
     if (!bbox) return null;
 
@@ -160,7 +240,7 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
     return (
       <group key={id}>
         {showCaseBase && (
-          <GroundedBox 
+          <GroundedHoleyBox 
             width={showCaseWalls ? innerWidth : bbox.width}
             depth={showCaseWalls ? innerHeight : bbox.height}
             centerX={bbox.centerX}
@@ -171,6 +251,7 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
             tentingAngle={tentingAngle}
             splitRotation={splitRotation}
             typingAngle={typingAngle}
+            mountingHoles={sideMountingHoles}
           />
         )}
 

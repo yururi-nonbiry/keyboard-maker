@@ -100,6 +100,14 @@ export interface BatteryConfig {
   connectorMountingSide?: 'top' | 'bottom';
 }
 
+export interface MountingHole {
+  id: string;
+  x: number; // in mm
+  y: number; // in mm
+  diameter: number; // in mm
+  side?: 'left' | 'right';
+}
+
 export interface KeyboardData {
   metadata: KeyboardMetadata;
   type: KeyboardType;
@@ -110,4 +118,5 @@ export interface KeyboardData {
   controllers?: ControllerConfig[];
   batteries?: BatteryConfig[];
   diodes?: DiodeConfig[];
+  mountingHoles?: MountingHole[];
 }

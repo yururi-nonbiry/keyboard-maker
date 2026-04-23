@@ -1,4 +1,4 @@
-import type { KeyConfig, ControllerType, ControllerConfig, TrackballConfig, BatteryConfig } from '../types';
+import type { KeyConfig, ControllerType, ControllerConfig, TrackballConfig, BatteryConfig, MountingHole } from '../types';
 
 export interface CollisionResult {
   hasCollision: boolean;
@@ -237,10 +237,11 @@ export const calculateFullBoundingBox3D = (
   trackballs: TrackballConfig[] = [],
   controllers: ControllerConfig[] = [],
   batteries: BatteryConfig[] = [],
+  mountingHoles: MountingHole[] = [],
   keyPitch: number = 19.05,
   padding: number = 0
 ): BoundingBox3D | null => {
-  const bbox2d = calculateFullBoundingBox(keys, trackballs, controllers, batteries, keyPitch, padding);
+  const bbox2d = calculateFullBoundingBox(keys, trackballs, controllers, batteries, mountingHoles, keyPitch, padding);
   if (!bbox2d) return null;
 
   let minZ = 0;
@@ -293,6 +294,7 @@ export const calculateFullBoundingBox = (
   trackballs: TrackballConfig[] = [],
   controllers: ControllerConfig[] = [],
   batteries: BatteryConfig[] = [],
+  mountingHoles: MountingHole[] = [],
   keyPitch: number = 19.05,
   padding: number = 0
 ): BoundingBox | null => {
@@ -323,6 +325,10 @@ export const calculateFullBoundingBox = (
       // Connector size approx 6x5mm
       allCorners.push(...getComponentCorners(b.connectorX, b.connectorY, 6, 5, 0));
     }
+  });
+
+  mountingHoles.forEach(h => {
+    allCorners.push(...getComponentCorners(h.x, h.y, h.diameter, h.diameter, 0));
   });
 
   return calculatePointsBoundingBox(allCorners, padding);

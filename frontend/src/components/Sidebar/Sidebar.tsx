@@ -84,6 +84,11 @@ const Sidebar: React.FC = () => {
     updateDiode,
     removeDiode,
     autoPlaceDiodes,
+    selectedMountingHoleId,
+    addMountingHole,
+    updateMountingHole,
+    removeMountingHole,
+    selectMountingHole,
   } = useKeyboardStore();
 
   const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({
@@ -96,10 +101,10 @@ const Sidebar: React.FC = () => {
 
   // Auto-expand selection section when a new item is selected
   React.useEffect(() => {
-    if (selectedKeyId || selectedTrackballId || selectedControllerId || selectedBatteryId || selectedDiodeId) {
+    if (selectedKeyId || selectedTrackballId || selectedControllerId || selectedBatteryId || selectedDiodeId || selectedMountingHoleId) {
       setExpandedSections(prev => ({ ...prev, selection: true }));
     }
-  }, [selectedKeyId, selectedTrackballId, selectedControllerId, selectedBatteryId, selectedDiodeId]);
+  }, [selectedKeyId, selectedTrackballId, selectedControllerId, selectedBatteryId, selectedDiodeId, selectedMountingHoleId]);
 
   const toggleSection = (id: string) => {
     setExpandedSections(prev => ({
@@ -113,6 +118,7 @@ const Sidebar: React.FC = () => {
   const selectedController = (data.controllers || []).find(c => c.id === selectedControllerId);
   const selectedBattery = (data.batteries || []).find(b => b.id === selectedBatteryId);
   const selectedDiode = (data.diodes || []).find(d => d.id === selectedDiodeId);
+  const selectedMountingHole = (data.mountingHoles || []).find(h => h.id === selectedMountingHoleId);
   const { typingAngle, tentingAngle, splitRotation } = data.case_config;
 
   return (
@@ -486,6 +492,33 @@ const Sidebar: React.FC = () => {
             }}
           >
             バッテリーを追加
+          </button>
+        </div>
+        <div className={styles.group}>
+          <button 
+            className={styles.input}
+            onClick={() => {
+              const id = `hole-${Date.now()}`;
+              let side: 'left' | 'right' = 'left';
+              
+              if (data.type === 'split') {
+                const hasLeft = (data.mountingHoles || []).some(h => h.side === 'left');
+                const hasRight = (data.mountingHoles || []).some(h => h.side === 'right');
+                if (hasLeft && !hasRight) side = 'right';
+                else if (!hasLeft) side = 'left';
+              }
+
+              addMountingHole({
+                id,
+                x: 0,
+                y: 0,
+                diameter: 3.2, // Default M3 screw hole
+                side,
+              });
+              selectMountingHole(id);
+            }}
+          >
+            マウント穴を追加
           </button>
         </div>
       </CollapsibleSection>
@@ -1077,6 +1110,87 @@ const Sidebar: React.FC = () => {
               onClick={() => removeDiode(selectedDiode.id)}
             >
               ダイオードを削除
+            </button>
+          </div>
+        </CollapsibleSection>
+      ) : selectedMountingHole ? (
+        <CollapsibleSection 
+          id="selection" 
+          title="マウント穴設定" 
+          isExpanded={expandedSections.selection} 
+          onToggle={toggleSection}
+          badge={
+            data.type === 'split' && (
+              <span className={`${styles.badge} ${selectedMountingHole.side === 'left' ? styles.badgeLeft : styles.badgeRight}`}>
+                {selectedMountingHole.side === 'left' ? 'LEFT' : 'RIGHT'}
+              </span>
+            )
+          }
+        >
+          <div className={styles.group}>
+            <label className={styles.label}>座標 (X, Y)</label>
+            <div className={styles.row}>
+              <div className={styles.inputWrapper}>
+                <span className={styles.coordLabel}>X</span>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={selectedMountingHole.x}
+                  onChange={(e) => updateMountingHole(selectedMountingHole.id, { x: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+              <div className={styles.inputWrapper}>
+                <span className={styles.coordLabel}>Y</span>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={selectedMountingHole.y}
+                  onChange={(e) => updateMountingHole(selectedMountingHole.id, { y: parseFloat(e.target.value) || 0 })}
+                />
+              </div>
+            </div>
+          </div>
+          <div className={styles.group}>
+            <label className={styles.label}>直径 (Diameter): {selectedMountingHole.diameter}mm</label>
+            <input
+              className={styles.input}
+              type="number"
+              step="0.1"
+              value={selectedMountingHole.diameter}
+              onChange={(e) => updateMountingHole(selectedMountingHole.id, { diameter: parseFloat(e.target.value) || 3.2 })}
+            />
+            <div className={styles.presetGrid} style={{ marginTop: '8px' }}>
+              {[2.2, 3.2, 4.2].map(d => (
+                <button
+                  key={d}
+                  className={`${styles.presetButton} ${selectedMountingHole.diameter === d ? styles.presetButtonActive : ''}`}
+                  onClick={() => updateMountingHole(selectedMountingHole.id, { diameter: d })}
+                >
+                  M{Math.floor(d)} ({d}mm)
+                </button>
+              ))}
+            </div>
+          </div>
+          {data.type === 'split' && (
+            <div className={styles.group}>
+              <label className={styles.label}>配置サイド</label>
+              <select
+                className={styles.input}
+                value={selectedMountingHole.side || 'left'}
+                onChange={(e) => updateMountingHole(selectedMountingHole.id, { side: e.target.value as 'left' | 'right' })}
+              >
+                <option value="left">左手 (Left)</option>
+                <option value="right">右手 (Right)</option>
+              </select>
+            </div>
+          )}
+          <div style={{ marginTop: 'auto' }}>
+            <button 
+              className={styles.input} 
+              style={{ width: '100%', borderColor: 'var(--color-secondary)', color: 'var(--color-secondary)' }}
+              onClick={() => removeMountingHole(selectedMountingHole.id)}
+            >
+              マウント穴を削除
             </button>
           </div>
         </CollapsibleSection>

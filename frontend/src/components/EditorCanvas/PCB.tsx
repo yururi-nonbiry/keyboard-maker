@@ -15,6 +15,7 @@ interface PCBMeshProps {
   boundaryPoints: { x: number; y: number }[];
   bbox: { centerX: number; centerY: number; width: number; height: number };
   pcbY: number;
+  mountingHoles: any[];
 }
 
 const PCBMesh: React.FC<PCBMeshProps> = ({ 
@@ -23,7 +24,8 @@ const PCBMesh: React.FC<PCBMeshProps> = ({
   pcbThickness, 
   boundaryPoints, 
   bbox, 
-  pcbY
+  pcbY,
+  mountingHoles
 }) => {
   const geometry = useMemo(() => {
     const shape = new THREE.Shape();
@@ -132,6 +134,16 @@ const PCBMesh: React.FC<PCBMeshProps> = ({
       }
     });
 
+    // Custom Mounting holes
+    mountingHoles.forEach(hole => {
+      const relX = hole.x - bbox.centerX;
+      const relY = hole.y - bbox.centerY;
+      
+      const path = new THREE.Path();
+      path.absarc(relX, relY, hole.diameter / 2, 0, Math.PI * 2, true);
+      shape.holes.push(path);
+    });
+
     const extrudeSettings = {
       depth: pcbThickness,
       bevelEnabled: false,
@@ -140,7 +152,7 @@ const PCBMesh: React.FC<PCBMeshProps> = ({
     const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
     geo.translate(0, 0, -pcbThickness / 2);
     return geo;
-  }, [keys, sideControllers, boundaryPoints, bbox, pcbThickness]);
+  }, [keys, sideControllers, boundaryPoints, bbox, pcbThickness, mountingHoles]);
 
   return (
     <mesh 
@@ -232,6 +244,11 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
       });
     });
 
+    const sideMountingHoles = (data.mountingHoles || []).filter(h => {
+      if (!side) return true;
+      return h.side === side;
+    });
+
     const boundaryPoints = getGridBoundary(footprints, cutouts, bridges, 1.0);
     if (boundaryPoints.length === 0) return null;
 
@@ -260,6 +277,7 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
         boundaryPoints={boundaryPoints}
         bbox={bbox}
         pcbY={pcbY}
+        mountingHoles={sideMountingHoles}
       />
     );
   };

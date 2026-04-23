@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { KeyboardData, KeyConfig, KeyboardMetadata, PcbConfig, CaseConfig, SwitchType, KeyboardType, TrackballConfig, ControllerConfig, BatteryConfig, DiodeConfig } from '../types';
+import type { KeyboardData, KeyConfig, KeyboardMetadata, PcbConfig, CaseConfig, SwitchType, KeyboardType, TrackballConfig, ControllerConfig, BatteryConfig, DiodeConfig, MountingHole } from '../types';
 import { checkInterference, calculateBoundingBox } from '../utils/geometry';
 
 interface KeyboardState {
@@ -44,6 +44,12 @@ interface KeyboardState {
   selectDiode: (id: string | null) => void;
   autoPlaceDiodes: () => void;
   
+  // Mounting Hole Actions
+  addMountingHole: (hole: MountingHole) => void;
+  updateMountingHole: (id: string, config: Partial<MountingHole>) => void;
+  removeMountingHole: (id: string) => void;
+  selectMountingHole: (id: string | null) => void;
+  
   // Grid Settings
   gridVisible: boolean;
   gridSnapping: boolean;
@@ -67,6 +73,7 @@ interface KeyboardState {
   selectedControllerId: string | null;
   selectedBatteryId: string | null;
   selectedDiodeId: string | null;
+  selectedMountingHoleId: string | null;
 
   // Visibility Settings
   showKeycaps: boolean;
@@ -144,12 +151,14 @@ export const useKeyboardStore = create<KeyboardState>()(
         diodes: [],
         pcb_config: DEFAULT_PCB,
         case_config: DEFAULT_CASE,
+        mountingHoles: [],
       },
       selectedKeyId: null,
       selectedTrackballId: null,
       selectedControllerId: null,
       selectedBatteryId: null,
       selectedDiodeId: null,
+      selectedMountingHoleId: null,
       collisions: {},
       gridVisible: true,
       gridSnapping: true,
@@ -245,7 +254,8 @@ export const useKeyboardStore = create<KeyboardState>()(
         selectedTrackballId: id ? null : state.selectedTrackballId,
         selectedControllerId: id ? null : state.selectedControllerId,
         selectedBatteryId: id ? null : state.selectedBatteryId,
-        selectedDiodeId: id ? null : state.selectedDiodeId
+        selectedDiodeId: id ? null : state.selectedDiodeId,
+        selectedMountingHoleId: id ? null : state.selectedMountingHoleId
       })),
 
       updatePcbConfig: (pcb_config) =>
@@ -488,6 +498,42 @@ export const useKeyboardStore = create<KeyboardState>()(
         };
       }),
 
+      addMountingHole: (hole) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            mountingHoles: [...(state.data.mountingHoles || []), hole],
+          },
+        })),
+
+      updateMountingHole: (id, config) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            mountingHoles: (state.data.mountingHoles || []).map((h) =>
+              h.id === id ? { ...h, ...config } : h
+            ),
+          },
+        })),
+
+      removeMountingHole: (id) =>
+        set((state) => ({
+          data: {
+            ...state.data,
+            mountingHoles: (state.data.mountingHoles || []).filter((h) => h.id !== id),
+          },
+          selectedMountingHoleId: state.selectedMountingHoleId === id ? null : state.selectedMountingHoleId,
+        })),
+
+      selectMountingHole: (id) => set((state) => ({ 
+        selectedMountingHoleId: id, 
+        selectedKeyId: id ? null : state.selectedKeyId,
+        selectedTrackballId: id ? null : state.selectedTrackballId,
+        selectedControllerId: id ? null : state.selectedControllerId,
+        selectedBatteryId: id ? null : state.selectedBatteryId,
+        selectedDiodeId: id ? null : state.selectedDiodeId
+      })),
+
       setKeyboardData: (data) => set({ 
         data, 
         collisions: checkInterference(data.layout, data.case_config.keyPitch || 19.05) 
@@ -506,6 +552,9 @@ export const useKeyboardStore = create<KeyboardState>()(
             }
             if (!rehydratedState.data.diodes) {
               rehydratedState.data.diodes = [];
+            }
+            if (!rehydratedState.data.mountingHoles) {
+              rehydratedState.data.mountingHoles = [];
             }
             rehydratedState.collisions = checkInterference(rehydratedState.data.layout, rehydratedState.data.case_config.keyPitch);
           }

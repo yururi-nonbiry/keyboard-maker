@@ -13,9 +13,10 @@ interface PlateMeshProps {
   plateThickness: number;
   boundaryPoints: { x: number; y: number }[];
   center: { x: number; y: number };
+  mountingHoles: any[];
 }
 
-const PlateMesh: React.FC<PlateMeshProps> = ({ keys, plateThickness, boundaryPoints, center }) => {
+const PlateMesh: React.FC<PlateMeshProps> = ({ keys, plateThickness, boundaryPoints, center, mountingHoles }) => {
   const geometry = useMemo(() => {
     const shape = new THREE.Shape();
     
@@ -60,6 +61,16 @@ const PlateMesh: React.FC<PlateMeshProps> = ({ keys, plateThickness, boundaryPoi
       shape.holes.push(path);
     });
 
+    // Mounting holes
+    mountingHoles.forEach(hole => {
+      const relX = hole.x - center.x;
+      const relY = hole.y - center.y;
+      
+      const path = new THREE.Path();
+      path.absarc(relX, relY, hole.diameter / 2, 0, Math.PI * 2, true);
+      shape.holes.push(path);
+    });
+
     const extrudeSettings = {
       depth: plateThickness,
       bevelEnabled: false,
@@ -68,7 +79,7 @@ const PlateMesh: React.FC<PlateMeshProps> = ({ keys, plateThickness, boundaryPoi
     const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
     geo.translate(0, 0, -plateThickness / 2);
     return geo;
-  }, [keys, boundaryPoints, center, plateThickness]);
+  }, [keys, boundaryPoints, center, plateThickness, mountingHoles]);
 
   return (
     <mesh 
@@ -170,6 +181,11 @@ const Plate: React.FC<PlateProps> = ({ side }) => {
       });
     });
 
+    const sideMountingHoles = (data.mountingHoles || []).filter(h => {
+      if (!side) return true;
+      return h.side === side;
+    });
+
     const boundaryPoints = getGridBoundary(footprints, cutouts, bridges, 1.0);
     if (boundaryPoints.length === 0) return null;
 
@@ -186,7 +202,7 @@ const Plate: React.FC<PlateProps> = ({ side }) => {
       y: (minY + maxY) / 2
     };
 
-    return <PlateMesh keys={keys} plateThickness={plateThickness} boundaryPoints={boundaryPoints} center={center} />;
+    return <PlateMesh keys={keys} plateThickness={plateThickness} boundaryPoints={boundaryPoints} center={center} mountingHoles={sideMountingHoles} />;
   };
 
   if (data.type === 'integrated') {

@@ -28,6 +28,9 @@ const Keyboard2D: React.FC = () => {
     selectedBatteryId,
     selectBattery,
     updateBattery,
+    selectedMountingHoleId,
+    selectMountingHole,
+    updateMountingHole,
     showSwitches,
     showSockets
   } = useKeyboardStore();
@@ -37,6 +40,7 @@ const Keyboard2D: React.FC = () => {
   const [draggingTrackballId, setDraggingTrackballId] = useState<string | null>(null);
   const [draggingControllerId, setDraggingControllerId] = useState<string | null>(null);
   const [draggingBatteryId, setDraggingBatteryId] = useState<string | null>(null);
+  const [draggingMountingHoleId, setDraggingMountingHoleId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [viewBox, setViewBox] = useState({ x: -250, y: -200, width: 500, height: 400 });
   const [isPanning, setIsPanning] = useState(false);
@@ -55,10 +59,12 @@ const Keyboard2D: React.FC = () => {
   const rightControllers = useMemo(() => (data.controllers || []).filter(c => c.side === 'right'), [data.controllers]);
   const leftBatteries = useMemo(() => (data.batteries || []).filter(b => b.side === 'left' || !b.side), [data.batteries]);
   const rightBatteries = useMemo(() => (data.batteries || []).filter(b => b.side === 'right'), [data.batteries]);
+  const leftMountingHoles = useMemo(() => (data.mountingHoles || []).filter(h => h.side === 'left' || !h.side), [data.mountingHoles]);
+  const rightMountingHoles = useMemo(() => (data.mountingHoles || []).filter(h => h.side === 'right'), [data.mountingHoles]);
 
-  const leftBbox = useMemo(() => calculateFullBoundingBox(leftKeys, [], leftControllers, leftBatteries, case_config.keyPitch), [leftKeys, leftControllers, leftBatteries, case_config.keyPitch]);
-  const rightBbox = useMemo(() => calculateFullBoundingBox(rightKeys, [], rightControllers, rightBatteries, case_config.keyPitch), [rightKeys, rightControllers, rightBatteries, case_config.keyPitch]);
-  const fullBbox = useMemo(() => calculateFullBoundingBox(layout, [], data.controllers || [], data.batteries || [], case_config.keyPitch), [layout, data.controllers, data.batteries, case_config.keyPitch]);
+  const leftBbox = useMemo(() => calculateFullBoundingBox(leftKeys, [], leftControllers, leftBatteries, leftMountingHoles, case_config.keyPitch), [leftKeys, leftControllers, leftBatteries, leftMountingHoles, case_config.keyPitch]);
+  const rightBbox = useMemo(() => calculateFullBoundingBox(rightKeys, [], rightControllers, rightBatteries, rightMountingHoles, case_config.keyPitch), [rightKeys, rightControllers, rightBatteries, rightMountingHoles, case_config.keyPitch]);
+  const fullBbox = useMemo(() => calculateFullBoundingBox(layout, [], data.controllers || [], data.batteries || [], data.mountingHoles || [], case_config.keyPitch), [layout, data.controllers, data.batteries, data.mountingHoles, case_config.keyPitch]);
 
   // Adjust viewBox to fit the keyboard initialy or when layout changes significantly
   useEffect(() => {
@@ -143,6 +149,21 @@ const Keyboard2D: React.FC = () => {
     }
   };
 
+  const handleMountingHoleMouseDown = (e: React.MouseEvent, holeId: string) => {
+    e.stopPropagation();
+    selectMountingHole(holeId);
+    setDraggingMountingHoleId(holeId);
+    
+    const hole = (data.mountingHoles || []).find(h => h.id === holeId);
+    if (hole) {
+      const mousePos = getMousePos(e);
+      setDragOffset({
+        x: mousePos.x - hole.x,
+        y: mousePos.y - hole.y
+      });
+    }
+  };
+
   const handleMouseMove = (e: React.MouseEvent) => {
     if (draggingKeyId) {
       const mousePos = getMousePos(e);
@@ -192,6 +213,18 @@ const Keyboard2D: React.FC = () => {
         x: snap(newX),
         y: snap(newY)
       });
+    } else if (draggingMountingHoleId) {
+      const mousePos = getMousePos(e);
+      const newX = mousePos.x - dragOffset.x;
+      const newY = mousePos.y - dragOffset.y;
+      
+      const snapIncrement = gridSnapping ? gridSize / 4 : 0.25;
+      const snap = (val: number) => Math.round(val / snapIncrement) * snapIncrement;
+
+      updateMountingHole(draggingMountingHoleId, {
+        x: snap(newX),
+        y: snap(newY)
+      });
     } else if (isPanning) {
       const dx = (e.clientX - panStart.x) * (viewBox.width / (svgRef.current?.clientWidth || 1));
       const dy = (e.clientY - panStart.y) * (viewBox.height / (svgRef.current?.clientHeight || 1));
@@ -219,6 +252,7 @@ const Keyboard2D: React.FC = () => {
     setDraggingTrackballId(null);
     setDraggingControllerId(null);
     setDraggingBatteryId(null);
+    setDraggingMountingHoleId(null);
     setIsPanning(false);
   };
 
@@ -497,6 +531,54 @@ const Keyboard2D: React.FC = () => {
     );
   };
 
+  const renderMountingHole = (hole: any) => {
+    const isSelected = selectedMountingHoleId === hole.id;
+    const r = hole.diameter / 2;
+
+    return (
+      <g 
+        key={hole.id}
+        transform={`translate(${hole.x}, ${hole.y})`}
+        onMouseDown={(e) => !splitMode && handleMountingHoleMouseDown(e, hole.id)}
+        onClick={(e) => e.stopPropagation()}
+        style={{ cursor: splitMode ? 'default' : 'move' }}
+      >
+        {/* Outer Highlight for Selection */}
+        {isSelected && (
+          <circle
+            r={r + 2}
+            fill="none"
+            stroke="#fbbf24"
+            strokeWidth={1}
+            strokeDasharray="2,1"
+          />
+        )}
+        <circle
+          r={r}
+          fill={isSelected ? 'rgba(251, 191, 36, 0.4)' : 'rgba(255, 255, 255, 0.1)'}
+          stroke={isSelected ? '#fbbf24' : '#fff'}
+          strokeWidth={isSelected ? 2 : 1}
+        />
+        <circle
+          r={r * 0.8}
+          fill="none"
+          stroke="rgba(255, 255, 255, 0.3)"
+          strokeWidth={0.5}
+        />
+        {/* Label */}
+        <text
+          y={r + 6}
+          textAnchor="middle"
+          fontSize={4}
+          fill="#fff"
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+          {`M${Math.floor(hole.diameter)}`}
+        </text>
+      </g>
+    );
+  };
+
   const renderHalf = (keys: KeyConfig[], bbox: any, side: 'left' | 'right') => {
     if (!bbox) return null;
 
@@ -522,6 +604,7 @@ const Keyboard2D: React.FC = () => {
           {(side === 'left' ? leftTrackballs : rightTrackballs).map(renderTrackball)}
           {(side === 'left' ? leftControllers : rightControllers).map(renderController)}
           {(side === 'left' ? leftBatteries : rightBatteries).map(renderBattery)}
+          {(side === 'left' ? leftMountingHoles : rightMountingHoles).map(renderMountingHole)}
         </g>
       </g>
     );
@@ -546,6 +629,7 @@ const Keyboard2D: React.FC = () => {
             selectTrackball(null);
             selectController(null);
             selectBattery(null);
+            selectMountingHole(null);
           }
         }}
       >
@@ -587,6 +671,7 @@ const Keyboard2D: React.FC = () => {
               {(data.trackballs || []).map(renderTrackball)}
               {(data.controllers || []).map(renderController)}
               {(data.batteries || []).map(renderBattery)}
+              {(data.mountingHoles || []).map(renderMountingHole)}
             </g>
           ) : (
             <>
