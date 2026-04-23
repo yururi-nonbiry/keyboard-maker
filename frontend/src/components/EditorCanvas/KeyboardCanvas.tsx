@@ -35,16 +35,19 @@ const KeyboardCanvas: React.FC = () => {
   const leftDiodes = (data.diodes || []).filter(d => d.side === 'left' || !d.side);
   const rightDiodes = (data.diodes || []).filter(d => d.side === 'right');
 
+  const leftMountingHoles = (data.mountingHoles || []).filter(m => m.side === 'left' || !m.side);
+  const rightMountingHoles = (data.mountingHoles || []).filter(m => m.side === 'right');
+
   const bbox = calculateBoundingBox(data.layout, keyPitch);
   const centerOffset = bbox ? [-bbox.centerX, 0, -bbox.centerY] : [0, 0, 0];
 
-  const leftFullBbox = calculateFullBoundingBox3D(leftKeys, [], data.controllers?.filter(c => c.side === 'left'), leftBatteries, keyPitch);
-  const rightFullBbox = calculateFullBoundingBox3D(rightKeys, [], data.controllers?.filter(c => c.side === 'right'), rightBatteries, keyPitch);
+  const leftFullBbox = calculateFullBoundingBox3D(leftKeys, leftTrackballs, (data.controllers || []).filter(c => c.side === 'left' || !c.side), leftBatteries, leftMountingHoles, keyPitch);
+  const rightFullBbox = calculateFullBoundingBox3D(rightKeys, rightTrackballs, (data.controllers || []).filter(c => c.side === 'right'), rightBatteries, rightMountingHoles, keyPitch);
   
   const leftLift = calculateLift(leftFullBbox, groundY, tentingAngle, splitRotation, typingAngle);
   const rightLift = calculateLift(rightFullBbox, groundY, -tentingAngle, -splitRotation, typingAngle);
   
-  const integratedBbox = calculateFullBoundingBox3D(data.layout, [], data.controllers, data.batteries, keyPitch);
+  const integratedBbox = calculateFullBoundingBox3D(data.layout, data.trackballs || [], data.controllers || [], data.batteries || [], data.mountingHoles || [], keyPitch);
   const integratedLift = calculateLift(integratedBbox, groundY, 0, 0, typingAngle);
 
   return (
