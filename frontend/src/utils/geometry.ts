@@ -415,6 +415,13 @@ export const calculateLift = (
   const split = splitDeg * (Math.PI / 180);
   const typing = typingDeg * (Math.PI / 180);
   
+  const cosT = Math.cos(tent);
+  const sinT = Math.sin(tent);
+  const cosS = Math.cos(split);
+  const sinS = Math.sin(split);
+  const cosTy = Math.cos(typing);
+  const sinTy = Math.sin(typing);
+
   const xMin = bbox.minX - bbox.centerX;
   const xMax = bbox.maxX - bbox.centerX;
   const yMin = bbox.minY - bbox.centerY;
@@ -435,16 +442,26 @@ export const calculateLift = (
 
   let minRelWorldY = Infinity;
   corners.forEach(p => {
-    const x1 = p.x * Math.cos(split) + p.z * Math.sin(split);
-    const y1 = p.y;
-    const z1 = -p.x * Math.sin(split) + p.z * Math.cos(split);
-    const y2 = x1 * Math.sin(tent) + y1 * Math.cos(tent);
-    const z2 = z1;
-    const relWorldY = y2 * Math.cos(typing) - z2 * Math.sin(typing);
+    // Rotation Order: Z (tent) -> Y (split) -> X (typing)
+    // 1. Z Rotation (tent)
+    const pz_x = p.x * cosT - p.y * sinT;
+    const pz_y = p.x * sinT + p.y * cosT;
+    const pz_z = p.z;
+
+    // 2. Y Rotation (split)
+    const py_y = pz_y;
+    const py_z = -pz_x * sinS + pz_z * cosS;
+
+    // 3. X Rotation (typing)
+    const relWorldY = py_y * cosTy - py_z * sinTy;
+    
     if (relWorldY < minRelWorldY) minRelWorldY = relWorldY;
   });
 
-  return (groundY - minRelWorldY) / (Math.cos(tent) * Math.cos(typing));
+  // The denominator is the vertical projection of the local Y axis:
+  // d(WorldY) / d(LocalY) = cos(T)*cos(Ty) - sin(T)*sin(S)*sin(Ty)
+  const denominator = cosT * cosTy - sinT * sinS * sinTy;
+  return (groundY - minRelWorldY) / denominator;
 };
 
 /**
@@ -472,17 +489,19 @@ export const calculateGroundedY = (
   const cosTy = Math.cos(typing);
   const sinTy = Math.sin(typing);
 
-  // Points relative to the pivot
-  const rx = x - pivotX;
-  const rz = z - pivotZ;
+  const dx = x - pivotX;
+  const dz = z - pivotZ;
 
-  const zDoublePrime = -rx * sinS + rz * cosS;
-  const xPrime = rx * cosS + rz * sinS;
+  // Solving for y_total = y_local + lift:
+  // WorldY = y_total * (cosT * cosTy - sinT * sinS * sinTy) + dx * (sinT * cosTy + cosT * sinS * sinTy) - dz * cosS * sinTy
+  // Set WorldY = groundY and solve for y_total
   
-  const y2 = (groundY + zDoublePrime * sinTy) / cosTy;
-  const y = (y2 - xPrime * sinT) / cosT - lift;
+  const termX = dx * (sinT * cosTy + cosT * sinS * sinTy);
+  const termZ = dz * cosS * sinTy;
+  const denominator = cosT * cosTy - sinT * sinS * sinTy;
   
-  return y;
+  const yTotal = (groundY - termX + termZ) / denominator;
+  return yTotal - lift;
 };
 
 /**
