@@ -205,17 +205,27 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
         radius: t.diameter / 2 + margin
       });
 
-      // Bridge tab to connect trackball PCB to main PCB
-      // Point towards layout center
-      const angle = Math.atan2(avgY - t.y, avgX - t.x);
-      const bridgeLength = t.diameter / 2 + margin + 10;
-      bridges.push({
-        centerX: t.x + Math.cos(angle) * (bridgeLength / 2),
-        centerY: t.y + Math.sin(angle) * (bridgeLength / 2),
-        width: 12,
-        height: bridgeLength,
-        angle: angle + Math.PI / 2
+      // Find closest key to point the bridge towards
+      let closestKey = keys[0];
+      let minD = Infinity;
+      keys.forEach(k => {
+        const d = (k.x - t.x) ** 2 + (k.y - t.y) ** 2;
+        if (d < minD) { minD = d; closestKey = k; }
       });
+
+      if (closestKey) {
+        const angle = Math.atan2(closestKey.y - t.y, closestKey.x - t.x);
+        const dist = Math.sqrt((closestKey.x - t.x) ** 2 + (closestKey.y - t.y) ** 2);
+        const bridgeLength = dist; 
+        
+        bridges.push({
+          centerX: t.x + Math.cos(angle) * (bridgeLength / 2),
+          centerY: t.y + Math.sin(angle) * (bridgeLength / 2),
+          width: 16, // Slightly wider for stability
+          height: bridgeLength,
+          angle: angle - Math.PI / 2 // Correct rotation to point along the vector
+        });
+      }
     });
 
     // Controllers
