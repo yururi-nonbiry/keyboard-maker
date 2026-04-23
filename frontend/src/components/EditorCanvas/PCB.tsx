@@ -63,6 +63,8 @@ const PCBMesh: React.FC<PCBMeshProps> = ({
       });
     });
 
+    // Skip trackball holes as requested
+    /*
     sideTrackballs.forEach(t => {
       const relX = t.x - bbox.centerX;
       const relY = t.y - bbox.centerY;
@@ -84,6 +86,7 @@ const PCBMesh: React.FC<PCBMeshProps> = ({
         shape.holes.push(path);
       });
     });
+    */
 
     sideControllers.forEach(c => {
       const relX = c.x - bbox.centerX;
@@ -180,11 +183,13 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
       });
     });
     
-    // Trackballs
+    // Trackballs - Temporarily excluded from calculation
+    /*
     const sideTrackballs = (data.trackballs || []).filter(t => {
       if (!side) return true;
       return t.side === side;
     });
+    */
 
     // Calculate layout center for bridge direction
     let avgX = 0, avgY = 0;
@@ -197,6 +202,7 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
     const cutouts: { centerX: number; centerY: number; radius: number }[] = [];
     const bridges: { centerX: number; centerY: number; width: number; height: number; angle: number }[] = [];
 
+    /*
     sideTrackballs.forEach(t => {
       // Circle cutout for the ball assembly
       cutouts.push({
@@ -227,6 +233,7 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
         });
       }
     });
+    */
 
     // Controllers
     const sideControllers = (data.controllers || []).filter(c => {
@@ -268,7 +275,7 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
     return (
       <PCBMesh 
         keys={keys}
-        sideTrackballs={sideTrackballs}
+        sideTrackballs={[]}
         sideControllers={sideControllers}
         pcbThickness={pcbThickness}
         boundaryPoints={boundaryPoints}

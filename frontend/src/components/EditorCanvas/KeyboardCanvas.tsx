@@ -34,13 +34,13 @@ const KeyboardCanvas: React.FC = () => {
   const bbox = calculateBoundingBox(data.layout, keyPitch);
   const centerOffset = bbox ? [-bbox.centerX, 0, -bbox.centerY] : [0, 0, 0];
 
-  const leftFullBbox = calculateFullBoundingBox3D(leftKeys, leftTrackballs, data.controllers?.filter(c => c.side === 'left'), leftBatteries, keyPitch);
-  const rightFullBbox = calculateFullBoundingBox3D(rightKeys, rightTrackballs, data.controllers?.filter(c => c.side === 'right'), rightBatteries, keyPitch);
+  const leftFullBbox = calculateFullBoundingBox3D(leftKeys, [], data.controllers?.filter(c => c.side === 'left'), leftBatteries, keyPitch);
+  const rightFullBbox = calculateFullBoundingBox3D(rightKeys, [], data.controllers?.filter(c => c.side === 'right'), rightBatteries, keyPitch);
   
   const leftLift = calculateLift(leftFullBbox, groundY, tentingAngle, splitRotation, typingAngle);
   const rightLift = calculateLift(rightFullBbox, groundY, -tentingAngle, -splitRotation, typingAngle);
   
-  const integratedBbox = calculateFullBoundingBox3D(data.layout, data.trackballs, data.controllers, data.batteries, keyPitch);
+  const integratedBbox = calculateFullBoundingBox3D(data.layout, [], data.controllers, data.batteries, keyPitch);
   const integratedLift = calculateLift(integratedBbox, groundY, 0, 0, typingAngle);
 
   return (

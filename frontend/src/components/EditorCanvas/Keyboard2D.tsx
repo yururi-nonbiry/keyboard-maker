@@ -56,9 +56,9 @@ const Keyboard2D: React.FC = () => {
   const leftBatteries = useMemo(() => (data.batteries || []).filter(b => b.side === 'left' || !b.side), [data.batteries]);
   const rightBatteries = useMemo(() => (data.batteries || []).filter(b => b.side === 'right'), [data.batteries]);
 
-  const leftBbox = useMemo(() => calculateFullBoundingBox(leftKeys, leftTrackballs, leftControllers, leftBatteries, case_config.keyPitch), [leftKeys, leftTrackballs, leftControllers, leftBatteries, case_config.keyPitch]);
-  const rightBbox = useMemo(() => calculateFullBoundingBox(rightKeys, rightTrackballs, rightControllers, rightBatteries, case_config.keyPitch), [rightKeys, rightTrackballs, rightControllers, rightBatteries, case_config.keyPitch]);
-  const fullBbox = useMemo(() => calculateFullBoundingBox(layout, data.trackballs || [], data.controllers || [], data.batteries || [], case_config.keyPitch), [layout, data.trackballs, data.controllers, data.batteries, case_config.keyPitch]);
+  const leftBbox = useMemo(() => calculateFullBoundingBox(leftKeys, [], leftControllers, leftBatteries, case_config.keyPitch), [leftKeys, leftControllers, leftBatteries, case_config.keyPitch]);
+  const rightBbox = useMemo(() => calculateFullBoundingBox(rightKeys, [], rightControllers, rightBatteries, case_config.keyPitch), [rightKeys, rightControllers, rightBatteries, case_config.keyPitch]);
+  const fullBbox = useMemo(() => calculateFullBoundingBox(layout, [], data.controllers || [], data.batteries || [], case_config.keyPitch), [layout, data.controllers, data.batteries, case_config.keyPitch]);
 
   // Adjust viewBox to fit the keyboard initialy or when layout changes significantly
   useEffect(() => {

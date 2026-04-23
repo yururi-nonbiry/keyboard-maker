@@ -114,7 +114,8 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
       ));
     });
 
-    // Trackballs
+    // Trackballs - Temporarily excluded
+    /*
     const sideTrackballs = (data.trackballs || []).filter(t => {
       if (!side) return true;
       return t.side === side || (!t.side && side === 'left');
@@ -122,6 +123,7 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
     sideTrackballs.forEach(t => {
       allCorners.push(...getComponentCorners(t.x, t.y, t.diameter, t.diameter, 0));
     });
+    */
 
     // Controllers
     const sideControllers = (data.controllers || []).filter(c => {
