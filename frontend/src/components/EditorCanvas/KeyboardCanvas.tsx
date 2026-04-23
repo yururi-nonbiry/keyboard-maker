@@ -12,7 +12,7 @@ import Trackball from './Trackball';
 import Battery from './Battery';
 import Diode from './Diode';
 
-import { calculateBoundingBox, calculateFullBoundingBox3D, calculateLift } from '../../utils/geometry';
+import { calculateFullBoundingBox3D, calculateLift } from '../../utils/geometry';
 
 const KeyboardCanvas: React.FC = () => {
   const { data, selectKey, selectedKeyId, selectTrackball, selectedTrackballId, selectController, selectedControllerId, selectBattery, selectedBatteryId, selectDiode, selectedDiodeId, gridVisible, gridSize, showTrackballs, showControllers, showDiodes } = useKeyboardStore();
@@ -38,8 +38,10 @@ const KeyboardCanvas: React.FC = () => {
   const leftMountingHoles = (data.mountingHoles || []).filter(m => m.side === 'left' || !m.side);
   const rightMountingHoles = (data.mountingHoles || []).filter(m => m.side === 'right');
 
-  const bbox = calculateBoundingBox(data.layout, keyPitch);
-  const centerOffset = bbox ? [-bbox.centerX, 0, -bbox.centerY] : [0, 0, 0];
+  const integratedBbox = calculateFullBoundingBox3D(data.layout, data.trackballs || [], data.controllers || [], data.batteries || [], data.mountingHoles || [], keyPitch);
+  const integratedLift = calculateLift(integratedBbox, groundY, 0, 0, typingAngle);
+  
+  const centerOffset = integratedBbox ? [-integratedBbox.centerX, 0, -integratedBbox.centerY] : [0, 0, 0];
 
   const leftFullBbox = calculateFullBoundingBox3D(leftKeys, leftTrackballs, (data.controllers || []).filter(c => c.side === 'left' || !c.side), leftBatteries, leftMountingHoles, keyPitch);
   const rightFullBbox = calculateFullBoundingBox3D(rightKeys, rightTrackballs, (data.controllers || []).filter(c => c.side === 'right'), rightBatteries, rightMountingHoles, keyPitch);
@@ -47,8 +49,6 @@ const KeyboardCanvas: React.FC = () => {
   const leftLift = calculateLift(leftFullBbox, groundY, tentingAngle, splitRotation, typingAngle);
   const rightLift = calculateLift(rightFullBbox, groundY, -tentingAngle, -splitRotation, typingAngle);
   
-  const integratedBbox = calculateFullBoundingBox3D(data.layout, data.trackballs || [], data.controllers || [], data.batteries || [], data.mountingHoles || [], keyPitch);
-  const integratedLift = calculateLift(integratedBbox, groundY, 0, 0, typingAngle);
 
   return (
     <Canvas
@@ -88,6 +88,8 @@ const KeyboardCanvas: React.FC = () => {
                   tentingAngle={0}
                   splitRotation={0}
                   typingAngle={typingAngle}
+                  centerX={integratedBbox?.centerX || 0}
+                  centerY={integratedBbox?.centerY || 0}
                 />
                 {showTrackballs && (data.trackballs || []).map((t) => (
                   <Trackball key={t.id} config={t} />
@@ -142,6 +144,8 @@ const KeyboardCanvas: React.FC = () => {
                         tentingAngle={tentingAngle}
                         splitRotation={splitRotation}
                         typingAngle={typingAngle}
+                        centerX={leftFullBbox.centerX}
+                        centerY={leftFullBbox.centerY}
                       />
                       {showTrackballs && leftTrackballs.map((t) => (
                         <Trackball key={t.id} config={t} />
@@ -199,6 +203,8 @@ const KeyboardCanvas: React.FC = () => {
                         tentingAngle={-tentingAngle}
                         splitRotation={-splitRotation}
                         typingAngle={typingAngle}
+                        centerX={rightFullBbox.centerX}
+                        centerY={rightFullBbox.centerY}
                       />
                       {showTrackballs && rightTrackballs.map((t) => (
                         <Trackball key={t.id} config={t} />

@@ -64,7 +64,7 @@ const Keyboard2D: React.FC = () => {
 
   const leftBbox = useMemo(() => calculateFullBoundingBox(leftKeys, [], leftControllers, leftBatteries, leftMountingHoles, case_config.keyPitch), [leftKeys, leftControllers, leftBatteries, leftMountingHoles, case_config.keyPitch]);
   const rightBbox = useMemo(() => calculateFullBoundingBox(rightKeys, [], rightControllers, rightBatteries, rightMountingHoles, case_config.keyPitch), [rightKeys, rightControllers, rightBatteries, rightMountingHoles, case_config.keyPitch]);
-  const fullBbox = useMemo(() => calculateFullBoundingBox(layout, [], data.controllers || [], data.batteries || [], data.mountingHoles || [], case_config.keyPitch), [layout, data.controllers, data.batteries, data.mountingHoles, case_config.keyPitch]);
+  const fullBbox = useMemo(() => calculateFullBoundingBox(layout, data.trackballs || [], data.controllers || [], data.batteries || [], data.mountingHoles || [], case_config.keyPitch), [layout, data.trackballs, data.controllers, data.batteries, data.mountingHoles, case_config.keyPitch]);
 
   // Adjust viewBox to fit the keyboard initialy or when layout changes significantly
   useEffect(() => {

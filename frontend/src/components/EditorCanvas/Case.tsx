@@ -16,6 +16,8 @@ interface CaseProps {
   tentingAngle: number;
   splitRotation: number;
   typingAngle: number;
+  centerX: number;
+  centerY: number;
 }
 
 /**
@@ -32,8 +34,10 @@ const GroundedBox: React.FC<{
   tentingAngle: number;
   splitRotation: number;
   typingAngle: number;
+  pivotX?: number;
+  pivotZ?: number;
   color?: string;
-}> = ({ width, depth, centerX, centerY, topY, groundY, lift, tentingAngle, splitRotation, typingAngle, color = "#1a1a24" }) => {
+}> = ({ width, depth, centerX, centerY, topY, groundY, lift, tentingAngle, splitRotation, typingAngle, pivotX = 0, pivotZ = 0, color = "#1a1a24" }) => {
   const geometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
     
@@ -48,10 +52,10 @@ const GroundedBox: React.FC<{
     const v4 = [centerX - hw, topY, centerY + hd];
     
     // Bottom face (grounded)
-    const v5 = [centerX - hw, calculateGroundedY(centerX - hw, centerY - hd, groundY, lift, tentingAngle, splitRotation, typingAngle), centerY - hd];
-    const v6 = [centerX + hw, calculateGroundedY(centerX + hw, centerY - hd, groundY, lift, tentingAngle, splitRotation, typingAngle), centerY - hd];
-    const v7 = [centerX + hw, calculateGroundedY(centerX + hw, centerY + hd, groundY, lift, tentingAngle, splitRotation, typingAngle), centerY + hd];
-    const v8 = [centerX - hw, calculateGroundedY(centerX - hw, centerY + hd, groundY, lift, tentingAngle, splitRotation, typingAngle), centerY + hd];
+    const v5 = [centerX - hw, calculateGroundedY(centerX - hw, centerY - hd, groundY, lift, tentingAngle, splitRotation, typingAngle, pivotX, pivotZ), centerY - hd];
+    const v6 = [centerX + hw, calculateGroundedY(centerX + hw, centerY - hd, groundY, lift, tentingAngle, splitRotation, typingAngle, pivotX, pivotZ), centerY - hd];
+    const v7 = [centerX + hw, calculateGroundedY(centerX + hw, centerY + hd, groundY, lift, tentingAngle, splitRotation, typingAngle, pivotX, pivotZ), centerY + hd];
+    const v8 = [centerX - hw, calculateGroundedY(centerX - hw, centerY + hd, groundY, lift, tentingAngle, splitRotation, typingAngle, pivotX, pivotZ), centerY + hd];
     
     const vertices = new Float32Array([
       ...v1, ...v2, ...v3, ...v4, // top
@@ -106,8 +110,10 @@ const GroundedHoleyBox: React.FC<{
   splitRotation: number;
   typingAngle: number;
   mountingHoles: any[];
+  pivotX?: number;
+  pivotZ?: number;
   color?: string;
-}> = ({ width, depth, centerX, centerY, topY, groundY, lift, tentingAngle, splitRotation, typingAngle, mountingHoles, color = "#1a1a24" }) => {
+}> = ({ width, depth, centerX, centerY, topY, groundY, lift, tentingAngle, splitRotation, typingAngle, mountingHoles, pivotX = 0, pivotZ = 0, color = "#1a1a24" }) => {
   const geometry = useMemo(() => {
     const shape = new THREE.Shape();
     const hw = width / 2;
@@ -146,7 +152,7 @@ const GroundedHoleyBox: React.FC<{
       if (vy > -0.01) { // "Top" face of the extrusion (which is at Y=0 after rotateX)
         pos.setY(i, topY);
       } else { // "Bottom" face
-        const groundedY = calculateGroundedY(vx, vz, groundY, lift, tentingAngle, splitRotation, typingAngle);
+        const groundedY = calculateGroundedY(vx, vz, groundY, lift, tentingAngle, splitRotation, typingAngle, pivotX, pivotZ);
         pos.setY(i, groundedY);
       }
     }
@@ -169,7 +175,7 @@ const GroundedHoleyBox: React.FC<{
 /**
  * Renders a 3D case for the keyboard.
  */
-const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRotation, typingAngle }) => {
+const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRotation, typingAngle, centerX, centerY }) => {
   const { data, showCaseBase, showCaseWalls } = useKeyboardStore();
   const { wallThickness, keyPitch } = data.case_config;
 
@@ -252,6 +258,8 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
             splitRotation={splitRotation}
             typingAngle={typingAngle}
             mountingHoles={sideMountingHoles}
+            pivotX={centerX}
+            pivotZ={centerY}
           />
         )}
 

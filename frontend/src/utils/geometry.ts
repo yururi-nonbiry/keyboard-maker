@@ -391,7 +391,9 @@ export const calculateGroundedY = (
   lift: number,
   tentingDeg: number,
   splitDeg: number,
-  typingDeg: number
+  typingDeg: number,
+  pivotX: number = 0,
+  pivotZ: number = 0
 ): number => {
   const tent = tentingDeg * (Math.PI / 180);
   const split = splitDeg * (Math.PI / 180);
@@ -404,8 +406,12 @@ export const calculateGroundedY = (
   const cosTy = Math.cos(typing);
   const sinTy = Math.sin(typing);
 
-  const zDoublePrime = -x * sinS + z * cosS;
-  const xPrime = x * cosS + z * sinS;
+  // Points relative to the pivot
+  const rx = x - pivotX;
+  const rz = z - pivotZ;
+
+  const zDoublePrime = -rx * sinS + rz * cosS;
+  const xPrime = rx * cosS + rz * sinS;
   
   const term1 = (groundY + zDoublePrime * sinTy) / cosTy - lift;
   const y = (term1 - xPrime * sinT) / cosT;
