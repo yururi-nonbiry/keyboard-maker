@@ -71,6 +71,7 @@ export interface TrackballConfig {
   sensorType: 'pmw3360' | 'pmw3389' | 'adns9800';
   sensorAngle?: number; // angle around the ball in degrees
   sensorRotation?: number; // rotation of the sensor chip in degrees
+  rotation: number; // in degrees
   side?: 'left' | 'right';
 }
 

@@ -114,18 +114,30 @@ const Trackball: React.FC<TrackballProps> = ({ config }) => {
       const worldPos = new THREE.Vector3();
       meshGroupRef.current.getWorldPosition(worldPos);
       
+      const worldQuat = new THREE.Quaternion();
+      meshGroupRef.current.getWorldQuaternion(worldQuat);
+      
       const container = groupRef.current.parent;
       if (!container) return;
 
       const containerWorldMatrixInverse = container.matrixWorld.clone().invert();
       const localPos = worldPos.applyMatrix4(containerWorldMatrixInverse);
       
+      const containerWorldQuat = new THREE.Quaternion();
+      container.getWorldQuaternion(containerWorldQuat);
+      const localQuat = worldQuat.clone().premultiply(containerWorldQuat.invert());
+      
+      const euler = new THREE.Euler().setFromQuaternion(localQuat);
+      
       const snapIncrement = gridSnapping ? gridSize / 4 : 0.25;
       const snapVal = (val: number) => Math.round(val / snapIncrement) * snapIncrement;
+      
+      const rotationDeg = -euler.y * (180 / Math.PI);
 
       updateTrackball(config.id, {
         x: snapVal(localPos.x),
         y: snapVal(localPos.z),
+        rotation: Math.round(rotationDeg),
       });
     }
   };
@@ -134,6 +146,7 @@ const Trackball: React.FC<TrackballProps> = ({ config }) => {
     <group 
       ref={groupRef}
       position={[config.x, config.z ?? -5, config.y]} 
+      rotation={[0, -(config.rotation || 0) * (Math.PI / 180), 0]}
       onClick={(e) => {
         e.stopPropagation();
         selectTrackball(config.id);
@@ -151,7 +164,7 @@ const Trackball: React.FC<TrackballProps> = ({ config }) => {
         lineWidth={2}
         onDragEnd={handleDragEnd}
         disableScaling
-        disableRotations
+        disableRotations={false}
       >
         <group ref={meshGroupRef}>
           {/* Internal components are relative to the center of the ball/socket */}

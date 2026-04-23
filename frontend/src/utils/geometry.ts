@@ -70,15 +70,19 @@ export const getTrackballPCBCorners = (t: TrackballConfig): Point[] => {
   // Offset of the PCB center from the ball center projected onto 2D plane
   const offsetDistance = (r + 3) * Math.sin(sensorAngleRad);
   
-  const centerX = t.x + offsetDistance;
-  const centerY = t.y;
+  const rotationRad = ((t.rotation || 0) * Math.PI) / 180;
+  const cosR = Math.cos(rotationRad);
+  const sinR = Math.sin(rotationRad);
+
+  const centerX = t.x + offsetDistance * cosR;
+  const centerY = t.y + offsetDistance * sinR;
   
   // The PCB is 28x28. If it's tilted, its footprint in X changes.
   // We use the projected width.
   const projectedWidth = Math.max(1.6, 28 * Math.abs(Math.cos(sensorAngleRad)));
   const projectedHeight = 28;
 
-  return getComponentCorners(centerX, centerY, projectedWidth, projectedHeight, t.sensorRotation || 0);
+  return getComponentCorners(centerX, centerY, projectedWidth, projectedHeight, (t.rotation || 0) + (t.sensorRotation || 0));
 };
 
 /**

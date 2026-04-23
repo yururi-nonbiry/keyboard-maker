@@ -682,6 +682,15 @@ const Sidebar: React.FC = () => {
             </div>
           </div>
           <div className={styles.group}>
+            <label className={styles.label}>回転 (Rotation)</label>
+            <input
+              className={styles.input}
+              type="number"
+              value={selectedTrackball.rotation || 0}
+              onChange={(e) => updateTrackball(selectedTrackball.id, { rotation: parseFloat(e.target.value) || 0 })}
+            />
+          </div>
+          <div className={styles.group}>
             <label className={styles.label}>直径 (Diameter): {selectedTrackball.diameter}mm</label>
             <input
               type="range"

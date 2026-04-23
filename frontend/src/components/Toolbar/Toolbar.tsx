@@ -51,6 +51,7 @@ const Toolbar: React.FC = () => {
       sensorType: 'pmw3360' as const,
       sensorAngle: 0,
       sensorRotation: 0,
+      rotation: 0,
       side: side,
     };
     addTrackball(newTrackball);

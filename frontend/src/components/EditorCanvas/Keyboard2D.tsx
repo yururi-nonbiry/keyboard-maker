@@ -375,7 +375,7 @@ const Keyboard2D: React.FC = () => {
     return (
       <g 
         key={trackball.id}
-        transform={`translate(${trackball.x}, ${trackball.y})`}
+        transform={`translate(${trackball.x}, ${trackball.y}) rotate(${-trackball.rotation || 0})`}
         onMouseDown={(e) => !splitMode && handleTrackballMouseDown(e, trackball.id)}
         onClick={(e) => e.stopPropagation()}
         style={{ cursor: splitMode ? 'default' : 'move' }}
