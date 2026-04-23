@@ -87,7 +87,7 @@ const PlateMesh: React.FC<PlateMeshProps> = ({ keys, plateThickness, boundaryPoi
 
 const Plate: React.FC<PlateProps> = ({ side }) => {
   const { data, showPlate } = useKeyboardStore();
-  const { plateThickness, keyPitch, pcbMargin, plateOffset } = data.case_config;
+  const { plateThickness, keyPitch, pcbMargin = 3.0, plateOffset = 0.0 } = data.case_config;
 
   const renderPlateComponent = (keys: KeyConfig[]) => {
     if (!showPlate || keys.length === 0) return null;
