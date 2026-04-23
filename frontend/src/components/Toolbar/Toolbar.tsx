@@ -1,6 +1,7 @@
 import { Save, FolderOpen, Download, Plus, Grid, Magnet, Box, Square, Scissors, Circle } from 'lucide-react';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
-import { saveProjectFile, loadProjectFile } from '../../utils/fileSystem';
+import { saveProjectFile, loadProjectFile, downloadTextFile } from '../../utils/fileSystem';
+import { generateKicadPcb } from '../../utils/kicadExport';
 import styles from './Toolbar.module.css';
 
 const Toolbar: React.FC = () => {
@@ -26,6 +27,12 @@ const Toolbar: React.FC = () => {
   const handleLoad = async () => {
     const loadedData = await loadProjectFile();
     if (loadedData) setKeyboardData(loadedData);
+  };
+
+  const handleExportKicad = () => {
+    const kicadSExp = generateKicadPcb(data);
+    const filename = `${data.metadata.name.toLowerCase().replace(/ /g, '_')}.kicad_pcb`;
+    downloadTextFile(filename, kicadSExp);
   };
 
   const handleAddKey = (side?: 'left' | 'right') => {
@@ -95,11 +102,11 @@ const Toolbar: React.FC = () => {
           <span>スナップ</span>
         </button>
         <div style={{ width: '1px', background: 'var(--color-border)', margin: '0 8px' }} />
-        <button className={styles.button} onClick={handleLoad}>
+        <button className={styles.button} onClick={handleLoad} title="プロジェクトを開く (.json)">
           <FolderOpen size={18} />
           <span>開く</span>
         </button>
-        <button className={styles.button} onClick={handleSave}>
+        <button className={styles.button} onClick={handleSave} title="プロジェクトを保存 (.json)">
           <Save size={18} />
         </button>
         {data.type === 'integrated' && (
@@ -161,8 +168,14 @@ const Toolbar: React.FC = () => {
             </button>
           </div>
         )}
-        <button className={styles.button}>
+        <div style={{ width: '1px', background: 'var(--color-border)', margin: '0 8px' }} />
+        <button 
+          className={styles.button} 
+          onClick={handleExportKicad}
+          title="KiCad基板ファイルとしてエクスポート (.kicad_pcb)"
+        >
           <Download size={18} />
+          <span>KiCad</span>
         </button>
       </div>
     </div>
