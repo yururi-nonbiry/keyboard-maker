@@ -364,7 +364,13 @@ const Keyboard2D: React.FC = () => {
 
   const renderTrackball = (trackball: TrackballConfig) => {
     const isSelected = selectedTrackballId === trackball.id;
+    const hasCollision = collisions[trackball.id];
     const r = (trackball.diameter || 34) / 2;
+
+    const sensorAngleRad = ((trackball.sensorAngle || 0) * Math.PI) / 180;
+    const pcbOffsetX = (r + 3) * Math.sin(sensorAngleRad);
+    const pcbWidth = Math.max(1.6, 28 * Math.abs(Math.cos(sensorAngleRad)));
+    const pcbHeight = 28;
 
     return (
       <g 
@@ -374,10 +380,25 @@ const Keyboard2D: React.FC = () => {
         onClick={(e) => e.stopPropagation()}
         style={{ cursor: splitMode ? 'default' : 'move' }}
       >
+        {/* Sensor PCB Footprint */}
+        <rect
+          x={pcbOffsetX - pcbWidth / 2}
+          y={-pcbHeight / 2}
+          width={pcbWidth}
+          height={pcbHeight}
+          rx={1}
+          transform={`rotate(${-trackball.sensorRotation || 0}, ${pcbOffsetX}, 0)`}
+          fill={hasCollision ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)'}
+          stroke={hasCollision ? '#ef4444' : '#10b981'}
+          strokeWidth={0.5}
+          strokeDasharray="2,1"
+        />
+
+        {/* Ball */}
         <circle
           r={r}
           fill={isSelected ? 'rgba(239, 68, 68, 0.4)' : 'rgba(239, 68, 68, 0.6)'}
-          stroke={isSelected ? '#f87171' : '#ef4444'}
+          stroke={hasCollision ? '#ef4444' : (isSelected ? '#f87171' : '#ef4444')}
           strokeWidth={isSelected ? 2 : 1}
         />
         <circle
@@ -398,9 +419,9 @@ const Keyboard2D: React.FC = () => {
         </text>
         {/* Sensor Position Indicator */}
         <circle
-          cx={Math.sin((trackball.sensorAngle || 0) * Math.PI / 180) * (r * 0.7)}
-          cy={0} // In 2D, it only moves left-right if it's rotating in X-Y plane
-          r={3}
+          cx={pcbOffsetX}
+          cy={0} 
+          r={2}
           fill="#4f46e5"
           stroke="#fff"
           strokeWidth={0.5}

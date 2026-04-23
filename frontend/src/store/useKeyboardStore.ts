@@ -226,7 +226,13 @@ export const useKeyboardStore = create<KeyboardState>()(
           const newLayout = [...state.data.layout, keyWithSide];
           return {
             data: { ...state.data, layout: newLayout },
-            collisions: checkInterference(newLayout, state.data.case_config.keyPitch),
+            collisions: checkInterference(
+              newLayout, 
+              state.data.trackballs, 
+              state.data.controllers, 
+              state.data.batteries, 
+              state.data.case_config.keyPitch
+            ),
           };
         }),
 
@@ -235,7 +241,13 @@ export const useKeyboardStore = create<KeyboardState>()(
           const newLayout = state.data.layout.map((k) => (k.id === id ? { ...k, ...config } : k));
           return {
             data: { ...state.data, layout: newLayout },
-            collisions: checkInterference(newLayout, state.data.case_config.keyPitch),
+            collisions: checkInterference(
+              newLayout, 
+              state.data.trackballs, 
+              state.data.controllers, 
+              state.data.batteries, 
+              state.data.case_config.keyPitch
+            ),
           };
         }),
 
@@ -244,7 +256,13 @@ export const useKeyboardStore = create<KeyboardState>()(
           const newLayout = state.data.layout.filter((k) => k.id !== id);
           return {
             data: { ...state.data, layout: newLayout },
-            collisions: checkInterference(newLayout, state.data.case_config.keyPitch),
+            collisions: checkInterference(
+              newLayout, 
+              state.data.trackballs, 
+              state.data.controllers, 
+              state.data.batteries, 
+              state.data.case_config.keyPitch
+            ),
             selectedKeyId: state.selectedKeyId === id ? null : state.selectedKeyId,
           };
         }),
@@ -270,7 +288,13 @@ export const useKeyboardStore = create<KeyboardState>()(
           return {
             data: newData,
             gridSize: newGridSize,
-            collisions: checkInterference(newData.layout, newData.case_config.keyPitch),
+            collisions: checkInterference(
+              newData.layout, 
+              newData.trackballs, 
+              newData.controllers, 
+              newData.batteries, 
+              newData.case_config.keyPitch
+            ),
           };
         }),
 
@@ -313,31 +337,61 @@ export const useKeyboardStore = create<KeyboardState>()(
         }),
 
       addTrackball: (trackball) =>
-        set((state) => ({
-          data: {
-            ...state.data,
-            trackballs: [...(state.data.trackballs || []), trackball],
-          },
-        })),
+        set((state) => {
+          const newTrackballs = [...(state.data.trackballs || []), trackball];
+          return {
+            data: {
+              ...state.data,
+              trackballs: newTrackballs,
+            },
+            collisions: checkInterference(
+              state.data.layout,
+              newTrackballs,
+              state.data.controllers,
+              state.data.batteries,
+              state.data.case_config.keyPitch
+            ),
+          };
+        }),
 
       updateTrackball: (id, config) =>
-        set((state) => ({
-          data: {
-            ...state.data,
-            trackballs: (state.data.trackballs || []).map((t) =>
-              t.id === id ? { ...t, ...config } : t
+        set((state) => {
+          const newTrackballs = (state.data.trackballs || []).map((t) =>
+            t.id === id ? { ...t, ...config } : t
+          );
+          return {
+            data: {
+              ...state.data,
+              trackballs: newTrackballs,
+            },
+            collisions: checkInterference(
+              state.data.layout,
+              newTrackballs,
+              state.data.controllers,
+              state.data.batteries,
+              state.data.case_config.keyPitch
             ),
-          },
-        })),
+          };
+        }),
 
       removeTrackball: (id) =>
-        set((state) => ({
-          data: {
-            ...state.data,
-            trackballs: (state.data.trackballs || []).filter((t) => t.id !== id),
-          },
-          selectedTrackballId: state.selectedTrackballId === id ? null : state.selectedTrackballId,
-        })),
+        set((state) => {
+          const newTrackballs = (state.data.trackballs || []).filter((t) => t.id !== id);
+          return {
+            data: {
+              ...state.data,
+              trackballs: newTrackballs,
+            },
+            collisions: checkInterference(
+              state.data.layout,
+              newTrackballs,
+              state.data.controllers,
+              state.data.batteries,
+              state.data.case_config.keyPitch
+            ),
+            selectedTrackballId: state.selectedTrackballId === id ? null : state.selectedTrackballId,
+          };
+        }),
 
       selectTrackball: (id) => set((state) => ({ 
         selectedTrackballId: id, 
@@ -348,31 +402,61 @@ export const useKeyboardStore = create<KeyboardState>()(
       })),
 
       addController: (controller) =>
-        set((state) => ({
-          data: {
-            ...state.data,
-            controllers: [...(state.data.controllers || []), controller],
-          },
-        })),
+        set((state) => {
+          const newControllers = [...(state.data.controllers || []), controller];
+          return {
+            data: {
+              ...state.data,
+              controllers: newControllers,
+            },
+            collisions: checkInterference(
+              state.data.layout,
+              state.data.trackballs,
+              newControllers,
+              state.data.batteries,
+              state.data.case_config.keyPitch
+            ),
+          };
+        }),
 
       updateController: (id, config) =>
-        set((state) => ({
-          data: {
-            ...state.data,
-            controllers: (state.data.controllers || []).map((c) =>
-              c.id === id ? { ...c, ...config } : c
+        set((state) => {
+          const newControllers = (state.data.controllers || []).map((c) =>
+            c.id === id ? { ...c, ...config } : c
+          );
+          return {
+            data: {
+              ...state.data,
+              controllers: newControllers,
+            },
+            collisions: checkInterference(
+              state.data.layout,
+              state.data.trackballs,
+              newControllers,
+              state.data.batteries,
+              state.data.case_config.keyPitch
             ),
-          },
-        })),
+          };
+        }),
 
       removeController: (id) =>
-        set((state) => ({
-          data: {
-            ...state.data,
-            controllers: (state.data.controllers || []).filter((c) => c.id !== id),
-          },
-          selectedControllerId: state.selectedControllerId === id ? null : state.selectedControllerId,
-        })),
+        set((state) => {
+          const newControllers = (state.data.controllers || []).filter((c) => c.id !== id);
+          return {
+            data: {
+              ...state.data,
+              controllers: newControllers,
+            },
+            collisions: checkInterference(
+              state.data.layout,
+              state.data.trackballs,
+              newControllers,
+              state.data.batteries,
+              state.data.case_config.keyPitch
+            ),
+            selectedControllerId: state.selectedControllerId === id ? null : state.selectedControllerId,
+          };
+        }),
 
       selectController: (id) => set((state) => ({ 
         selectedControllerId: id, 
@@ -383,40 +467,70 @@ export const useKeyboardStore = create<KeyboardState>()(
       })),
   
       addBattery: (battery) =>
-        set((state) => ({
-          data: {
-            ...state.data,
-            batteries: [
-              ...(state.data.batteries || []),
-              {
-                ...battery,
-                connectorEnabled: false,
-                connectorX: battery.x,
-                connectorY: battery.y + 10,
-                connectorMountingSide: battery.mountingSide
-              }
-            ],
-          },
-        })),
+        set((state) => {
+          const newBatteries = [
+            ...(state.data.batteries || []),
+            {
+              ...battery,
+              connectorEnabled: false,
+              connectorX: battery.x,
+              connectorY: battery.y + 10,
+              connectorMountingSide: battery.mountingSide
+            }
+          ];
+          return {
+            data: {
+              ...state.data,
+              batteries: newBatteries,
+            },
+            collisions: checkInterference(
+              state.data.layout,
+              state.data.trackballs,
+              state.data.controllers,
+              newBatteries,
+              state.data.case_config.keyPitch
+            ),
+          };
+        }),
   
       updateBattery: (id, config) =>
-        set((state) => ({
-          data: {
-            ...state.data,
-            batteries: (state.data.batteries || []).map((b) =>
-              b.id === id ? { ...b, ...config } : b
+        set((state) => {
+          const newBatteries = (state.data.batteries || []).map((b) =>
+            b.id === id ? { ...b, ...config } : b
+          );
+          return {
+            data: {
+              ...state.data,
+              batteries: newBatteries,
+            },
+            collisions: checkInterference(
+              state.data.layout,
+              state.data.trackballs,
+              state.data.controllers,
+              newBatteries,
+              state.data.case_config.keyPitch
             ),
-          },
-        })),
+          };
+        }),
   
       removeBattery: (id) =>
-        set((state) => ({
-          data: {
-            ...state.data,
-            batteries: (state.data.batteries || []).filter((b) => b.id !== id),
-          },
-          selectedBatteryId: state.selectedBatteryId === id ? null : state.selectedBatteryId,
-        })),
+        set((state) => {
+          const newBatteries = (state.data.batteries || []).filter((b) => b.id !== id);
+          return {
+            data: {
+              ...state.data,
+              batteries: newBatteries,
+            },
+            collisions: checkInterference(
+              state.data.layout,
+              state.data.trackballs,
+              state.data.controllers,
+              newBatteries,
+              state.data.case_config.keyPitch
+            ),
+            selectedBatteryId: state.selectedBatteryId === id ? null : state.selectedBatteryId,
+          };
+        }),
   
       selectBattery: (id) => set((state) => ({ 
         selectedBatteryId: id, 
@@ -536,7 +650,13 @@ export const useKeyboardStore = create<KeyboardState>()(
 
       setKeyboardData: (data) => set({ 
         data, 
-        collisions: checkInterference(data.layout, data.case_config.keyPitch || 19.05) 
+        collisions: checkInterference(
+          data.layout, 
+          data.trackballs, 
+          data.controllers, 
+          data.batteries, 
+          data.case_config.keyPitch || 19.05
+        ) 
       }),
     }),
     {
@@ -556,7 +676,13 @@ export const useKeyboardStore = create<KeyboardState>()(
             if (!rehydratedState.data.mountingHoles) {
               rehydratedState.data.mountingHoles = [];
             }
-            rehydratedState.collisions = checkInterference(rehydratedState.data.layout, rehydratedState.data.case_config.keyPitch);
+            rehydratedState.collisions = checkInterference(
+              rehydratedState.data.layout,
+              rehydratedState.data.trackballs,
+              rehydratedState.data.controllers,
+              rehydratedState.data.batteries,
+              rehydratedState.data.case_config.keyPitch
+            );
           }
         };
       },

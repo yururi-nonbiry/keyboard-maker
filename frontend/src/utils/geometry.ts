@@ -61,6 +61,27 @@ const getCorners = (key: KeyConfig, unit: number, buffer: number = 0): Point[] =
 };
 
 /**
+ * Calculates the 4 corners of a trackball sensor PCB, accounting for sensor placement.
+ */
+export const getTrackballPCBCorners = (t: TrackballConfig): Point[] => {
+  const r = t.diameter / 2;
+  const sensorAngleRad = ((t.sensorAngle || 0) * Math.PI) / 180;
+  
+  // Offset of the PCB center from the ball center projected onto 2D plane
+  const offsetDistance = (r + 3) * Math.sin(sensorAngleRad);
+  
+  const centerX = t.x + offsetDistance;
+  const centerY = t.y;
+  
+  // The PCB is 28x28. If it's tilted, its footprint in X changes.
+  // We use the projected width.
+  const projectedWidth = Math.max(1.6, 28 * Math.abs(Math.cos(sensorAngleRad)));
+  const projectedHeight = 28;
+
+  return getComponentCorners(centerX, centerY, projectedWidth, projectedHeight, t.sensorRotation || 0);
+};
+
+/**
  * Gets the axes (normals) to check for the Separating Axis Theorem.
  */
 const getAxes = (corners: Point[]): Point[] => {
@@ -109,28 +130,67 @@ const intersectOBB = (cornersA: Point[], cornersB: Point[]): boolean => {
  * Checks for interference (overlaps) between keys in the layout.
  * For split keyboards, it only checks collisions between keys on the same side.
  */
-export const checkInterference = (layout: KeyConfig[], keyPitch: number = 19.05): Record<string, boolean> => {
+export const checkInterference = (
+  layout: KeyConfig[], 
+  trackballs: TrackballConfig[] = [],
+  controllers: ControllerConfig[] = [],
+  batteries: BatteryConfig[] = [],
+  keyPitch: number = 19.05
+): Record<string, boolean> => {
   const collisions: Record<string, boolean> = {};
   const UNIT = keyPitch;
-  const BUFFER = 0.5; // Small buffer (0.25mm per side) to allow touching keys
+  const BUFFER = 0.5; // Small buffer (0.25mm per side) to allow touching components
 
-  for (let i = 0; i < layout.length; i++) {
-    const keyA = layout[i];
-    const sideA = keyA.side || 'left';
-    const cornersA = getCorners(keyA, UNIT, BUFFER);
+  const allComponents: { id: string; side: string; corners: Point[] }[] = [];
 
-    for (let j = i + 1; j < layout.length; j++) {
-      const keyB = layout[j];
-      const sideB = keyB.side || 'left';
+  // Keys
+  layout.forEach(key => {
+    allComponents.push({
+      id: key.id,
+      side: key.side || 'left',
+      corners: getCorners(key, UNIT, BUFFER)
+    });
+  });
 
-      // If keys are on different sides of a split keyboard, they cannot collide
-      if (sideA !== sideB) continue;
+  // Trackball PCBs
+  trackballs.forEach(t => {
+    allComponents.push({
+      id: t.id,
+      side: t.side || 'left',
+      corners: getTrackballPCBCorners(t)
+    });
+  });
 
-      const cornersB = getCorners(keyB, UNIT, BUFFER);
+  // Controllers
+  controllers.forEach(c => {
+    const dim = getControllerDimensions(c.type);
+    allComponents.push({
+      id: c.id,
+      side: c.side || 'left',
+      corners: getComponentCorners(c.x, c.y, dim.width, dim.length, c.rotation, BUFFER)
+    });
+  });
 
-      if (intersectOBB(cornersA, cornersB)) {
-        collisions[keyA.id] = true;
-        collisions[keyB.id] = true;
+  // Batteries
+  batteries.forEach(b => {
+    allComponents.push({
+      id: b.id,
+      side: b.side || 'left',
+      corners: getComponentCorners(b.x, b.y, b.width, b.height, b.rotation, BUFFER)
+    });
+  });
+
+  for (let i = 0; i < allComponents.length; i++) {
+    for (let j = i + 1; j < allComponents.length; j++) {
+      const a = allComponents[i];
+      const b = allComponents[j];
+
+      // Components on different sides of a split keyboard cannot collide
+      if (a.side !== b.side) continue;
+
+      if (intersectOBB(a.corners, b.corners)) {
+        collisions[a.id] = true;
+        collisions[b.id] = true;
       }
     }
   }
@@ -311,6 +371,8 @@ export const calculateFullBoundingBox = (
   });
 
   trackballs.forEach(t => {
+    allCorners.push(...getTrackballPCBCorners(t));
+    // Also include the ball itself
     allCorners.push(...getComponentCorners(t.x, t.y, t.diameter, t.diameter, 0));
   });
 
