@@ -406,3 +406,128 @@ export const calculateGroundedY = (
   
   return y;
 };
+
+/**
+ * Traces the organic boundary of a set of rectangles on a grid.
+ * Useful for generating PCB and Plate outlines that follow component silhouettes.
+ */
+export const getGridBoundary = (
+  rects: { centerX: number; centerY: number; width: number; height: number; angle: number }[], 
+  resolution: number = 1.0
+): { x: number; y: number }[] => {
+  if (rects.length === 0) return [];
+
+  // 1. Calculate Bounding Box
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  rects.forEach(r => {
+    const diag = Math.sqrt(r.width * r.width + r.height * r.height) / 2;
+    minX = Math.min(minX, r.centerX - diag);
+    maxX = Math.max(maxX, r.centerX + diag);
+    minY = Math.min(minY, r.centerY - diag);
+    maxY = Math.max(maxY, r.centerY + diag);
+  });
+
+  minX -= resolution * 2;
+  minY -= resolution * 2;
+  maxX += resolution * 2;
+  maxY += resolution * 2;
+
+  const width = Math.ceil((maxX - minX) / resolution);
+  const height = Math.ceil((maxY - minY) / resolution);
+
+  // 2. Fill Grid
+  const grid = new Uint8Array(width * height);
+  const isPointInRect = (px: number, py: number, r: any) => {
+    const dx = px - r.centerX;
+    const dy = py - r.centerY;
+    const cos = Math.cos(-r.angle);
+    const sin = Math.sin(-r.angle);
+    const rx = dx * cos - dy * sin;
+    const ry = dx * sin + dy * cos;
+    return Math.abs(rx) <= r.width / 2 && Math.abs(ry) <= r.height / 2;
+  };
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const px = minX + x * resolution;
+      const py = minY + y * resolution;
+      for (const r of rects) {
+        if (isPointInRect(px, py, r)) {
+          grid[y * width + x] = 1;
+          break;
+        }
+      }
+    }
+  }
+
+  // 3. Boundary Tracing (Moore Neighborhood)
+  const get = (x: number, y: number) => {
+    if (x < 0 || x >= width || y < 0 || y >= height) return 0;
+    return grid[y * width + x];
+  };
+
+  let startX = -1, startY = -1;
+  outer: for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (get(x, y)) {
+        startX = x;
+        startY = y;
+        break outer;
+      }
+    }
+  }
+
+  if (startX === -1) return [];
+
+  const boundary: {x: number, y: number}[] = [];
+  let currX = startX, currY = startY;
+  let prevX = startX - 1, prevY = startY; 
+
+  const dxs = [0, 1, 1, 1, 0, -1, -1, -1];
+  const dys = [-1, -1, 0, 1, 1, 1, 0, -1];
+
+  let limit = 5000; // Larger safety break for complex plates
+  do {
+    boundary.push({ x: minX + currX * resolution, y: minY + currY * resolution });
+    
+    let dir = 0;
+    for (let d = 0; d < 8; d++) {
+      if (currX + dxs[d] === prevX && currY + dys[d] === prevY) {
+        dir = d;
+        break;
+      }
+    }
+
+    let found = false;
+    for (let i = 1; i <= 8; i++) {
+      const nextDir = (dir + i) % 8;
+      const nx = currX + dxs[nextDir];
+      const ny = currY + dys[nextDir];
+      if (get(nx, ny)) {
+        prevX = currX + dxs[(nextDir + 7) % 8]; 
+        prevY = currY + dys[(nextDir + 7) % 8];
+        currX = nx;
+        currY = ny;
+        found = true;
+        break;
+      }
+    }
+    if (!found || --limit < 0) break;
+  } while (currX !== startX || currY !== startY);
+
+  // 4. Simplify Path
+  if (boundary.length < 3) return boundary;
+  const simplified: {x: number, y: number}[] = [boundary[0]];
+  for (let i = 1; i < boundary.length; i++) {
+    const prev = simplified[simplified.length - 1];
+    const curr = boundary[i];
+    const next = boundary[(i + 1) % boundary.length];
+    
+    const cross = (curr.x - prev.x) * (next.y - curr.y) - (curr.y - prev.y) * (next.x - curr.x);
+    if (Math.abs(cross) > 0.001) {
+      simplified.push(curr);
+    }
+  }
+
+  return simplified;
+};

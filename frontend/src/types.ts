@@ -46,6 +46,8 @@ export interface CaseConfig {
   splitRotation: number; // in degrees
   splitGap: number; // in mm
   keyPitch: number; // in mm
+  pcbMargin: number; // in mm
+  plateOffset: number; // in mm, relative to PCB edge
   defaultKeycapProfile: KeycapProfile;
 }
 

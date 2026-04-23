@@ -105,6 +105,8 @@ const DEFAULT_CASE: CaseConfig = {
   splitRotation: 0,
   splitGap: 40,
   keyPitch: 19.05,
+  pcbMargin: 3.0,
+  plateOffset: 0.0,
   defaultKeycapProfile: 'cherry',
 };
 

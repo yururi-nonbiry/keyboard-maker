@@ -313,6 +313,30 @@ const Sidebar: React.FC = () => {
             <option value="mbk">MBK</option>
           </select>
         </div>
+        <div className={styles.group}>
+          <label className={styles.label}>PCB マージン (外形余裕): {data.case_config.pcbMargin}mm</label>
+          <input
+            type="number"
+            min="0"
+            max="20"
+            step="0.5"
+            className={styles.input}
+            value={data.case_config.pcbMargin}
+            onChange={(e) => updateCaseConfig({ pcbMargin: parseFloat(e.target.value) || 0 })}
+          />
+        </div>
+        <div className={styles.group}>
+          <label className={styles.label}>プレート オフセット (PCB基準): {data.case_config.plateOffset}mm</label>
+          <input
+            type="number"
+            min="-10"
+            max="10"
+            step="0.1"
+            className={styles.input}
+            value={data.case_config.plateOffset}
+            onChange={(e) => updateCaseConfig({ plateOffset: parseFloat(e.target.value) || 0 })}
+          />
+        </div>
       </CollapsibleSection>
 
       <CollapsibleSection 

@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
-import { getComponentCorners, calculatePointsBoundingBox, getControllerDimensions } from '../../utils/geometry';
+import { getGridBoundary, getControllerDimensions } from '../../utils/geometry';
 import type { KeyConfig } from '../../types';
 
 interface PlateProps {
@@ -11,31 +11,26 @@ interface PlateProps {
 interface PlateMeshProps {
   keys: KeyConfig[];
   plateThickness: number;
-  bbox: {
-    width: number;
-    height: number;
-    centerX: number;
-    centerY: number;
-  };
+  boundaryPoints: { x: number; y: number }[];
+  center: { x: number; y: number };
 }
 
-const PlateMesh: React.FC<PlateMeshProps> = ({ keys, plateThickness, bbox }) => {
+const PlateMesh: React.FC<PlateMeshProps> = ({ keys, plateThickness, boundaryPoints, center }) => {
   const geometry = useMemo(() => {
     const shape = new THREE.Shape();
-    const hw_plate = bbox.width / 2;
-    const hh_plate = bbox.height / 2;
-
-    // Outer boundary
-    shape.moveTo(-hw_plate, -hh_plate);
-    shape.lineTo(hw_plate, -hh_plate);
-    shape.lineTo(hw_plate, hh_plate);
-    shape.lineTo(-hw_plate, hh_plate);
+    
+    // Outer boundary from grid tracing
+    const first = boundaryPoints[0];
+    shape.moveTo(first.x - center.x, first.y - center.y);
+    for (let i = 1; i < boundaryPoints.length; i++) {
+      shape.lineTo(boundaryPoints[i].x - center.x, boundaryPoints[i].y - center.y);
+    }
     shape.closePath();
 
     // Holes for keys
     keys.forEach(key => {
-      const relX = key.x - bbox.centerX;
-      const relY = key.y - bbox.centerY;
+      const relX = key.x - center.x;
+      const relY = key.y - center.y;
       const rot = -key.rotation * (Math.PI / 180);
       const cos = Math.cos(rot);
       const sin = Math.sin(rot);
@@ -73,11 +68,11 @@ const PlateMesh: React.FC<PlateMeshProps> = ({ keys, plateThickness, bbox }) => 
     const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
     geo.translate(0, 0, -plateThickness / 2);
     return geo;
-  }, [keys, bbox, plateThickness]);
+  }, [keys, boundaryPoints, center, plateThickness]);
 
   return (
     <mesh 
-      position={[bbox.centerX, -1, bbox.centerY]}
+      position={[center.x, -1, center.y]}
       rotation={[Math.PI / 2, 0, 0]}
       geometry={geometry}
     >
@@ -92,25 +87,28 @@ const PlateMesh: React.FC<PlateMeshProps> = ({ keys, plateThickness, bbox }) => 
 
 const Plate: React.FC<PlateProps> = ({ side }) => {
   const { data, showPlate } = useKeyboardStore();
-  const { plateThickness, keyPitch } = data.case_config;
+  const { plateThickness, keyPitch, pcbMargin, plateOffset } = data.case_config;
 
   const renderPlateComponent = (keys: KeyConfig[]) => {
     if (!showPlate || keys.length === 0) return null;
 
-    // Collect corners from keys and trackballs
-    const allCorners: { x: number; y: number }[] = [];
+    // The plate margin is derived from pcbMargin + plateOffset
+    const margin = pcbMargin + plateOffset;
+
+    // Component footprints (with margin)
+    const footprints: { centerX: number; centerY: number; width: number; height: number; angle: number }[] = [];
 
     // Keys
     keys.forEach(key => {
-      allCorners.push(...getComponentCorners(
-        key.x,
-        key.y,
-        key.keycapSize.width * keyPitch,
-        key.keycapSize.height * keyPitch,
-        key.rotation
-      ));
+      footprints.push({
+        centerX: key.x,
+        centerY: key.y,
+        width: key.keycapSize.width * keyPitch + margin * 2,
+        height: key.keycapSize.height * keyPitch + margin * 2,
+        angle: -key.rotation * (Math.PI / 180)
+      });
     });
-
+    
     // Trackballs
     const sideTrackballs = (data.trackballs || []).filter(t => {
       if (!side) return true; // integrated
@@ -118,15 +116,15 @@ const Plate: React.FC<PlateProps> = ({ side }) => {
     });
 
     sideTrackballs.forEach(t => {
-      allCorners.push(...getComponentCorners(
-        t.x,
-        t.y,
-        t.diameter,
-        t.diameter,
-        0
-      ));
+      footprints.push({
+        centerX: t.x,
+        centerY: t.y,
+        width: t.diameter + margin * 2,
+        height: t.diameter + margin * 2,
+        angle: 0
+      });
     });
-    
+
     // Controllers
     const sideControllers = (data.controllers || []).filter(c => {
       if (!side) return true; // integrated
@@ -135,20 +133,32 @@ const Plate: React.FC<PlateProps> = ({ side }) => {
 
     sideControllers.forEach(c => {
       const dimensions = getControllerDimensions(c.type);
-      
-      allCorners.push(...getComponentCorners(
-        c.x,
-        c.y,
-        dimensions.width,
-        dimensions.length,
-        c.rotation
-      ));
+      footprints.push({
+        centerX: c.x,
+        centerY: c.y,
+        width: dimensions.width + margin * 2,
+        height: dimensions.length + margin * 2,
+        angle: -c.rotation * (Math.PI / 180)
+      });
     });
 
-    const bbox = calculatePointsBoundingBox(allCorners, 2); // Small padding for the plate
-    if (!bbox) return null;
+    const boundaryPoints = getGridBoundary(footprints, 1.0);
+    if (boundaryPoints.length === 0) return null;
 
-    return <PlateMesh keys={keys} plateThickness={plateThickness} bbox={bbox} />;
+    // Calculate bbox for centering
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    boundaryPoints.forEach(p => {
+      minX = Math.min(minX, p.x);
+      maxX = Math.max(maxX, p.x);
+      minY = Math.min(minY, p.y);
+      maxY = Math.max(maxY, p.y);
+    });
+    const center = {
+      x: (minX + maxX) / 2,
+      y: (minY + maxY) / 2
+    };
+
+    return <PlateMesh keys={keys} plateThickness={plateThickness} boundaryPoints={boundaryPoints} center={center} />;
   };
 
   if (data.type === 'integrated') {
@@ -170,3 +180,4 @@ const Plate: React.FC<PlateProps> = ({ side }) => {
 };
 
 export default Plate;
+
