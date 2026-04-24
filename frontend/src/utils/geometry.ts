@@ -458,10 +458,10 @@ export const calculateLift = (
     if (relWorldY < minRelWorldY) minRelWorldY = relWorldY;
   });
 
-  // The denominator is the vertical projection of the local Y axis:
-  // d(WorldY) / d(LocalY) = cos(T)*cos(Ty) - sin(T)*sin(S)*sin(Ty)
-  const denominator = cosT * cosTy - sinT * sinS * sinTy;
-  return (groundY - minRelWorldY) / denominator;
+  // Based on KeyboardCanvas.tsx hierarchy: 
+  // lift is applied AFTER tenting/split but BEFORE typing.
+  // So WorldY = (RelWorldY_no_lift) + lift * cos(typing)
+  return (groundY - minRelWorldY) / cosTy;
 };
 
 /**
@@ -492,16 +492,17 @@ export const calculateGroundedY = (
   const dx = x - pivotX;
   const dz = z - pivotZ;
 
-  // Solving for y_total = y_local + lift:
-  // WorldY = y_total * (cosT * cosTy - sinT * sinS * sinTy) + dx * (sinT * cosTy + cosT * sinS * sinTy) - dz * cosS * sinTy
-  // Set WorldY = groundY and solve for y_total
+  // Solving for y_local:
+  // p_world.y = (p_rotated.y + lift) * cosTy - p_rotated.z * sinTy = groundY
+  // where p_rotated.y = dx * sinT + y_local * cosT
+  // and p_rotated.z = - (dx * cosT - y_local * sinT) * sinS + dz * cosS
   
   const termX = dx * (sinT * cosTy + cosT * sinS * sinTy);
   const termZ = dz * cosS * sinTy;
   const denominator = cosT * cosTy - sinT * sinS * sinTy;
   
-  const yTotal = (groundY - termX + termZ) / denominator;
-  return yTotal - lift;
+  // Final equation: y_local * denominator = groundY - lift * cosTy - termX + termZ
+  return (groundY - lift * cosTy - termX + termZ) / denominator;
 };
 
 /**
