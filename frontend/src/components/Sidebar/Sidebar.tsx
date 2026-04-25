@@ -1,6 +1,7 @@
 import React from 'react';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
 import type { SwitchType } from '../../types';
+import { Plus, Circle, Cpu, Battery, Target } from 'lucide-react';
 import styles from './Sidebar.module.css';
 
 const CollapsibleSection: React.FC<{
@@ -59,10 +60,17 @@ const Sidebar: React.FC = () => {
     selectedMountingHoleId,
     updateMountingHole,
     removeMountingHole,
+    toolboxVisibleItems,
+    addKey,
+    addTrackball,
+    addController,
+    addBattery,
+    addMountingHole,
   } = useKeyboardStore();
 
   const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({
     selection: true,
+    toolbox: true,
   });
 
   // Auto-expand selection section when a new item is selected
@@ -88,6 +96,101 @@ const Sidebar: React.FC = () => {
 
   return (
     <div className={`${styles.sidebar} glass`}>
+      <CollapsibleSection 
+        id="toolbox" 
+        title="ツールボックス" 
+        isExpanded={expandedSections.toolbox} 
+        onToggle={toggleSection}
+      >
+        <div className={styles.toolboxGrid}>
+          {(toolboxVisibleItems?.key ?? true) && (
+            <button 
+              className={styles.toolboxButton} 
+              onClick={() => {
+                const id = `key-${Date.now()}`;
+                addKey({
+                  id,
+                  x: 0,
+                  y: 0,
+                  rotation: 0,
+                  switchType: 'mx' as const,
+                  keycapSize: { width: 1, height: 1 },
+                });
+              }}
+              title="キーを追加"
+            >
+              <Plus size={18} />
+              <span>キー</span>
+            </button>
+          )}
+          {(toolboxVisibleItems?.trackball ?? true) && (
+            <button 
+              className={styles.toolboxButton} 
+              onClick={() => {
+                const id = `trackball-${Date.now()}`;
+                addTrackball({
+                  id,
+                  x: 0,
+                  y: 0,
+                  z: -6.5,
+                  diameter: 34,
+                  sensorType: 'pmw3360' as const,
+                  sensorAngle: 0,
+                  sensorRotation: 0,
+                  rotation: 0,
+                  mountingSide: 'bottom' as const,
+                });
+              }}
+              title="トラックボールを追加"
+            >
+              <Circle size={18} />
+              <span>TB</span>
+            </button>
+          )}
+          {(toolboxVisibleItems?.mcu ?? true) && (
+            <button 
+              className={styles.toolboxButton} 
+              onClick={() => {
+                const id = `mcu-${Date.now()}`;
+                addController({ id, type: 'pro_micro', x: 0, y: -60, rotation: 0, side: 'left', mountingSide: 'top' });
+              }}
+              title="MCUを追加"
+            >
+              <Cpu size={18} />
+              <span>MCU</span>
+            </button>
+          )}
+          {(toolboxVisibleItems?.battery ?? true) && (
+            <button 
+              className={styles.toolboxButton} 
+              onClick={() => {
+                const id = `battery-${Date.now()}`;
+                addBattery({ id, x: 0, y: 60, width: 30, height: 50, thickness: 4, rotation: 0, side: 'left', mountingSide: 'bottom' });
+              }}
+              title="バッテリーを追加"
+            >
+              <Battery size={18} />
+              <span>電池</span>
+            </button>
+          )}
+          {(toolboxVisibleItems?.hole ?? true) && (
+            <button 
+              className={styles.toolboxButton} 
+              onClick={() => {
+                const id = `hole-${Date.now()}`;
+                addMountingHole({ id, x: 0, y: 0, diameter: 3.2, side: 'left' });
+              }}
+              title="マウント穴を追加"
+            >
+              <Target size={18} />
+              <span>穴</span>
+            </button>
+          )}
+        </div>
+      </CollapsibleSection>
+
+      <div className={styles.divider} />
+
       {!(selectedKey || selectedTrackball || selectedController || selectedBattery || selectedDiode || selectedMountingHole) && (
         <div style={{ padding: '20px', textAlign: 'center', opacity: 0.6 }}>
           <p style={{ fontSize: '0.875rem', marginBottom: '16px' }}>アイテムを選択して設定を表示</p>

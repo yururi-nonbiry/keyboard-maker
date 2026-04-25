@@ -72,7 +72,9 @@ const SettingsModalContent: React.FC = () => {
     selectBattery,
     addMountingHole,
     selectMountingHole,
-    toggleSettingsModal
+    toggleSettingsModal,
+    toolboxVisibleItems,
+    toggleToolboxItem
   } = useKeyboardStore();
 
   const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({
@@ -172,6 +174,61 @@ const SettingsModalContent: React.FC = () => {
               <label className={styles.checkboxLabel}>
                 <input type="checkbox" className={styles.checkbox} checked={showMatrix} onChange={toggleMatrixVisible} />
                 配線
+              </label>
+            </div>
+          </CollapsibleSection>
+
+          <CollapsibleSection 
+            id="toolbox" 
+            title="ツールボックス表示設定" 
+            isExpanded={expandedSections.toolbox || false} 
+            onToggle={toggleSection}
+          >
+            <div className={styles.checkboxGrid}>
+              <label className={styles.checkboxLabel}>
+                <input 
+                  type="checkbox" 
+                  className={styles.checkbox} 
+                  checked={toolboxVisibleItems?.key ?? true} 
+                  onChange={() => toggleToolboxItem('key')} 
+                />
+                キー (Key)
+              </label>
+              <label className={styles.checkboxLabel}>
+                <input 
+                  type="checkbox" 
+                  className={styles.checkbox} 
+                  checked={toolboxVisibleItems?.trackball ?? true} 
+                  onChange={() => toggleToolboxItem('trackball')} 
+                />
+                トラックボール (Trackball)
+              </label>
+              <label className={styles.checkboxLabel}>
+                <input 
+                  type="checkbox" 
+                  className={styles.checkbox} 
+                  checked={toolboxVisibleItems?.mcu ?? true} 
+                  onChange={() => toggleToolboxItem('mcu')} 
+                />
+                マイコン (MCU)
+              </label>
+              <label className={styles.checkboxLabel}>
+                <input 
+                  type="checkbox" 
+                  className={styles.checkbox} 
+                  checked={toolboxVisibleItems?.battery ?? true} 
+                  onChange={() => toggleToolboxItem('battery')} 
+                />
+                バッテリー (Battery)
+              </label>
+              <label className={styles.checkboxLabel}>
+                <input 
+                  type="checkbox" 
+                  className={styles.checkbox} 
+                  checked={toolboxVisibleItems?.hole ?? true} 
+                  onChange={() => toggleToolboxItem('hole')} 
+                />
+                マウント穴 (Mounting Hole)
               </label>
             </div>
           </CollapsibleSection>

@@ -105,6 +105,10 @@ interface KeyboardState {
   // UI State
   settingsModalOpen: boolean;
   toggleSettingsModal: (open?: boolean) => void;
+
+  // Toolbox State
+  toolboxVisibleItems: Record<string, boolean>;
+  toggleToolboxItem: (itemId: string) => void;
 }
 
 const DEFAULT_METADATA: KeyboardMetadata = {
@@ -187,6 +191,13 @@ export const useKeyboardStore = create<KeyboardState>()(
       showDiodes: true,
       showMatrix: true,
       settingsModalOpen: false,
+      toolboxVisibleItems: {
+        key: true,
+        trackball: true,
+        mcu: true,
+        battery: true,
+        hole: true,
+      },
 
       toggleKeycapsVisible: () => set((state) => ({ showKeycaps: !state.showKeycaps })),
       togglePlateVisible: () => set((state) => ({ showPlate: !state.showPlate })),
@@ -202,6 +213,13 @@ export const useKeyboardStore = create<KeyboardState>()(
 
       toggleSettingsModal: (open) => set((state) => ({ 
         settingsModalOpen: open !== undefined ? open : !state.settingsModalOpen 
+      })),
+
+      toggleToolboxItem: (itemId) => set((state) => ({
+        toolboxVisibleItems: {
+          ...state.toolboxVisibleItems,
+          [itemId]: !state.toolboxVisibleItems[itemId]
+        }
       })),
 
       toggleSplitMode: () => set((state) => ({ splitMode: !state.splitMode })),
@@ -708,6 +726,15 @@ export const useKeyboardStore = create<KeyboardState>()(
             }
             if (!rehydratedState.data.mountingHoles) {
               rehydratedState.data.mountingHoles = [];
+            }
+            if (!rehydratedState.toolboxVisibleItems) {
+              rehydratedState.toolboxVisibleItems = {
+                key: true,
+                trackball: true,
+                mcu: true,
+                battery: true,
+                hole: true,
+              };
             }
             if (rehydratedState.data.trackballs) {
               rehydratedState.data.trackballs.forEach((t: any) => {
