@@ -1,6 +1,6 @@
 import React from 'react';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
-import type { SwitchType, KeyboardType, ControllerType } from '../../types';
+import type { SwitchType } from '../../types';
 import styles from './Sidebar.module.css';
 
 const CollapsibleSection: React.FC<{
@@ -39,11 +39,7 @@ const CollapsibleSection: React.FC<{
 
 const Sidebar: React.FC = () => {
   const { 
-    data, 
-    updateMetadata, 
-    updateKeyboardType, 
-    updateCaseConfig,
-    updatePcbConfig,
+    data,
     selectedKeyId, 
     updateKey, 
     removeKey,
@@ -53,53 +49,19 @@ const Sidebar: React.FC = () => {
     selectedControllerId,
     updateController,
     removeController,
-    selectController,
-    addController,
-    showKeycaps,
-    showPlate,
-    showCaseBase,
-    showCaseWalls,
-    showPCB,
-    showSwitches,
-    showTrackballs,
-    showControllers,
-    showSockets,
-    showDiodes,
-    toggleKeycapsVisible,
-    togglePlateVisible,
-    toggleCaseBaseVisible,
-    toggleCaseWallsVisible,
-    togglePCBVisible,
-    toggleSwitchesVisible,
-    toggleTrackballsVisible,
-    toggleControllersVisible,
-    toggleSocketsVisible,
-    toggleDiodesVisible,
-    showMatrix,
-    toggleMatrixVisible,
-    autoAssignMatrix,
     updateKeyMatrix,
     selectedBatteryId,
-    selectBattery,
-    addBattery,
     updateBattery,
     removeBattery,
     selectedDiodeId,
     updateDiode,
     removeDiode,
-    autoPlaceDiodes,
     selectedMountingHoleId,
-    addMountingHole,
     updateMountingHole,
     removeMountingHole,
-    selectMountingHole,
   } = useKeyboardStore();
 
   const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({
-    project: true,
-    display: true,
-    case: true,
-    pcb: true,
     selection: true,
   });
 
@@ -123,429 +85,20 @@ const Sidebar: React.FC = () => {
   const selectedBattery = (data.batteries || []).find(b => b.id === selectedBatteryId);
   const selectedDiode = (data.diodes || []).find(d => d.id === selectedDiodeId);
   const selectedMountingHole = (data.mountingHoles || []).find(h => h.id === selectedMountingHoleId);
-  const { typingAngle, tentingAngle, splitRotation } = data.case_config;
 
   return (
     <div className={`${styles.sidebar} glass`}>
-      <CollapsibleSection 
-        id="project" 
-        title="プロジェクト情報" 
-        isExpanded={expandedSections.project} 
-        onToggle={toggleSection}
-      >
-        <div className={styles.group}>
-          <label className={styles.label}>キーボード名</label>
-          <input
-            className={styles.input}
-            value={data.metadata.name}
-            onChange={(e) => updateMetadata({ name: e.target.value })}
-          />
+      {!(selectedKey || selectedTrackball || selectedController || selectedBattery || selectedDiode || selectedMountingHole) && (
+        <div style={{ padding: '20px', textAlign: 'center', opacity: 0.6 }}>
+          <p style={{ fontSize: '0.875rem', marginBottom: '16px' }}>アイテムを選択して設定を表示</p>
+          <div style={{ borderTop: '1px solid var(--glass-border)', margin: '20px 0' }} />
+          <p style={{ fontSize: '0.75rem' }}>
+            キーボード全体の詳細設定は<br/>
+            上部ツールバーの ⚙️ アイコンから<br/>
+            開くことができます。
+          </p>
         </div>
-        <div className={styles.group}>
-          <label className={styles.label}>タイプ</label>
-          <select
-            className={styles.input}
-            value={data.type}
-            onChange={(e) => updateKeyboardType(e.target.value as KeyboardType)}
-          >
-            <option value="integrated">一体型 (Integrated)</option>
-            <option value="split">分割型 (Split)</option>
-          </select>
-        </div>
-      </CollapsibleSection>
-      
-      <CollapsibleSection 
-        id="display" 
-        title="表示設定" 
-        isExpanded={expandedSections.display} 
-        onToggle={toggleSection}
-      >
-        <div className={styles.checkboxGroup}>
-          <label className={styles.checkboxLabel}>
-            <input 
-              type="checkbox" 
-              className={styles.checkbox} 
-              checked={showKeycaps} 
-              onChange={toggleKeycapsVisible} 
-            />
-            キーキャップ
-          </label>
-          <label className={styles.checkboxLabel}>
-            <input 
-              type="checkbox" 
-              className={styles.checkbox} 
-              checked={showPlate} 
-              onChange={togglePlateVisible} 
-            />
-            プレート (Plate)
-          </label>
-          <label className={styles.checkboxLabel}>
-            <input 
-              type="checkbox" 
-              className={styles.checkbox} 
-              checked={showPCB} 
-              onChange={togglePCBVisible} 
-            />
-            基板 (PCB)
-          </label>
-          <label className={styles.checkboxLabel}>
-            <input 
-              type="checkbox" 
-              className={styles.checkbox} 
-              checked={showCaseBase} 
-              onChange={toggleCaseBaseVisible} 
-            />
-            ベース (Base)
-          </label>
-          <label className={styles.checkboxLabel}>
-            <input 
-              type="checkbox" 
-              className={styles.checkbox} 
-              checked={showCaseWalls} 
-              onChange={toggleCaseWallsVisible} 
-            />
-            カバー (Cover)
-          </label>
-          <label className={styles.checkboxLabel}>
-            <input 
-              type="checkbox" 
-              className={styles.checkbox} 
-              checked={showSwitches} 
-              onChange={toggleSwitchesVisible} 
-            />
-            キースイッチ
-          </label>
-          <label className={styles.checkboxLabel}>
-            <input 
-              type="checkbox" 
-              className={styles.checkbox} 
-              checked={showTrackballs} 
-              onChange={toggleTrackballsVisible} 
-            />
-            トラックボール
-          </label>
-          <label className={styles.checkboxLabel}>
-            <input 
-              type="checkbox" 
-              className={styles.checkbox} 
-              checked={showControllers} 
-              onChange={toggleControllersVisible} 
-            />
-            マイコン (MCU)
-          </label>
-          <label className={styles.checkboxLabel}>
-            <input 
-              type="checkbox" 
-              className={styles.checkbox} 
-              checked={showSockets} 
-              onChange={toggleSocketsVisible} 
-            />
-            ホットスワップソケット
-          </label>
-          <label className={styles.checkboxLabel}>
-            <input 
-              type="checkbox" 
-              className={styles.checkbox} 
-              checked={showDiodes} 
-              onChange={toggleDiodesVisible} 
-            />
-            ダイオード
-          </label>
-          <label className={styles.checkboxLabel}>
-            <input 
-              type="checkbox" 
-              className={styles.checkbox} 
-              checked={showMatrix} 
-              onChange={toggleMatrixVisible} 
-            />
-            マトリックス配線
-          </label>
-        </div>
-      </CollapsibleSection>
-
-      <CollapsibleSection 
-        id="case" 
-        title="ケース設定" 
-        isExpanded={expandedSections.case} 
-        onToggle={toggleSection}
-      >
-        <div className={styles.group}>
-          <label className={styles.label}>ベース角度 (タイピング角): {typingAngle}°</label>
-          <input
-            type="range"
-            min="0"
-            max="15"
-            step="0.5"
-            className={styles.input}
-            value={typingAngle}
-            onChange={(e) => updateCaseConfig({ typingAngle: parseFloat(e.target.value) })}
-          />
-        </div>
-        {data.type === 'split' && (
-          <>
-            <div className={styles.group}>
-              <label className={styles.label}>テント角: {tentingAngle}°</label>
-              <input
-                type="range"
-                min="0"
-                max="30"
-                step="1"
-                className={styles.input}
-                value={tentingAngle}
-                onChange={(e) => updateCaseConfig({ tentingAngle: parseFloat(e.target.value) })}
-              />
-            </div>
-            <div className={styles.group}>
-              <label className={styles.label}>分割回転角: {splitRotation}°</label>
-              <input
-                type="range"
-                min="0"
-                max="45"
-                step="1"
-                className={styles.input}
-                value={splitRotation}
-                onChange={(e) => updateCaseConfig({ splitRotation: parseFloat(e.target.value) })}
-              />
-            </div>
-            <div className={styles.group}>
-              <label className={styles.label}>分割幅 (Gap): {data.case_config.splitGap}mm</label>
-              <input
-                type="range"
-                min="0"
-                max="200"
-                step="1"
-                className={styles.input}
-                value={data.case_config.splitGap}
-                onChange={(e) => updateCaseConfig({ splitGap: parseFloat(e.target.value) })}
-              />
-            </div>
-          </>
-        )}
-        <div className={styles.group}>
-          <label className={styles.label}>キーピッチ: {data.case_config.keyPitch}mm</label>
-          <input
-            type="number"
-            min="15"
-            max="20"
-            step="0.01"
-            className={styles.input}
-            value={data.case_config.keyPitch}
-            onChange={(e) => updateCaseConfig({ keyPitch: parseFloat(e.target.value) || 19.05 })}
-          />
-        </div>
-        <div className={styles.group}>
-          <label className={styles.label}>キーキャップのプロファイル (全体)</label>
-          <select
-            className={styles.input}
-            value={data.case_config.defaultKeycapProfile}
-            onChange={(e) => updateCaseConfig({ defaultKeycapProfile: e.target.value as any })}
-          >
-            <option value="cherry">Cherry</option>
-            <option value="oem">OEM</option>
-            <option value="dsa">DSA</option>
-            <option value="xda">XDA</option>
-            <option value="choc">Choc</option>
-            <option value="mbk">MBK</option>
-          </select>
-        </div>
-        <div className={styles.group}>
-          <label className={styles.label}>PCB マージン (外形余裕): {data.case_config.pcbMargin}mm</label>
-          <input
-            type="number"
-            min="0"
-            max="20"
-            step="0.5"
-            className={styles.input}
-            value={data.case_config.pcbMargin}
-            onChange={(e) => updateCaseConfig({ pcbMargin: parseFloat(e.target.value) || 0 })}
-          />
-        </div>
-        <div className={styles.group}>
-          <label className={styles.label}>プレート オフセット (PCB基準): {data.case_config.plateOffset}mm</label>
-          <input
-            type="number"
-            min="-10"
-            max="10"
-            step="0.1"
-            className={styles.input}
-            value={data.case_config.plateOffset}
-            onChange={(e) => updateCaseConfig({ plateOffset: parseFloat(e.target.value) || 0 })}
-          />
-        </div>
-      </CollapsibleSection>
-
-      <CollapsibleSection 
-        id="pcb" 
-        title="PCB/コントローラー設定" 
-        isExpanded={expandedSections.pcb} 
-        onToggle={toggleSection}
-      >
-        <div className={styles.group}>
-          <label className={styles.label}>マイクロコントローラー</label>
-          <select
-            className={styles.input}
-            value={data.pcb_config.controllerType}
-            onChange={(e) => updatePcbConfig({ controllerType: e.target.value as ControllerType })}
-          >
-            <option value="pro_micro">Pro Micro</option>
-            <option value="elite_c">Elite-C</option>
-            <option value="xiao_rp2040">XIAO RP2040</option>
-            <option value="xiao_ble">XIAO nRF52840 (BLE)</option>
-            <option value="pico">Raspberry Pi Pico</option>
-            <option value="bluepill">Bluepill (STM32)</option>
-          </select>
-        </div>
-        <div className={styles.group}>
-          <label className={styles.label}>ダイオード方向</label>
-          <select
-            className={styles.input}
-            value={data.pcb_config.diodeDirection}
-            onChange={(e) => updatePcbConfig({ diodeDirection: e.target.value as 'col2row' | 'row2col' })}
-          >
-            <option value="col2row">Col to Row</option>
-            <option value="row2col">Row to Col</option>
-          </select>
-        </div>
-
-        <div className={styles.divider} />
-        <div className={styles.group}>
-          <label className={styles.label}>ダイオード自動配置オフセット (X, Y, Rotation)</label>
-          <div className={styles.row}>
-            <input
-              className={styles.input}
-              type="number"
-              step="0.5"
-              value={data.pcb_config.autoDiodeOffset?.x ?? 0}
-              onChange={(e) => updatePcbConfig({ autoDiodeOffset: { ...(data.pcb_config.autoDiodeOffset || { x: 0, y: 8, rotation: 0 }), x: parseFloat(e.target.value) || 0 } })}
-              placeholder="X"
-            />
-            <input
-              className={styles.input}
-              type="number"
-              step="0.5"
-              value={data.pcb_config.autoDiodeOffset?.y ?? 8}
-              onChange={(e) => updatePcbConfig({ autoDiodeOffset: { ...(data.pcb_config.autoDiodeOffset || { x: 0, y: 8, rotation: 0 }), y: parseFloat(e.target.value) || 0 } })}
-              placeholder="Y"
-            />
-            <input
-              className={styles.input}
-              type="number"
-              step="1"
-              value={data.pcb_config.autoDiodeOffset?.rotation ?? 0}
-              onChange={(e) => updatePcbConfig({ autoDiodeOffset: { ...(data.pcb_config.autoDiodeOffset || { x: 0, y: 8, rotation: 0 }), rotation: parseFloat(e.target.value) || 0 } })}
-              placeholder="Rot"
-            />
-          </div>
-          <button 
-            className={`${styles.input} ${styles.primaryButton}`}
-            style={{ marginTop: '8px' }}
-            onClick={autoPlaceDiodes}
-          >
-            ダイオードを自動配置
-          </button>
-        </div>
-
-        <div className={styles.divider} />
-        <div className={styles.group}>
-          <label className={styles.label}>マトリックス設定</label>
-          <button 
-            className={`${styles.input} ${styles.primaryButton}`}
-            onClick={autoAssignMatrix}
-          >
-            マトリックスを自動推論
-          </button>
-        </div>
-
-        <div className={styles.divider} />
-
-        <div className={styles.group}>
-          <button 
-            className={styles.input}
-            onClick={() => {
-              const id = `mcu-${Date.now()}`;
-              let side: 'left' | 'right' = 'left';
-              
-              if (data.type === 'split') {
-                const hasLeft = (data.controllers || []).some(c => c.side === 'left');
-                const hasRight = (data.controllers || []).some(c => c.side === 'right');
-                if (hasLeft && !hasRight) side = 'right';
-                else if (!hasLeft) side = 'left';
-              }
-
-              addController({
-                id,
-                type: 'pro_micro',
-                x: 0,
-                y: -60,
-                rotation: 0,
-                side,
-                mountingSide: 'top'
-              });
-              selectController(id);
-            }}
-          >
-            MCUを追加
-          </button>
-        </div>
-        <div className={styles.group}>
-          <button 
-            className={styles.input}
-            onClick={() => {
-              const id = `battery-${Date.now()}`;
-              let side: 'left' | 'right' = 'left';
-              
-              if (data.type === 'split') {
-                const hasLeft = (data.batteries || []).some(b => b.side === 'left');
-                const hasRight = (data.batteries || []).some(b => b.side === 'right');
-                if (hasLeft && !hasRight) side = 'right';
-                else if (!hasLeft) side = 'left';
-              }
-
-              addBattery({
-                id,
-                x: 0,
-                y: 60,
-                width: 30,
-                height: 50,
-                thickness: 4,
-                rotation: 0,
-                side,
-                mountingSide: 'bottom'
-              });
-              selectBattery(id);
-            }}
-          >
-            バッテリーを追加
-          </button>
-        </div>
-        <div className={styles.group}>
-          <button 
-            className={styles.input}
-            onClick={() => {
-              const id = `hole-${Date.now()}`;
-              let side: 'left' | 'right' = 'left';
-              
-              if (data.type === 'split') {
-                const hasLeft = (data.mountingHoles || []).some(h => h.side === 'left');
-                const hasRight = (data.mountingHoles || []).some(h => h.side === 'right');
-                if (hasLeft && !hasRight) side = 'right';
-                else if (!hasLeft) side = 'left';
-              }
-
-              addMountingHole({
-                id,
-                x: 0,
-                y: 0,
-                diameter: 3.2, // Default M3 screw hole
-                side,
-              });
-              selectMountingHole(id);
-            }}
-          >
-            マウント穴を追加
-          </button>
-        </div>
-      </CollapsibleSection>
+      )}
 
       {selectedKey ? (
         <CollapsibleSection 

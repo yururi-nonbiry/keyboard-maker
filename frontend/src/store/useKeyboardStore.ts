@@ -101,6 +101,10 @@ interface KeyboardState {
   toggleSocketsVisible: () => void;
   toggleDiodesVisible: () => void;
   toggleMatrixVisible: () => void;
+  
+  // UI State
+  settingsModalOpen: boolean;
+  toggleSettingsModal: (open?: boolean) => void;
 }
 
 const DEFAULT_METADATA: KeyboardMetadata = {
@@ -182,6 +186,7 @@ export const useKeyboardStore = create<KeyboardState>()(
       showSockets: true,
       showDiodes: true,
       showMatrix: true,
+      settingsModalOpen: false,
 
       toggleKeycapsVisible: () => set((state) => ({ showKeycaps: !state.showKeycaps })),
       togglePlateVisible: () => set((state) => ({ showPlate: !state.showPlate })),
@@ -194,6 +199,10 @@ export const useKeyboardStore = create<KeyboardState>()(
       toggleSocketsVisible: () => set((state) => ({ showSockets: !state.showSockets })),
       toggleDiodesVisible: () => set((state) => ({ showDiodes: !state.showDiodes })),
       toggleMatrixVisible: () => set((state) => ({ showMatrix: !state.showMatrix })),
+
+      toggleSettingsModal: (open) => set((state) => ({ 
+        settingsModalOpen: open !== undefined ? open : !state.settingsModalOpen 
+      })),
 
       toggleSplitMode: () => set((state) => ({ splitMode: !state.splitMode })),
       setTempSplitX: (tempSplitX) => set({ tempSplitX }),

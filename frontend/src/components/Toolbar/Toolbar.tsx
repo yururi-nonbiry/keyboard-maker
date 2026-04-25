@@ -1,4 +1,4 @@
-import { Save, FolderOpen, Download, Plus, Grid, Magnet, Box, Square, Scissors, Circle } from 'lucide-react';
+import { Save, FolderOpen, Download, Plus, Grid, Magnet, Box, Square, Scissors, Circle, Settings } from 'lucide-react';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
 import { saveProjectFile, loadProjectFile, downloadTextFile } from '../../utils/fileSystem';
 import { generateKicadPcb } from '../../utils/kicadExport';
@@ -17,7 +17,8 @@ const Toolbar: React.FC = () => {
     setViewMode,
     splitMode,
     toggleSplitMode,
-    addTrackball
+    addTrackball,
+    toggleSettingsModal
   } = useKeyboardStore();
 
   const handleSave = async () => {
@@ -177,6 +178,13 @@ const Toolbar: React.FC = () => {
         >
           <Download size={18} />
           <span>KiCad</span>
+        </button>
+        <button 
+          className={styles.button} 
+          onClick={() => toggleSettingsModal(true)}
+          title="詳細設定を開く"
+        >
+          <Settings size={18} />
         </button>
       </div>
     </div>

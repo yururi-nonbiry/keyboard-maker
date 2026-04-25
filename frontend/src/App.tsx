@@ -3,10 +3,12 @@ import Toolbar from './components/Toolbar/Toolbar';
 import KeyboardCanvas from './components/EditorCanvas/KeyboardCanvas';
 import Keyboard2D from './components/EditorCanvas/Keyboard2D';
 import { useKeyboardStore } from './store/useKeyboardStore';
+import Modal from './components/Modal/Modal';
+import SettingsModalContent from './components/Modal/SettingsModalContent';
 import styles from './App.module.css';
 
 function App() {
-  const { viewMode } = useKeyboardStore();
+  const { viewMode, settingsModalOpen, toggleSettingsModal } = useKeyboardStore();
 
   return (
     <div className={styles.container}>
@@ -28,6 +30,14 @@ function App() {
           </div>
         </div>
       </main>
+
+      <Modal 
+        isOpen={settingsModalOpen} 
+        onClose={() => toggleSettingsModal(false)} 
+        title="詳細設定"
+      >
+        <SettingsModalContent />
+      </Modal>
     </div>
   );
 }
