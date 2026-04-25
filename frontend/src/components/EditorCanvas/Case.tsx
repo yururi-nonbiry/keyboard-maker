@@ -119,19 +119,18 @@ const GroundedHoleyBox: React.FC<{
     const hw = width / 2;
     const hd = depth / 2;
 
-    shape.moveTo(-hw, -hd);
-    shape.lineTo(hw, -hd);
-    shape.lineTo(hw, hd);
-    shape.lineTo(-hw, hd);
+    // Use absolute coordinates (matching GroundedBox) so the base aligns with walls
+    shape.moveTo(centerX - hw, centerY - hd);
+    shape.lineTo(centerX + hw, centerY - hd);
+    shape.lineTo(centerX + hw, centerY + hd);
+    shape.lineTo(centerX - hw, centerY + hd);
     shape.closePath();
 
     mountingHoles.forEach(hole => {
-      const relX = hole.x - centerX;
-      const relY = hole.y - centerY;
       // Only add hole if it's within the box area
-      if (Math.abs(relX) < hw && Math.abs(relY) < hd) {
+      if (Math.abs(hole.x - centerX) < hw && Math.abs(hole.y - centerY) < hd) {
         const path = new THREE.Path();
-        path.absarc(relX, relY, hole.diameter / 2, 0, Math.PI * 2, true);
+        path.absarc(hole.x, hole.y, hole.diameter / 2, 0, Math.PI * 2, true);
         shape.holes.push(path);
       }
     });
@@ -145,8 +144,8 @@ const GroundedHoleyBox: React.FC<{
     
     const pos = geo.attributes.position;
     for (let i = 0; i < pos.count; i++) {
-      const vx = pos.getX(i) + centerX;
-      const vz = pos.getZ(i) + centerY;
+      const vx = pos.getX(i);
+      const vz = pos.getZ(i);
       const vy = pos.getY(i);
       
       if (vy > -0.01) { // "Top" face of the extrusion (which is at Y=0 after rotateX)
