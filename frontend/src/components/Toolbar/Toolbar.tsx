@@ -60,6 +60,7 @@ const Toolbar: React.FC = () => {
       sensorRotation: 0,
       rotation: 0,
       side: side,
+      mountingSide: 'bottom' as const,
     };
     addTrackball(newTrackball);
   };

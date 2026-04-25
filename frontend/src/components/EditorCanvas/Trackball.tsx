@@ -16,14 +16,16 @@ const TrackballPCB: React.FC<{ config: TrackballConfig }> = ({ config }) => {
   const pcbWidth = 28;
   const pcbHeight = 1.6;
   const pcbLength = 28;
+  const isTop = config.mountingSide === 'top';
+  const yOffset = isTop ? (config.diameter / 2 + 3) : -(config.diameter / 2 + 3);
 
   return (
     <group 
       rotation={[0, 0, THREE.MathUtils.degToRad(config.sensorAngle || 0)]}
     >
       <group 
-        position={[0, -(config.diameter / 2 + 3), 0]} 
-        rotation={[0, THREE.MathUtils.degToRad(config.sensorRotation || 0), 0]}
+        position={[0, yOffset, 0]} 
+        rotation={[isTop ? Math.PI : 0, THREE.MathUtils.degToRad(config.sensorRotation || 0), 0]}
       >
         {/* PCB Board */}
         <mesh position={[0, -pcbHeight / 2, 0]}>
@@ -104,10 +106,11 @@ const Trackball: React.FC<TrackballProps> = ({ config }) => {
   const meshGroupRef = useRef<THREE.Group>(null);
   const isSelected = selectedTrackballId === config.id;
 
+  const isTop = config.mountingSide === 'top';
   // Ball is at y = 15 + diameter/2 - 5 in original, let's simplify to centered at y=0 
   // and offset the group in KeyboardCanvas if needed. 
   // Actually, let's keep the baseline at y=0 for the holder base.
-  const ballY = config.diameter / 2 - 2;
+  const ballY = isTop ? -(config.diameter / 2 - 2) : (config.diameter / 2 - 2);
 
   const handleDragEnd = () => {
     if (groupRef.current && meshGroupRef.current) {

@@ -772,6 +772,17 @@ const Sidebar: React.FC = () => {
               </select>
             </div>
           )}
+          <div className={styles.group}>
+            <label className={styles.label}>マウント面 (Mounting Side)</label>
+            <select
+              className={styles.input}
+              value={selectedTrackball.mountingSide || 'bottom'}
+              onChange={(e) => updateTrackball(selectedTrackball.id, { mountingSide: e.target.value as 'top' | 'bottom' })}
+            >
+              <option value="top">表面 (Top)</option>
+              <option value="bottom">裏面 (Bottom)</option>
+            </select>
+          </div>
           <div style={{ marginTop: 'auto' }}>
             <button 
               className={styles.input} 

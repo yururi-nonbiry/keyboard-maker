@@ -417,6 +417,15 @@ const Keyboard2D: React.FC = () => {
         >
           {trackball.diameter}mm
         </text>
+        <text
+          y={12}
+          textAnchor="middle"
+          fontSize={4}
+          fill="rgba(255, 255, 255, 0.8)"
+          style={{ pointerEvents: 'none', userSelect: 'none' }}
+        >
+          {trackball.mountingSide?.toUpperCase()}
+        </text>
         {/* Sensor Position Indicator */}
         <circle
           cx={pcbOffsetX}

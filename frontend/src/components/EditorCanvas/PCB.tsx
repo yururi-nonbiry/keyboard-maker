@@ -64,8 +64,16 @@ const PCBMesh: React.FC<PCBMeshProps> = ({
     });
 
     sideTrackballs.forEach(t => {
-      const relX = t.x - bbox.centerX;
-      const relY = t.y - bbox.centerY;
+      const r = t.diameter / 2;
+      const sensorAngleRad = ((t.sensorAngle || 0) * Math.PI) / 180;
+      const offsetDistance = (r + 3) * Math.sin(sensorAngleRad);
+      const rotationRad = (-(t.rotation || 0) * Math.PI) / 180;
+      
+      const sensorX = t.x + offsetDistance * Math.cos(rotationRad);
+      const sensorY = t.y + offsetDistance * Math.sin(rotationRad);
+
+      const relX = sensorX - bbox.centerX;
+      const relY = sensorY - bbox.centerY;
       
       const aperturePath = new THREE.Path();
       aperturePath.absarc(relX, relY, 5, 0, Math.PI * 2, true);
@@ -78,9 +86,15 @@ const PCBMesh: React.FC<PCBMeshProps> = ({
         { x: -10, y: 10, r: 1.5 }
       ];
 
+      const sRot = (-(t.sensorRotation || 0) * Math.PI) / 180;
+      const sCos = Math.cos(sRot);
+      const sSin = Math.sin(sRot);
+
       mountingHoles.forEach(h => {
+        const rotatedHX = h.x * sCos - h.y * sSin;
+        const rotatedHY = h.x * sSin + h.y * sCos;
         const path = new THREE.Path();
-        path.absarc(relX + h.x, relY + h.y, h.r, 0, Math.PI * 2, true);
+        path.absarc(relX + rotatedHX, relY + rotatedHY, h.r, 0, Math.PI * 2, true);
         shape.holes.push(path);
       });
     });

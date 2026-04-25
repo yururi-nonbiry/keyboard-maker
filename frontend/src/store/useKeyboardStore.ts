@@ -679,6 +679,7 @@ export const useKeyboardStore = create<KeyboardState>()(
             if (rehydratedState.data.trackballs) {
               rehydratedState.data.trackballs.forEach((t: any) => {
                 if (t.rotation === undefined) t.rotation = 0;
+                if (t.mountingSide === undefined) t.mountingSide = 'bottom';
               });
             }
             rehydratedState.collisions = checkInterference(

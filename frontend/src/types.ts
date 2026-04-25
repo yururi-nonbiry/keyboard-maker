@@ -73,6 +73,7 @@ export interface TrackballConfig {
   sensorRotation?: number; // rotation of the sensor chip in degrees
   rotation: number; // in degrees
   side?: 'left' | 'right';
+  mountingSide: 'top' | 'bottom';
 }
 
 export interface ControllerConfig {
