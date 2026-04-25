@@ -317,7 +317,7 @@ export const calculateFullBoundingBox3D = (
   }
 
   trackballs.forEach(t => {
-    const ballCenterZ = (t.z ?? -6.5) + (t.diameter / 2 - 2);
+    const ballCenterZ = (t.z ?? -5) + (t.diameter / 2 - 2);
     const ballRadius = t.diameter / 2;
     const pcbZ = ballCenterZ - 7;
     minZ = Math.min(minZ, pcbZ - 2);

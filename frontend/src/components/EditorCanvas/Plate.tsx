@@ -120,18 +120,14 @@ const Plate: React.FC<PlateProps> = ({ side }) => {
       });
     });
     
-    // Trackballs - Temporarily excluded
-    /*
-    const sideTrackballs = (data.trackballs || []).filter(t => {
-      if (!side) return true; // integrated
-      return t.side === side || (!t.side && side === 'left');
-    });
-    */
-
     const cutouts: { centerX: number; centerY: number; radius: number }[] = [];
     const bridges: { centerX: number; centerY: number; width: number; height: number; angle: number }[] = [];
 
-    /*
+    const sideTrackballs = (data.trackballs || []).filter(t => {
+      if (!side) return true; // integrated
+      return t.side === side;
+    });
+
     sideTrackballs.forEach(t => {
       // Circle cutout for the ball assembly
       cutouts.push({
@@ -162,7 +158,6 @@ const Plate: React.FC<PlateProps> = ({ side }) => {
         });
       }
     });
-    */
 
     // Controllers
     const sideControllers = (data.controllers || []).filter(c => {

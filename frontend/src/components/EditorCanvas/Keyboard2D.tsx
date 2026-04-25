@@ -62,9 +62,9 @@ const Keyboard2D: React.FC = () => {
   const leftMountingHoles = useMemo(() => (data.mountingHoles || []).filter(h => h.side === 'left' || !h.side), [data.mountingHoles]);
   const rightMountingHoles = useMemo(() => (data.mountingHoles || []).filter(h => h.side === 'right'), [data.mountingHoles]);
 
-  const leftBbox = useMemo(() => calculateFullBoundingBox(leftKeys, [], leftControllers, leftBatteries, leftMountingHoles, case_config.keyPitch), [leftKeys, leftControllers, leftBatteries, leftMountingHoles, case_config.keyPitch]);
-  const rightBbox = useMemo(() => calculateFullBoundingBox(rightKeys, [], rightControllers, rightBatteries, rightMountingHoles, case_config.keyPitch), [rightKeys, rightControllers, rightBatteries, rightMountingHoles, case_config.keyPitch]);
-  const fullBbox = useMemo(() => calculateFullBoundingBox(layout, data.trackballs || [], data.controllers || [], data.batteries || [], data.mountingHoles || [], case_config.keyPitch), [layout, data.trackballs, data.controllers, data.batteries, data.mountingHoles, case_config.keyPitch]);
+  const leftBbox = useMemo(() => calculateFullBoundingBox(leftKeys, leftTrackballs, leftControllers, leftBatteries, leftMountingHoles, case_config.keyPitch), [leftKeys, leftTrackballs, leftControllers, leftBatteries, leftMountingHoles, case_config.keyPitch]);
+  const rightBbox = useMemo(() => calculateFullBoundingBox(rightKeys, rightTrackballs, rightControllers, rightBatteries, rightMountingHoles, case_config.keyPitch), [rightKeys, rightTrackballs, rightControllers, rightBatteries, rightMountingHoles, case_config.keyPitch]);
+  const fullBbox = useMemo(() => calculateFullBoundingBox(data.layout, data.trackballs || [], data.controllers || [], data.batteries || [], data.mountingHoles || [], case_config.keyPitch), [data.layout, data.trackballs, data.controllers, data.batteries, data.mountingHoles, case_config.keyPitch]);
 
   // Adjust viewBox to fit the keyboard initialy or when layout changes significantly
   useEffect(() => {
@@ -292,7 +292,7 @@ const Keyboard2D: React.FC = () => {
     return (
       <g 
         key={key.id}
-        transform={`translate(${key.x}, ${key.y}) rotate(${-key.rotation})`}
+        transform={`translate(${key.x}, ${key.y}) rotate(${key.rotation})`}
         onMouseDown={(e) => !splitMode && handleMouseDown(e, key.id)}
         onClick={(e) => e.stopPropagation()}
         style={{ cursor: splitMode ? 'default' : 'move' }}

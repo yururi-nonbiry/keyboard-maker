@@ -195,16 +195,14 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
       ));
     });
 
-    // Trackballs - Temporarily excluded
-    /*
+    // Trackballs
     const sideTrackballs = (data.trackballs || []).filter(t => {
       if (!side) return true;
-      return t.side === side || (!t.side && side === 'left');
+      return t.side === side;
     });
     sideTrackballs.forEach(t => {
-      allCorners.push(...getComponentCorners(t.x, t.y, t.diameter, t.diameter, 0));
+      allCorners.push(...getComponentCorners(t.x, t.y, t.diameter, t.diameter, t.rotation || 0));
     });
-    */
 
     // Controllers
     const sideControllers = (data.controllers || []).filter(c => {
@@ -228,6 +226,9 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
     const sideMountingHoles = (data.mountingHoles || []).filter(h => {
       if (!side) return true;
       return h.side === side;
+    });
+    sideMountingHoles.forEach(h => {
+      allCorners.push(...getComponentCorners(h.x, h.y, h.diameter, h.diameter, 0));
     });
 
     const bbox = calculatePointsBoundingBox(allCorners, wallThickness);
@@ -265,7 +266,7 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
 
         {showCaseWalls && (
           <>
-            {/* Top Wall (Full width) */}
+            {/* Bottom Wall (Full width) */}
             <GroundedBox 
               width={bbox.width}
               depth={wallThickness}
@@ -280,7 +281,8 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
               pivotX={centerX}
               pivotZ={centerY}
             />
-            {/* Bottom Wall (Full width) */}
+
+            {/* Top Wall (Full width) */}
             <GroundedBox 
               width={bbox.width}
               depth={wallThickness}
@@ -330,6 +332,10 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
       </group>
     );
   };
+
+  if (data.type === 'integrated') {
+    return renderCase(data.layout, 'integrated-case');
+  }
 
   const leftKeys = data.layout.filter(k => k.side === 'left' || !k.side);
   const rightKeys = data.layout.filter(k => k.side === 'right');

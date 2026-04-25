@@ -16,6 +16,7 @@ interface PCBMeshProps {
   bbox: { centerX: number; centerY: number; width: number; height: number };
   pcbY: number;
   mountingHoles: any[];
+  sideTrackballs: any[];
 }
 
 const PCBMesh: React.FC<PCBMeshProps> = ({ 
@@ -25,7 +26,8 @@ const PCBMesh: React.FC<PCBMeshProps> = ({
   boundaryPoints, 
   bbox, 
   pcbY,
-  mountingHoles
+  mountingHoles,
+  sideTrackballs
 }) => {
   const geometry = useMemo(() => {
     const shape = new THREE.Shape();
@@ -61,8 +63,6 @@ const PCBMesh: React.FC<PCBMeshProps> = ({
       });
     });
 
-    // Skip trackball holes as requested
-    /*
     sideTrackballs.forEach(t => {
       const relX = t.x - bbox.centerX;
       const relY = t.y - bbox.centerY;
@@ -84,7 +84,6 @@ const PCBMesh: React.FC<PCBMeshProps> = ({
         shape.holes.push(path);
       });
     });
-    */
 
     sideControllers.forEach(c => {
       const relX = c.x - bbox.centerX;
@@ -152,7 +151,7 @@ const PCBMesh: React.FC<PCBMeshProps> = ({
     const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings);
     geo.translate(0, 0, -pcbThickness / 2);
     return geo;
-  }, [keys, sideControllers, boundaryPoints, bbox, pcbThickness, mountingHoles]);
+  }, [keys, sideControllers, boundaryPoints, bbox, pcbThickness, mountingHoles, sideTrackballs]);
 
   return (
     <mesh 
@@ -194,7 +193,11 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
     const cutouts: { centerX: number; centerY: number; radius: number }[] = [];
     const bridges: { centerX: number; centerY: number; width: number; height: number; angle: number }[] = [];
 
-    /*
+    const sideTrackballs = (data.trackballs || []).filter(t => {
+      if (!side) return true; // integrated
+      return t.side === side;
+    });
+
     sideTrackballs.forEach(t => {
       // Circle cutout for the ball assembly
       cutouts.push({
@@ -225,7 +228,6 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
         });
       }
     });
-    */
 
     // Controllers
     const sideControllers = (data.controllers || []).filter(c => {
@@ -278,6 +280,7 @@ const PCB: React.FC<PCBProps> = ({ side }) => {
         bbox={bbox}
         pcbY={pcbY}
         mountingHoles={sideMountingHoles}
+        sideTrackballs={sideTrackballs}
       />
     );
   };
