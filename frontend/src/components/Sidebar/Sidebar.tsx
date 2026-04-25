@@ -75,6 +75,10 @@ const Sidebar: React.FC = () => {
     toggleControllersVisible,
     toggleSocketsVisible,
     toggleDiodesVisible,
+    showMatrix,
+    toggleMatrixVisible,
+    autoAssignMatrix,
+    updateKeyMatrix,
     selectedBatteryId,
     selectBattery,
     addBattery,
@@ -246,6 +250,15 @@ const Sidebar: React.FC = () => {
               onChange={toggleDiodesVisible} 
             />
             ダイオード
+          </label>
+          <label className={styles.checkboxLabel}>
+            <input 
+              type="checkbox" 
+              className={styles.checkbox} 
+              checked={showMatrix} 
+              onChange={toggleMatrixVisible} 
+            />
+            マトリックス配線
           </label>
         </div>
       </CollapsibleSection>
@@ -433,6 +446,17 @@ const Sidebar: React.FC = () => {
         </div>
 
         <div className={styles.divider} />
+        <div className={styles.group}>
+          <label className={styles.label}>マトリックス設定</label>
+          <button 
+            className={`${styles.input} ${styles.primaryButton}`}
+            onClick={autoAssignMatrix}
+          >
+            マトリックスを自動推論
+          </button>
+        </div>
+
+        <div className={styles.divider} />
 
         <div className={styles.group}>
           <button 
@@ -561,6 +585,31 @@ const Sidebar: React.FC = () => {
               value={selectedKey.rotation}
               onChange={(e) => updateKey(selectedKey.id, { rotation: parseFloat(e.target.value) || 0 })}
             />
+          </div>
+          <div className={styles.group}>
+            <label className={styles.label}>マトリックス (Row, Col)</label>
+            <div className={styles.row}>
+              <div className={styles.inputWrapper}>
+                <span className={styles.coordLabel}>R</span>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={selectedKey.matrixRow ?? ''}
+                  onChange={(e) => updateKeyMatrix(selectedKey.id, parseInt(e.target.value) || 0, selectedKey.matrixCol || 0)}
+                  placeholder="Row"
+                />
+              </div>
+              <div className={styles.inputWrapper}>
+                <span className={styles.coordLabel}>C</span>
+                <input
+                  className={styles.input}
+                  type="number"
+                  value={selectedKey.matrixCol ?? ''}
+                  onChange={(e) => updateKeyMatrix(selectedKey.id, selectedKey.matrixRow || 0, parseInt(e.target.value) || 0)}
+                  placeholder="Col"
+                />
+              </div>
+            </div>
           </div>
           <div className={styles.group}>
             <label className={styles.label}>スイッチの種類</label>

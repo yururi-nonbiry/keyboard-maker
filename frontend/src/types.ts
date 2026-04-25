@@ -26,6 +26,8 @@ export interface KeyConfig {
   };
   stabilizer?: boolean;
   side?: 'left' | 'right';
+  matrixRow?: number;
+  matrixCol?: number;
 }
 
 export interface DiodeConfig {
@@ -44,6 +46,10 @@ export interface PcbConfig {
   diodeDirection: 'col2row' | 'row2col';
   autoDiodeOffset: { x: number; y: number; rotation: number };
   footprintAttributes: Record<string, string>;
+  matrixMap?: {
+    rows: string[]; // Pin names/numbers for each row
+    cols: string[]; // Pin names/numbers for each column
+  };
 }
 
 export interface CaseConfig {

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { KeyboardData, KeyConfig, KeyboardMetadata, PcbConfig, CaseConfig, SwitchType, KeyboardType, TrackballConfig, ControllerConfig, BatteryConfig, DiodeConfig, MountingHole } from '../types';
 import { checkInterference, calculateBoundingBox } from '../utils/geometry';
+import { inferMatrix } from '../utils/matrix';
 
 interface KeyboardState {
   data: KeyboardData;
@@ -18,6 +19,8 @@ interface KeyboardState {
   updateCaseConfig: (config: Partial<CaseConfig>) => void;
   updateKeyboardType: (type: KeyboardType) => void;
   setKeyboardData: (data: KeyboardData) => void;
+  autoAssignMatrix: () => void;
+  updateKeyMatrix: (id: string, row: number, col: number) => void;
   
   // Trackball Actions
   addTrackball: (trackball: TrackballConfig) => void;
@@ -86,6 +89,7 @@ interface KeyboardState {
   showControllers: boolean;
   showSockets: boolean;
   showDiodes: boolean;
+  showMatrix: boolean;
   toggleKeycapsVisible: () => void;
   togglePlateVisible: () => void;
   toggleCaseBaseVisible: () => void;
@@ -96,6 +100,7 @@ interface KeyboardState {
   toggleControllersVisible: () => void;
   toggleSocketsVisible: () => void;
   toggleDiodesVisible: () => void;
+  toggleMatrixVisible: () => void;
 }
 
 const DEFAULT_METADATA: KeyboardMetadata = {
@@ -176,6 +181,7 @@ export const useKeyboardStore = create<KeyboardState>()(
       showControllers: true,
       showSockets: true,
       showDiodes: true,
+      showMatrix: true,
 
       toggleKeycapsVisible: () => set((state) => ({ showKeycaps: !state.showKeycaps })),
       togglePlateVisible: () => set((state) => ({ showPlate: !state.showPlate })),
@@ -187,6 +193,7 @@ export const useKeyboardStore = create<KeyboardState>()(
       toggleControllersVisible: () => set((state) => ({ showControllers: !state.showControllers })),
       toggleSocketsVisible: () => set((state) => ({ showSockets: !state.showSockets })),
       toggleDiodesVisible: () => set((state) => ({ showDiodes: !state.showDiodes })),
+      toggleMatrixVisible: () => set((state) => ({ showMatrix: !state.showMatrix })),
 
       toggleSplitMode: () => set((state) => ({ splitMode: !state.splitMode })),
       setTempSplitX: (tempSplitX) => set({ tempSplitX }),
@@ -611,6 +618,23 @@ export const useKeyboardStore = create<KeyboardState>()(
           }
         };
       }),
+
+      autoAssignMatrix: () => set((state) => {
+        const newLayout = inferMatrix(state.data.layout);
+        return {
+          data: {
+            ...state.data,
+            layout: newLayout
+          }
+        };
+      }),
+
+      updateKeyMatrix: (id, row, col) => set((state) => ({
+        data: {
+          ...state.data,
+          layout: state.data.layout.map(k => k.id === id ? { ...k, matrixRow: row, matrixCol: col } : k)
+        }
+      })),
 
       addMountingHole: (hole) =>
         set((state) => ({

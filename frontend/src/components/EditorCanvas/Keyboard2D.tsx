@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useKeyboardStore } from '../../store/useKeyboardStore';
 import { calculateFullBoundingBox } from '../../utils/geometry';
+import { generateMatrixRoutes } from '../../utils/routing';
 import type { KeyConfig, TrackballConfig, ControllerConfig, BatteryConfig } from '../../types';
 
 const UNIT = 19.05; // Standard key pitch
@@ -32,7 +33,8 @@ const Keyboard2D: React.FC = () => {
     selectMountingHole,
     updateMountingHole,
     showSwitches,
-    showSockets
+    showSockets,
+    showMatrix
   } = useKeyboardStore();
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -65,6 +67,10 @@ const Keyboard2D: React.FC = () => {
   const leftBbox = useMemo(() => calculateFullBoundingBox(leftKeys, leftTrackballs, leftControllers, leftBatteries, leftMountingHoles, case_config.keyPitch), [leftKeys, leftTrackballs, leftControllers, leftBatteries, leftMountingHoles, case_config.keyPitch]);
   const rightBbox = useMemo(() => calculateFullBoundingBox(rightKeys, rightTrackballs, rightControllers, rightBatteries, rightMountingHoles, case_config.keyPitch), [rightKeys, rightTrackballs, rightControllers, rightBatteries, rightMountingHoles, case_config.keyPitch]);
   const fullBbox = useMemo(() => calculateFullBoundingBox(data.layout, data.trackballs || [], data.controllers || [], data.batteries || [], data.mountingHoles || [], case_config.keyPitch), [data.layout, data.trackballs, data.controllers, data.batteries, data.mountingHoles, case_config.keyPitch]);
+
+  const { segments } = useMemo(() => generateMatrixRoutes(data), [data]);
+  const leftSegments = useMemo(() => segments.filter(s => s.side === 'left'), [segments]);
+  const rightSegments = useMemo(() => segments.filter(s => s.side === 'right'), [segments]);
 
   // Adjust viewBox to fit the keyboard initialy or when layout changes significantly
   useEffect(() => {
@@ -635,6 +641,15 @@ const Keyboard2D: React.FC = () => {
           {(side === 'left' ? leftControllers : rightControllers).map(renderController)}
           {(side === 'left' ? leftBatteries : rightBatteries).map(renderBattery)}
           {(side === 'left' ? leftMountingHoles : rightMountingHoles).map(renderMountingHole)}
+          {showMatrix && (side === 'left' ? leftSegments : rightSegments).map((seg, i) => (
+            <line
+              key={`seg-${i}`}
+              x1={seg.x1} y1={seg.y1} x2={seg.x2} y2={seg.y2}
+              stroke="#fbbf24"
+              strokeWidth={0.3}
+              opacity={0.6}
+            />
+          ))}
         </g>
       </g>
     );
@@ -702,6 +717,15 @@ const Keyboard2D: React.FC = () => {
               {(data.controllers || []).map(renderController)}
               {(data.batteries || []).map(renderBattery)}
               {(data.mountingHoles || []).map(renderMountingHole)}
+              {showMatrix && segments.map((seg, i) => (
+                <line
+                  key={`seg-int-${i}`}
+                  x1={seg.x1} y1={seg.y1} x2={seg.x2} y2={seg.y2}
+                  stroke="#fbbf24"
+                  strokeWidth={0.3}
+                  opacity={0.6}
+                />
+              ))}
             </g>
           ) : (
             <>

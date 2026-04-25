@@ -1,5 +1,7 @@
 import type { KeyboardData } from '../types';
 import { getGridBoundary } from './geometry';
+import { generateMatrixRoutes } from './routing';
+import { getNetName } from './matrix';
 
 const FOOTPRINT_MAP: Record<string, string> = {
   mx: 'keebs:Switch_MX_1.00u',
@@ -30,6 +32,15 @@ export const generateKicadPcb = (data: KeyboardData): string => {
 
   let sExp = `(kicad_pcb (version 20211014) (generator "Keyboard Maker")\n`;
   
+  const { segments, nets } = generateMatrixRoutes(data);
+  const diodeDir = data.pcb_config.diodeDirection || 'col2row';
+
+  // 0. Nets
+  nets.forEach(net => {
+    sExp += `  (net ${net.id} "${net.name}")\n`;
+  });
+  sExp += `\n`;
+
   // Basic Setup
   sExp += `  (paper "A4")\n`;
   sExp += `  (setup\n`;
@@ -115,6 +126,21 @@ export const generateKicadPcb = (data: KeyboardData): string => {
     sExp += `    (tstamp "${timestamp}-${key.id}")\n`;
     sExp += `    (property "Reference" "${ref}" (at 0 -2.5 ${key.rotation.toFixed(2)}) (layer "F.SilkS") (effects (font (size 1 1) (thickness 0.15))))\n`;
     sExp += `    (property "Value" "${key.switchType}" (at 0 2.5 ${key.rotation.toFixed(2)}) (layer "F.Fab") (effects (font (size 1 1) (thickness 0.15))))\n`;
+    
+    // Assign Nets to Pads
+    if (key.matrixRow !== undefined && key.matrixCol !== undefined) {
+      const rowNet = nets.find(n => n.name === getNetName(key.matrixRow!, 0, 'row'))?.id || 0;
+      const colNet = nets.find(n => n.name === getNetName(0, key.matrixCol!, 'col'))?.id || 0;
+      const diodeNet = nets.find(n => n.name === getNetName(key.matrixRow!, key.matrixCol!, 'diode'))?.id || 0;
+
+      if (diodeDir === 'col2row') {
+        sExp += `    (pad "1" tht circle (at -3.81 -2.54 ${key.rotation.toFixed(2)}) (size 2.2 2.2) (drill 1.5) (layers *.Cu *.Mask) (net ${rowNet} "${getNetName(key.matrixRow!, 0, 'row')}"))\n`;
+        sExp += `    (pad "2" tht circle (at 2.54 -5.08 ${key.rotation.toFixed(2)}) (size 2.2 2.2) (drill 1.5) (layers *.Cu *.Mask) (net ${diodeNet} "${getNetName(key.matrixRow!, key.matrixCol!, 'diode')}"))\n`;
+      } else {
+        sExp += `    (pad "1" tht circle (at -3.81 -2.54 ${key.rotation.toFixed(2)}) (size 2.2 2.2) (drill 1.5) (layers *.Cu *.Mask) (net ${diodeNet} "${getNetName(key.matrixRow!, key.matrixCol!, 'diode')}"))\n`;
+        sExp += `    (pad "2" tht circle (at 2.54 -5.08 ${key.rotation.toFixed(2)}) (size 2.2 2.2) (drill 1.5) (layers *.Cu *.Mask) (net ${colNet} "${getNetName(0, key.matrixCol!, 'col')}"))\n`;
+      }
+    }
     sExp += `  )\n`;
   });
 
@@ -136,6 +162,22 @@ export const generateKicadPcb = (data: KeyboardData): string => {
     sExp += `  (footprint "${DIODE_FOOTPRINT}" (at ${d.x.toFixed(4)} ${d.y.toFixed(4)} ${d.rotation.toFixed(2)}) (layer "${layer}")\n`;
     sExp += `    (tstamp "${timestamp}-${d.id}")\n`;
     sExp += `    (property "Reference" "${ref}" (at 0 -1.5 ${d.rotation.toFixed(2)}) (layer "${d.mountingSide === 'bottom' ? 'B.SilkS' : 'F.SilkS'}") (effects (font (size 0.8 0.8) (thickness 0.12))))\n`;
+
+    // Assign Nets to Diode Pads
+    const key = layout.find(k => k.id === d.keyId);
+    if (key && key.matrixRow !== undefined && key.matrixCol !== undefined) {
+      const rowNet = nets.find(n => n.name === getNetName(key.matrixRow!, 0, 'row'))?.id || 0;
+      const colNet = nets.find(n => n.name === getNetName(0, key.matrixCol!, 'col'))?.id || 0;
+      const diodeNet = nets.find(n => n.name === getNetName(key.matrixRow!, key.matrixCol!, 'diode'))?.id || 0;
+
+      if (diodeDir === 'col2row') {
+        sExp += `    (pad "1" smd rect (at -1.65 0 ${d.rotation.toFixed(2)}) (size 0.9 1.2) (layers "${d.mountingSide === 'bottom' ? 'B.Cu' : 'F.Cu'}" "${d.mountingSide === 'bottom' ? 'B.Mask' : 'F.Mask'}") (net ${colNet} "${getNetName(0, key.matrixCol!, 'col')}"))\n`;
+        sExp += `    (pad "2" smd rect (at 1.65 0 ${d.rotation.toFixed(2)}) (size 0.9 1.2) (layers "${d.mountingSide === 'bottom' ? 'B.Cu' : 'F.Cu'}" "${d.mountingSide === 'bottom' ? 'B.Mask' : 'F.Mask'}") (net ${diodeNet} "${getNetName(key.matrixRow!, key.matrixCol!, 'diode')}"))\n`;
+      } else {
+        sExp += `    (pad "1" smd rect (at -1.65 0 ${d.rotation.toFixed(2)}) (size 0.9 1.2) (layers "${d.mountingSide === 'bottom' ? 'B.Cu' : 'F.Cu'}" "${d.mountingSide === 'bottom' ? 'B.Mask' : 'F.Mask'}") (net ${rowNet} "${getNetName(key.matrixRow!, 0, 'row')}"))\n`;
+        sExp += `    (pad "2" smd rect (at 1.65 0 ${d.rotation.toFixed(2)}) (size 0.9 1.2) (layers "${d.mountingSide === 'bottom' ? 'B.Cu' : 'F.Cu'}" "${d.mountingSide === 'bottom' ? 'B.Mask' : 'F.Mask'}") (net ${diodeNet} "${getNetName(key.matrixRow!, key.matrixCol!, 'diode')}"))\n`;
+      }
+    }
     sExp += `  )\n`;
   });
 
@@ -157,6 +199,11 @@ export const generateKicadPcb = (data: KeyboardData): string => {
     const halfW = b.width / 2;
     const halfH = b.height / 2;
     sExp += `  (gr_rect (start ${(b.x - halfW).toFixed(4)} ${(b.y - halfH).toFixed(4)}) (end ${(b.x + halfW).toFixed(4)} ${(b.y + halfH).toFixed(4)}) (layer "Dwgs.User") (width 0.15) (tstamp "${timestamp}-${b.id}"))\n`;
+  });
+
+  // 7. Segments
+  segments.forEach(seg => {
+    sExp += `  (segment (start ${seg.x1.toFixed(4)} ${seg.y1.toFixed(4)}) (end ${seg.x2.toFixed(4)} ${seg.y2.toFixed(4)}) (width ${seg.width}) (layer "${seg.layer}") (net ${seg.net}) (tstamp "${timestamp}"))\n`;
   });
 
   sExp += `)\n`;
