@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import Sidebar from './components/Sidebar/Sidebar';
 import Toolbar from './components/Toolbar/Toolbar';
 import KeyboardCanvas from './components/EditorCanvas/KeyboardCanvas';
@@ -8,7 +9,31 @@ import SettingsModalContent from './components/Modal/SettingsModalContent';
 import styles from './App.module.css';
 
 function App() {
-  const { viewMode, settingsModalOpen, toggleSettingsModal } = useKeyboardStore();
+  const { viewMode, settingsModalOpen, toggleSettingsModal, undo, redo } = useKeyboardStore();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger undo/redo if the user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+        e.preventDefault();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        redo();
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
 
   return (
     <div className={styles.container}>

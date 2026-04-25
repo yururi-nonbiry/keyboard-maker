@@ -109,6 +109,14 @@ interface KeyboardState {
   // Toolbox State
   toolboxVisibleItems: Record<string, boolean>;
   toggleToolboxItem: (itemId: string) => void;
+
+  // History Actions
+  history: {
+    past: KeyboardData[];
+    future: KeyboardData[];
+  };
+  undo: () => void;
+  redo: () => void;
 }
 
 const DEFAULT_METADATA: KeyboardMetadata = {
@@ -153,8 +161,16 @@ const INITIAL_LAYOUT: KeyConfig[] = Array.from({ length: 9 }, (_, i) => ({
 
 export const useKeyboardStore = create<KeyboardState>()(
   persist(
-    (set) => ({
-      data: {
+    (set) => {
+      const pushHistory = (state: KeyboardState) => ({
+        history: {
+          past: [JSON.parse(JSON.stringify(state.data)), ...state.history.past].slice(0, 30),
+          future: [],
+        }
+      });
+
+      return {
+        data: {
         metadata: DEFAULT_METADATA,
         type: 'integrated',
         layout: INITIAL_LAYOUT,
@@ -198,6 +214,10 @@ export const useKeyboardStore = create<KeyboardState>()(
         battery: true,
         hole: true,
       },
+      history: {
+        past: [],
+        future: [],
+      },
 
       toggleKeycapsVisible: () => set((state) => ({ showKeycaps: !state.showKeycaps })),
       togglePlateVisible: () => set((state) => ({ showPlate: !state.showPlate })),
@@ -234,6 +254,7 @@ export const useKeyboardStore = create<KeyboardState>()(
           }))
         };
         return { 
+          ...pushHistory(state),
           data: newData, 
           splitMode: false, 
           tempSplitX: null,
@@ -248,6 +269,7 @@ export const useKeyboardStore = create<KeyboardState>()(
 
       updateMetadata: (metadata) =>
         set((state) => ({
+          ...pushHistory(state),
           data: { ...state.data, metadata: { ...state.data.metadata, ...metadata } },
         })),
 
@@ -259,6 +281,7 @@ export const useKeyboardStore = create<KeyboardState>()(
           }
           const newLayout = [...state.data.layout, keyWithSide];
           return {
+            ...pushHistory(state),
             data: { ...state.data, layout: newLayout },
             collisions: checkInterference(
               newLayout, 
@@ -274,6 +297,7 @@ export const useKeyboardStore = create<KeyboardState>()(
         set((state) => {
           const newLayout = state.data.layout.map((k) => (k.id === id ? { ...k, ...config } : k));
           return {
+            ...pushHistory(state),
             data: { ...state.data, layout: newLayout },
             collisions: checkInterference(
               newLayout, 
@@ -289,6 +313,7 @@ export const useKeyboardStore = create<KeyboardState>()(
         set((state) => {
           const newLayout = state.data.layout.filter((k) => k.id !== id);
           return {
+            ...pushHistory(state),
             data: { ...state.data, layout: newLayout },
             collisions: checkInterference(
               newLayout, 
@@ -312,6 +337,7 @@ export const useKeyboardStore = create<KeyboardState>()(
 
       updatePcbConfig: (pcb_config) =>
         set((state) => ({
+          ...pushHistory(state),
           data: { ...state.data, pcb_config: { ...state.data.pcb_config, ...pcb_config } },
         })),
 
@@ -320,6 +346,7 @@ export const useKeyboardStore = create<KeyboardState>()(
           const newData = { ...state.data, case_config: { ...state.data.case_config, ...case_config } };
           const newGridSize = case_config.keyPitch !== undefined ? case_config.keyPitch : state.gridSize;
           return {
+            ...pushHistory(state),
             data: newData,
             gridSize: newGridSize,
             collisions: checkInterference(
@@ -367,13 +394,14 @@ export const useKeyboardStore = create<KeyboardState>()(
             }
           }
           
-          return { data: newData };
+          return { ...pushHistory(state), data: newData };
         }),
 
       addTrackball: (trackball) =>
         set((state) => {
           const newTrackballs = [...(state.data.trackballs || []), trackball];
           return {
+            ...pushHistory(state),
             data: {
               ...state.data,
               trackballs: newTrackballs,
@@ -394,6 +422,7 @@ export const useKeyboardStore = create<KeyboardState>()(
             t.id === id ? { ...t, ...config } : t
           );
           return {
+            ...pushHistory(state),
             data: {
               ...state.data,
               trackballs: newTrackballs,
@@ -412,6 +441,7 @@ export const useKeyboardStore = create<KeyboardState>()(
         set((state) => {
           const newTrackballs = (state.data.trackballs || []).filter((t) => t.id !== id);
           return {
+            ...pushHistory(state),
             data: {
               ...state.data,
               trackballs: newTrackballs,
@@ -439,6 +469,7 @@ export const useKeyboardStore = create<KeyboardState>()(
         set((state) => {
           const newControllers = [...(state.data.controllers || []), controller];
           return {
+            ...pushHistory(state),
             data: {
               ...state.data,
               controllers: newControllers,
@@ -459,6 +490,7 @@ export const useKeyboardStore = create<KeyboardState>()(
             c.id === id ? { ...c, ...config } : c
           );
           return {
+            ...pushHistory(state),
             data: {
               ...state.data,
               controllers: newControllers,
@@ -477,6 +509,7 @@ export const useKeyboardStore = create<KeyboardState>()(
         set((state) => {
           const newControllers = (state.data.controllers || []).filter((c) => c.id !== id);
           return {
+            ...pushHistory(state),
             data: {
               ...state.data,
               controllers: newControllers,
@@ -513,6 +546,7 @@ export const useKeyboardStore = create<KeyboardState>()(
             }
           ];
           return {
+            ...pushHistory(state),
             data: {
               ...state.data,
               batteries: newBatteries,
@@ -533,6 +567,7 @@ export const useKeyboardStore = create<KeyboardState>()(
             b.id === id ? { ...b, ...config } : b
           );
           return {
+            ...pushHistory(state),
             data: {
               ...state.data,
               batteries: newBatteries,
@@ -551,6 +586,7 @@ export const useKeyboardStore = create<KeyboardState>()(
         set((state) => {
           const newBatteries = (state.data.batteries || []).filter((b) => b.id !== id);
           return {
+            ...pushHistory(state),
             data: {
               ...state.data,
               batteries: newBatteries,
@@ -576,6 +612,7 @@ export const useKeyboardStore = create<KeyboardState>()(
 
       addDiode: (diode) =>
         set((state) => ({
+          ...pushHistory(state),
           data: {
             ...state.data,
             diodes: [...(state.data.diodes || []), diode],
@@ -584,6 +621,7 @@ export const useKeyboardStore = create<KeyboardState>()(
 
       updateDiode: (id, config) =>
         set((state) => ({
+          ...pushHistory(state),
           data: {
             ...state.data,
             diodes: (state.data.diodes || []).map((d) =>
@@ -594,6 +632,7 @@ export const useKeyboardStore = create<KeyboardState>()(
 
       removeDiode: (id) =>
         set((state) => ({
+          ...pushHistory(state),
           data: {
             ...state.data,
             diodes: (state.data.diodes || []).filter((d) => d.id !== id),
@@ -639,6 +678,7 @@ export const useKeyboardStore = create<KeyboardState>()(
         });
         
         return {
+          ...pushHistory(state),
           data: {
             ...state.data,
             diodes: newDiodes,
@@ -649,6 +689,7 @@ export const useKeyboardStore = create<KeyboardState>()(
       autoAssignMatrix: () => set((state) => {
         const newLayout = inferMatrix(state.data.layout);
         return {
+          ...pushHistory(state),
           data: {
             ...state.data,
             layout: newLayout
@@ -657,6 +698,7 @@ export const useKeyboardStore = create<KeyboardState>()(
       }),
 
       updateKeyMatrix: (id, row, col) => set((state) => ({
+        ...pushHistory(state),
         data: {
           ...state.data,
           layout: state.data.layout.map(k => k.id === id ? { ...k, matrixRow: row, matrixCol: col } : k)
@@ -665,6 +707,7 @@ export const useKeyboardStore = create<KeyboardState>()(
 
       addMountingHole: (hole) =>
         set((state) => ({
+          ...pushHistory(state),
           data: {
             ...state.data,
             mountingHoles: [...(state.data.mountingHoles || []), hole],
@@ -673,6 +716,7 @@ export const useKeyboardStore = create<KeyboardState>()(
 
       updateMountingHole: (id, config) =>
         set((state) => ({
+          ...pushHistory(state),
           data: {
             ...state.data,
             mountingHoles: (state.data.mountingHoles || []).map((h) =>
@@ -683,6 +727,7 @@ export const useKeyboardStore = create<KeyboardState>()(
 
       removeMountingHole: (id) =>
         set((state) => ({
+          ...pushHistory(state),
           data: {
             ...state.data,
             mountingHoles: (state.data.mountingHoles || []).filter((h) => h.id !== id),
@@ -699,7 +744,8 @@ export const useKeyboardStore = create<KeyboardState>()(
         selectedDiodeId: id ? null : state.selectedDiodeId
       })),
 
-      setKeyboardData: (data) => set({ 
+      setKeyboardData: (data) => set((state) => ({ 
+        ...pushHistory(state),
         data, 
         collisions: checkInterference(
           data.layout, 
@@ -708,11 +754,63 @@ export const useKeyboardStore = create<KeyboardState>()(
           data.batteries, 
           data.case_config.keyPitch || 19.05
         ) 
+      })),
+
+      undo: () => set((state) => {
+        if (state.history.past.length === 0) return state;
+        
+        const previous = state.history.past[0];
+        const newPast = state.history.past.slice(1);
+        const newFuture = [JSON.parse(JSON.stringify(state.data)), ...state.history.future].slice(0, 30);
+        
+        return {
+          data: previous,
+          history: {
+            past: newPast,
+            future: newFuture,
+          },
+          collisions: checkInterference(
+            previous.layout,
+            previous.trackballs || [],
+            previous.controllers || [],
+            previous.batteries || [],
+            previous.case_config.keyPitch
+          ),
+        };
       }),
-    }),
-    {
+
+      redo: () => set((state) => {
+        if (state.history.future.length === 0) return state;
+        
+        const next = state.history.future[0];
+        const newFuture = state.history.future.slice(1);
+        const newPast = [JSON.parse(JSON.stringify(state.data)), ...state.history.past].slice(0, 30);
+        
+        return {
+          data: next,
+          history: {
+            past: newPast,
+            future: newFuture,
+          },
+          collisions: checkInterference(
+            next.layout,
+            next.trackballs || [],
+            next.controllers || [],
+            next.batteries || [],
+            next.case_config.keyPitch
+          ),
+        };
+      }),
+    };
+  },
+  {
       name: 'keyboard-maker-storage',
       storage: createJSONStorage(() => localStorage),
+      // Exclude history from persistence
+      partialize: (state) => {
+        const { history, ...rest } = state;
+        return rest;
+      },
       // Recalculate collisions after rehydration to ensure accuracy
       onRehydrateStorage: () => {
         return (rehydratedState) => {
