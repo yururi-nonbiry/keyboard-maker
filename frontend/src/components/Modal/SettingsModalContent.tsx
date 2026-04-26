@@ -363,12 +363,12 @@ const SettingsModalContent: React.FC = () => {
 
           <CollapsibleSection 
             id="lighting" 
-            title="ビジュアル・照明設定" 
+            title="外観・ライティング" 
             isExpanded={expandedSections.lighting} 
             onToggle={toggleSection}
           >
             <div className={styles.group}>
-              <label className={styles.label}>背景色</label>
+              <label className={styles.label}>背景色 (Background)</label>
               <div className={styles.colorInputWrapper}>
                 <input
                   type="color"
@@ -418,7 +418,80 @@ const SettingsModalContent: React.FC = () => {
                 />
               </div>
             </div>
+
             <div className={styles.divider} />
+
+            <div className={styles.group}>
+              <label className={styles.label}>ケースカラー</label>
+              <div className={styles.colorInputWrapper}>
+                <input
+                  type="color"
+                  className={styles.colorInput}
+                  value={data.case_config.caseColor || '#1e1e2e'}
+                  onChange={(e) => updateCaseConfig({ caseColor: e.target.value })}
+                />
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={data.case_config.caseColor || '#1e1e2e'}
+                  onChange={(e) => updateCaseConfig({ caseColor: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className={styles.group}>
+              <label className={styles.label}>プレートカラー</label>
+              <div className={styles.colorInputWrapper}>
+                <input
+                  type="color"
+                  className={styles.colorInput}
+                  value={data.case_config.plateColor || '#313244'}
+                  onChange={(e) => updateCaseConfig({ plateColor: e.target.value })}
+                />
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={data.case_config.plateColor || '#313244'}
+                  onChange={(e) => updateCaseConfig({ plateColor: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className={styles.group}>
+              <label className={styles.label}>PCBカラー</label>
+              <div className={styles.colorInputWrapper}>
+                <input
+                  type="color"
+                  className={styles.colorInput}
+                  value={data.pcb_config.pcbColor || '#166534'}
+                  onChange={(e) => updatePcbConfig({ pcbColor: e.target.value })}
+                />
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={data.pcb_config.pcbColor || '#166534'}
+                  onChange={(e) => updatePcbConfig({ pcbColor: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className={styles.group}>
+              <label className={styles.label}>デフォルトキーキャップカラー</label>
+              <div className={styles.colorInputWrapper}>
+                <input
+                  type="color"
+                  className={styles.colorInput}
+                  value={data.case_config.defaultKeycapColor || '#cdd6f4'}
+                  onChange={(e) => updateCaseConfig({ defaultKeycapColor: e.target.value })}
+                />
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={data.case_config.defaultKeycapColor || '#cdd6f4'}
+                  onChange={(e) => updateCaseConfig({ defaultKeycapColor: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className={styles.divider} />
+
             <div className={styles.checkboxGrid}>
               <label className={styles.checkboxLabel}>
                 <input 

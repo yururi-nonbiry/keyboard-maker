@@ -200,6 +200,45 @@ const Sidebar: React.FC = () => {
         onToggle={toggleSection}
       >
         <div className={styles.group}>
+          <label className={styles.label}>背景色 (Background)</label>
+          <div className={styles.colorPickerRow}>
+            <input 
+              type="color" 
+              className={styles.colorInput} 
+              value={data.lighting_config?.backgroundColor || '#0a0a0c'} 
+              onChange={(e) => updateLightingConfig({ backgroundColor: e.target.value })}
+            />
+            <span className={styles.label}>{data.lighting_config?.backgroundColor || '#0a0a0c'}</span>
+          </div>
+        </div>
+        <div className={styles.group}>
+          <label className={styles.label}>環境光 (Ambient Light)</label>
+          <div className={styles.colorPickerRow}>
+            <input 
+              type="color" 
+              className={styles.colorInput} 
+              value={data.lighting_config?.ambientLightColor || '#ffffff'} 
+              onChange={(e) => updateLightingConfig({ ambientLightColor: e.target.value })}
+            />
+            <span className={styles.label}>{data.lighting_config?.ambientLightColor || '#ffffff'}</span>
+          </div>
+        </div>
+        <div className={styles.group}>
+          <label className={styles.label}>シーン照明 (Scene Light)</label>
+          <div className={styles.colorPickerRow}>
+            <input 
+              type="color" 
+              className={styles.colorInput} 
+              value={data.lighting_config?.sceneLightColor || '#ffffff'} 
+              onChange={(e) => updateLightingConfig({ sceneLightColor: e.target.value })}
+            />
+            <span className={styles.label}>{data.lighting_config?.sceneLightColor || '#ffffff'}</span>
+          </div>
+        </div>
+
+        <div className={styles.divider} />
+
+        <div className={styles.group}>
           <label className={styles.label}>ケースカラー</label>
           <div className={styles.colorPickerRow}>
             <input 
