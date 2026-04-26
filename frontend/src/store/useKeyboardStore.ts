@@ -108,6 +108,11 @@ interface KeyboardState {
   // UI State
   settingsModalOpen: boolean;
   toggleSettingsModal: (open?: boolean) => void;
+  exportModalOpen: boolean;
+  toggleExportModal: (open?: boolean) => void;
+  exportTrigger: { format: 'stl' | 'glb', timestamp: number } | null;
+  triggerExport: (format: 'stl' | 'glb') => void;
+  clearExportTrigger: () => void;
 
   // Toolbox State
   toolboxVisibleItems: Record<string, boolean>;
@@ -225,6 +230,8 @@ export const useKeyboardStore = create<KeyboardState>()(
       showDiodes: true,
       showMatrix: true,
       settingsModalOpen: false,
+      exportModalOpen: false,
+      exportTrigger: null,
       toolboxVisibleItems: {
         key: true,
         trackball: true,
@@ -252,6 +259,17 @@ export const useKeyboardStore = create<KeyboardState>()(
       toggleSettingsModal: (open) => set((state) => ({ 
         settingsModalOpen: open !== undefined ? open : !state.settingsModalOpen 
       })),
+
+      toggleExportModal: (open) => set((state) => ({ 
+        exportModalOpen: open !== undefined ? open : !state.exportModalOpen 
+      })),
+
+      triggerExport: (format) => set({ 
+        exportTrigger: { format, timestamp: Date.now() },
+        exportModalOpen: false 
+      }),
+
+      clearExportTrigger: () => set({ exportTrigger: null }),
 
       toggleToolboxItem: (itemId) => set((state) => ({
         toolboxVisibleItems: {

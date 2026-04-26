@@ -6,6 +6,7 @@ import Keyboard2D from './components/EditorCanvas/Keyboard2D';
 import { useKeyboardStore } from './store/useKeyboardStore';
 import Modal from './components/Modal/Modal';
 import SettingsModalContent from './components/Modal/SettingsModalContent';
+import ExportModal from './components/Modal/ExportModal';
 import styles from './App.module.css';
 
 function App() {
@@ -63,6 +64,8 @@ function App() {
       >
         <SettingsModalContent />
       </Modal>
+
+      <ExportModal />
     </div>
   );
 }

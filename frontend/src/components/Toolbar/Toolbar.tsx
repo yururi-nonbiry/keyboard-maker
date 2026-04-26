@@ -18,7 +18,8 @@ const Toolbar: React.FC = () => {
     splitMode,
     toggleSplitMode,
     addTrackball,
-    toggleSettingsModal
+    toggleSettingsModal,
+    toggleExportModal
   } = useKeyboardStore();
 
   const handleSave = async () => {
@@ -178,6 +179,14 @@ const Toolbar: React.FC = () => {
         >
           <Download size={18} />
           <span>KiCad</span>
+        </button>
+        <button 
+          className={styles.button} 
+          onClick={() => toggleExportModal(true)}
+          title="3Dモデルをエクスポート (STL/GLB)"
+        >
+          <Box size={18} />
+          <span>3D出力</span>
         </button>
         <button 
           className={styles.button} 

@@ -12,10 +12,12 @@ import Trackball from './Trackball';
 import Battery from './Battery';
 import Diode from './Diode';
 import { Lighting } from './Lighting';
+import ExportManager from '../ExportManager';
 
 import { calculateFullBoundingBox3D, calculateLift } from '../../utils/geometry';
 
 const KeyboardCanvas: React.FC = () => {
+  const keyboardGroupRef = React.useRef<THREE.Group>(null);
   const { data, selectKey, selectedKeyId, selectTrackball, selectedTrackballId, selectController, selectedControllerId, selectBattery, selectedBatteryId, selectDiode, selectedDiodeId, gridVisible, gridSize, showTrackballs, showControllers, showDiodes } = useKeyboardStore();
 
   const groundY = -12;
@@ -60,6 +62,8 @@ const KeyboardCanvas: React.FC = () => {
       <color attach="background" args={[data.lighting_config?.backgroundColor || '#0a0a0c']} />
       <fog attach="fog" args={[data.lighting_config?.backgroundColor || '#0a0a0c', 200, 1000]} />
       
+      <ExportManager targetRef={keyboardGroupRef} />
+
       <Suspense fallback={null}>
         <ambientLight color={data.lighting_config?.ambientLightColor || '#ffffff'} intensity={0.5} />
         <spotLight 
@@ -80,6 +84,7 @@ const KeyboardCanvas: React.FC = () => {
           floatIntensity={isEditing ? 0 : 0.5}
         >
           <group 
+            ref={keyboardGroupRef}
             rotation={[typingAngle * (Math.PI / 180), 0, 0]}
             position={[0, 0, 0]}
           >
