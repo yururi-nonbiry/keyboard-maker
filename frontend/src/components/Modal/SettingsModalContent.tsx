@@ -73,6 +73,7 @@ const SettingsModalContent: React.FC = () => {
     addMountingHole,
     selectMountingHole,
     toggleSettingsModal,
+    updateLightingConfig,
     toolboxVisibleItems,
     toggleToolboxItem
   } = useKeyboardStore();
@@ -82,6 +83,7 @@ const SettingsModalContent: React.FC = () => {
     display: true,
     case: true,
     pcb: true,
+    lighting: true,
   });
 
   const toggleSection = (id: string) => {
@@ -357,6 +359,96 @@ const SettingsModalContent: React.FC = () => {
                 toggleSettingsModal(false);
               }}>マウント穴追加</button>
             </div>
+          </CollapsibleSection>
+
+          <CollapsibleSection 
+            id="lighting" 
+            title="ビジュアル・照明設定" 
+            isExpanded={expandedSections.lighting} 
+            onToggle={toggleSection}
+          >
+            <div className={styles.group}>
+              <label className={styles.label}>背景色</label>
+              <div className={styles.colorInputWrapper}>
+                <input
+                  type="color"
+                  className={styles.colorInput}
+                  value={data.lighting_config?.backgroundColor || '#0a0a0c'}
+                  onChange={(e) => updateLightingConfig({ backgroundColor: e.target.value })}
+                />
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={data.lighting_config?.backgroundColor || '#0a0a0c'}
+                  onChange={(e) => updateLightingConfig({ backgroundColor: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className={styles.group}>
+              <label className={styles.label}>環境光 (Ambient Light)</label>
+              <div className={styles.colorInputWrapper}>
+                <input
+                  type="color"
+                  className={styles.colorInput}
+                  value={data.lighting_config?.ambientLightColor || '#ffffff'}
+                  onChange={(e) => updateLightingConfig({ ambientLightColor: e.target.value })}
+                />
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={data.lighting_config?.ambientLightColor || '#ffffff'}
+                  onChange={(e) => updateLightingConfig({ ambientLightColor: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className={styles.group}>
+              <label className={styles.label}>シーン照明 (Point/Spot Light)</label>
+              <div className={styles.colorInputWrapper}>
+                <input
+                  type="color"
+                  className={styles.colorInput}
+                  value={data.lighting_config?.sceneLightColor || '#ffffff'}
+                  onChange={(e) => updateLightingConfig({ sceneLightColor: e.target.value })}
+                />
+                <input
+                  type="text"
+                  className={styles.input}
+                  value={data.lighting_config?.sceneLightColor || '#ffffff'}
+                  onChange={(e) => updateLightingConfig({ sceneLightColor: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className={styles.divider} />
+            <div className={styles.checkboxGrid}>
+              <label className={styles.checkboxLabel}>
+                <input 
+                  type="checkbox" 
+                  className={styles.checkbox} 
+                  checked={data.lighting_config?.underglowEnabled} 
+                  onChange={(e) => updateLightingConfig({ underglowEnabled: e.target.checked })} 
+                />
+                アンダーグロウ (Underglow)
+              </label>
+            </div>
+            {data.lighting_config?.underglowEnabled && (
+              <div className={styles.group}>
+                <label className={styles.label}>アンダーグロウ色</label>
+                <div className={styles.colorInputWrapper}>
+                  <input
+                    type="color"
+                    className={styles.colorInput}
+                    value={data.lighting_config?.underglowColor || '#89b4fa'}
+                    onChange={(e) => updateLightingConfig({ underglowColor: e.target.value })}
+                  />
+                  <input
+                    type="text"
+                    className={styles.input}
+                    value={data.lighting_config?.underglowColor || '#89b4fa'}
+                    onChange={(e) => updateLightingConfig({ underglowColor: e.target.value })}
+                  />
+                </div>
+              </div>
+            )}
           </CollapsibleSection>
         </div>
       </div>

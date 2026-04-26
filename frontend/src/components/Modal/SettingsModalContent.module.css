@@ -182,3 +182,35 @@
   background: rgba(255, 255, 255, 0.05);
   margin: 10px 0;
 }
+
+.colorInputWrapper {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.colorInput {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.colorInput::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.colorInput::-webkit-color-swatch {
+  border: none;
+}
+
+.colorInputWrapper .input {
+  flex: 1;
+}

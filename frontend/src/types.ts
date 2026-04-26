@@ -18,6 +18,9 @@ export interface LightingConfig {
   underglowEnabled: boolean;
   backlightColor: string;
   backlightEnabled: boolean;
+  backgroundColor?: string;
+  ambientLightColor?: string;
+  sceneLightColor?: string;
 }
 
 export interface KeyConfig {

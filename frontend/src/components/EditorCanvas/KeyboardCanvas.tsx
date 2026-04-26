@@ -57,13 +57,20 @@ const KeyboardCanvas: React.FC = () => {
       camera={{ position: [150, 200, 250], fov: 45, up: [0, 1, 0], near: 0.1, far: 2000 }}
       style={{ height: '100%', width: '100%' }}
     >
-      <color attach="background" args={['#0a0a0c']} />
-      <fog attach="fog" args={['#0a0a0c', 200, 1000]} />
+      <color attach="background" args={[data.lighting_config?.backgroundColor || '#0a0a0c']} />
+      <fog attach="fog" args={[data.lighting_config?.backgroundColor || '#0a0a0c', 200, 1000]} />
       
       <Suspense fallback={null}>
-        <ambientLight intensity={0.5} />
-        <spotLight position={[100, 200, 100]} angle={0.15} penumbra={1} intensity={1} castShadow />
-        <pointLight position={[-100, -100, -100]} intensity={0.5} />
+        <ambientLight color={data.lighting_config?.ambientLightColor || '#ffffff'} intensity={0.5} />
+        <spotLight 
+          position={[100, 200, 100]} 
+          angle={0.15} 
+          penumbra={1} 
+          intensity={1} 
+          castShadow 
+          color={data.lighting_config?.sceneLightColor || '#ffffff'}
+        />
+        <pointLight position={[-100, -100, -100]} intensity={0.5} color={data.lighting_config?.sceneLightColor || '#ffffff'} />
         
         <Environment preset="city" />
  

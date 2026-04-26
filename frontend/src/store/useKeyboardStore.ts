@@ -161,6 +161,9 @@ const DEFAULT_LIGHTING: LightingConfig = {
   underglowEnabled: true,
   backlightColor: '#f5c2e7', // Pink
   backlightEnabled: false,
+  backgroundColor: '#0a0a0c',
+  ambientLightColor: '#ffffff',
+  sceneLightColor: '#ffffff',
 };
 
 const INITIAL_LAYOUT: KeyConfig[] = Array.from({ length: 9 }, (_, i) => ({
