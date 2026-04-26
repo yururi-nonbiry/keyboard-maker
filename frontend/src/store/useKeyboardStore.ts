@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { KeyboardData, KeyConfig, KeyboardMetadata, PcbConfig, CaseConfig, SwitchType, KeyboardType, TrackballConfig, ControllerConfig, BatteryConfig, DiodeConfig, MountingHole } from '../types';
+import type { KeyboardData, KeyConfig, KeyboardMetadata, PcbConfig, CaseConfig, SwitchType, KeyboardType, TrackballConfig, ControllerConfig, BatteryConfig, DiodeConfig, MountingHole, LightingConfig } from '../types';
 import { checkInterference, calculateBoundingBox } from '../utils/geometry';
 import { inferMatrix } from '../utils/matrix';
 
@@ -52,6 +52,9 @@ interface KeyboardState {
   updateMountingHole: (id: string, config: Partial<MountingHole>) => void;
   removeMountingHole: (id: string) => void;
   selectMountingHole: (id: string | null) => void;
+
+  // Lighting Actions
+  updateLightingConfig: (config: Partial<LightingConfig>) => void;
   
   // Grid Settings
   gridVisible: boolean;
@@ -131,6 +134,7 @@ const DEFAULT_PCB: PcbConfig = {
   diodeDirection: 'col2row',
   autoDiodeOffset: { x: 0, y: 8, rotation: 0 },
   footprintAttributes: {},
+  pcbColor: '#166534', // Forest green
 };
 
 const DEFAULT_CASE: CaseConfig = {
@@ -147,6 +151,16 @@ const DEFAULT_CASE: CaseConfig = {
   pcbMargin: 3.0,
   plateOffset: 0.0,
   defaultKeycapProfile: 'cherry',
+  caseColor: '#1e1e2e', // Catppuccin Mocha base
+  plateColor: '#313244', // Catppuccin Mocha surface0
+  defaultKeycapColor: '#cdd6f4', // Catppuccin Mocha text
+};
+
+const DEFAULT_LIGHTING: LightingConfig = {
+  underglowColor: '#89b4fa', // Blue
+  underglowEnabled: true,
+  backlightColor: '#f5c2e7', // Pink
+  backlightEnabled: false,
 };
 
 const INITIAL_LAYOUT: KeyConfig[] = Array.from({ length: 9 }, (_, i) => ({
@@ -181,6 +195,7 @@ export const useKeyboardStore = create<KeyboardState>()(
         pcb_config: DEFAULT_PCB,
         case_config: DEFAULT_CASE,
         mountingHoles: [],
+        lighting_config: DEFAULT_LIGHTING,
       },
       selectedKeyId: null,
       selectedTrackballId: null,
@@ -399,7 +414,7 @@ export const useKeyboardStore = create<KeyboardState>()(
 
       addTrackball: (trackball) =>
         set((state) => {
-          const newTrackballs = [...(state.data.trackballs || []), trackball];
+          const newTrackballs = [...(state.data.trackballs || []), { ...trackball, ballColor: trackball.ballColor || '#f38ba8' }];
           return {
             ...pushHistory(state),
             data: {
@@ -749,11 +764,22 @@ export const useKeyboardStore = create<KeyboardState>()(
         data, 
         collisions: checkInterference(
           data.layout, 
-          data.trackballs, 
-          data.controllers, 
-          data.batteries, 
+          data.trackballs || [], 
+          data.controllers || [], 
+          data.batteries || [], 
           data.case_config.keyPitch || 19.05
         ) 
+      })),
+
+      updateLightingConfig: (config) => set((state) => ({
+        ...pushHistory(state),
+        data: {
+          ...state.data,
+          lighting_config: {
+            ...state.data.lighting_config || DEFAULT_LIGHTING,
+            ...config
+          }
+        }
       })),
 
       undo: () => set((state) => {

@@ -14,8 +14,9 @@ const RealisticKeycap: React.FC<{
   profile: string;
   isSelected: boolean;
   hasCollision: boolean;
-}> = ({ width, height, profile, isSelected, hasCollision }) => {
-  const color = hasCollision ? "#ef4444" : (isSelected ? "#6366f1" : "#1c1c21");
+  color?: string;
+}> = ({ width, height, profile, isSelected, hasCollision, color: customColor }) => {
+  const color = hasCollision ? "#ef4444" : (isSelected ? "#6366f1" : (customColor || "#1c1c21"));
   
   let capHeight = 8;
   let topScale = 0.75;
@@ -236,6 +237,7 @@ const KeySwitch: React.FC<KeySwitchProps> = ({ config }) => {
                 profile={profile} 
                 isSelected={isSelected}
                 hasCollision={hasCollision}
+                color={config.keycapColor || data.case_config.defaultKeycapColor}
               />
             </group>
           )}

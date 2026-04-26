@@ -248,3 +248,31 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
+.colorPickerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.colorInput {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 32px;
+  height: 32px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.colorInput::-webkit-color-swatch {
+  border-radius: 50%;
+  border: 2px solid var(--glass-border);
+}
+
+.colorInput::-moz-color-swatch {
+  border-radius: 50%;
+  border: 2px solid var(--glass-border);
+}

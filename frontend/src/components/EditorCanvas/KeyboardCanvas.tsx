@@ -11,6 +11,7 @@ import MicroController from './MicroController';
 import Trackball from './Trackball';
 import Battery from './Battery';
 import Diode from './Diode';
+import { Lighting } from './Lighting';
 
 import { calculateFullBoundingBox3D, calculateLift } from '../../utils/geometry';
 
@@ -122,6 +123,7 @@ const KeyboardCanvas: React.FC = () => {
                 {showDiodes && (data.diodes || []).map((d) => (
                   <Diode key={d.id} config={d} />
                 ))}
+                <Lighting />
               </group>
             ) : (
               <>
@@ -180,6 +182,7 @@ const KeyboardCanvas: React.FC = () => {
                       {showDiodes && leftDiodes.map((d) => (
                         <Diode key={d.id} config={d} />
                       ))}
+                      <Lighting />
                     </group>
                   )}
                 </group>
@@ -239,6 +242,7 @@ const KeyboardCanvas: React.FC = () => {
                       {showDiodes && rightDiodes.map((d) => (
                         <Diode key={d.id} config={d} />
                       ))}
+                      <Lighting />
                     </group>
                   )}
                 </group>

@@ -13,6 +13,13 @@ export type KeyboardType = 'integrated' | 'split';
 
 export type KeycapProfile = 'cherry' | 'oem' | 'dsa' | 'xda' | 'choc' | 'mbk';
 
+export interface LightingConfig {
+  underglowColor: string;
+  underglowEnabled: boolean;
+  backlightColor: string;
+  backlightEnabled: boolean;
+}
+
 export interface KeyConfig {
   id: string;
   x: number; // in mm
@@ -20,6 +27,7 @@ export interface KeyConfig {
   rotation: number; // in degrees
   switchType: SwitchType;
   keycapProfile?: KeycapProfile;
+  keycapColor?: string;
   keycapSize: {
     width: number; // in units (e.g. 1u, 1.25u)
     height: number;
@@ -46,6 +54,7 @@ export interface PcbConfig {
   diodeDirection: 'col2row' | 'row2col';
   autoDiodeOffset: { x: number; y: number; rotation: number };
   footprintAttributes: Record<string, string>;
+  pcbColor?: string;
   matrixMap?: {
     rows: string[]; // Pin names/numbers for each row
     cols: string[]; // Pin names/numbers for each column
@@ -66,6 +75,9 @@ export interface CaseConfig {
   pcbMargin: number; // in mm
   plateOffset: number; // in mm, relative to PCB edge
   defaultKeycapProfile: KeycapProfile;
+  caseColor?: string;
+  plateColor?: string;
+  defaultKeycapColor?: string;
 }
 
 export interface TrackballConfig {
@@ -80,6 +92,7 @@ export interface TrackballConfig {
   rotation: number; // in degrees
   side?: 'left' | 'right';
   mountingSide: 'top' | 'bottom';
+  ballColor?: string;
 }
 
 export interface ControllerConfig {
@@ -127,4 +140,6 @@ export interface KeyboardData {
   batteries?: BatteryConfig[];
   diodes?: DiodeConfig[];
   mountingHoles?: MountingHole[];
+  lighting_config?: LightingConfig;
 }
+

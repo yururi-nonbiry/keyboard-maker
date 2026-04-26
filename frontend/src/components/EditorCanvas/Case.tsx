@@ -260,6 +260,7 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
             mountingHoles={sideMountingHoles}
             pivotX={centerX}
             pivotZ={centerY}
+            color={data.case_config.caseColor}
           />
         )}
 
@@ -279,6 +280,7 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
               typingAngle={typingAngle}
               pivotX={centerX}
               pivotZ={centerY}
+              color={data.case_config.caseColor}
             />
 
             {/* Top Wall (Full width) */}
@@ -295,6 +297,7 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
               typingAngle={typingAngle}
               pivotX={centerX}
               pivotZ={centerY}
+              color={data.case_config.caseColor}
             />
             {/* Left Wall (Inner height to avoid corner overlap) */}
             <GroundedBox 
@@ -310,6 +313,7 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
               typingAngle={typingAngle}
               pivotX={centerX}
               pivotZ={centerY}
+              color={data.case_config.caseColor}
             />
             {/* Right Wall (Inner height to avoid corner overlap) */}
             <GroundedBox 
@@ -325,6 +329,7 @@ const Case: React.FC<CaseProps> = ({ side, groundY, lift, tentingAngle, splitRot
               typingAngle={typingAngle}
               pivotX={centerX}
               pivotZ={centerY}
+              color={data.case_config.caseColor}
             />
           </>
         )}

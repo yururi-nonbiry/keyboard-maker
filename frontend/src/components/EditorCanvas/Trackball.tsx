@@ -176,7 +176,7 @@ const Trackball: React.FC<TrackballProps> = ({ config }) => {
             <mesh>
               <sphereGeometry args={[config.diameter / 2, 32, 32]} />
               <meshStandardMaterial 
-                color="#ef4444" 
+                color={config.ballColor || "#ef4444"} 
                 metalness={0.8} 
                 roughness={0.2} 
               />

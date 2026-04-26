@@ -66,11 +66,15 @@ const Sidebar: React.FC = () => {
     addController,
     addBattery,
     addMountingHole,
+    updateCaseConfig,
+    updatePcbConfig,
+    updateLightingConfig,
   } = useKeyboardStore();
 
   const [expandedSections, setExpandedSections] = React.useState<Record<string, boolean>>({
     selection: true,
     toolbox: true,
+    appearance: false,
   });
 
   // Auto-expand selection section when a new item is selected
@@ -189,19 +193,88 @@ const Sidebar: React.FC = () => {
         </div>
       </CollapsibleSection>
 
-      <div className={styles.divider} />
-
-      {!(selectedKey || selectedTrackball || selectedController || selectedBattery || selectedDiode || selectedMountingHole) && (
-        <div style={{ padding: '20px', textAlign: 'center', opacity: 0.6 }}>
-          <p style={{ fontSize: '0.875rem', marginBottom: '16px' }}>アイテムを選択して設定を表示</p>
-          <div style={{ borderTop: '1px solid var(--glass-border)', margin: '20px 0' }} />
-          <p style={{ fontSize: '0.75rem' }}>
-            キーボード全体の詳細設定は<br/>
-            上部ツールバーの ⚙️ アイコンから<br/>
-            開くことができます。
-          </p>
+      <CollapsibleSection 
+        id="appearance" 
+        title="外観・ライティング" 
+        isExpanded={expandedSections.appearance} 
+        onToggle={toggleSection}
+      >
+        <div className={styles.group}>
+          <label className={styles.label}>ケースカラー</label>
+          <div className={styles.colorPickerRow}>
+            <input 
+              type="color" 
+              className={styles.colorInput} 
+              value={data.case_config.caseColor || '#1e1e2e'} 
+              onChange={(e) => updateCaseConfig({ caseColor: e.target.value })}
+            />
+            <span className={styles.label}>{data.case_config.caseColor || '#1e1e2e'}</span>
+          </div>
         </div>
-      )}
+        <div className={styles.group}>
+          <label className={styles.label}>プレートカラー</label>
+          <div className={styles.colorPickerRow}>
+            <input 
+              type="color" 
+              className={styles.colorInput} 
+              value={data.case_config.plateColor || '#313244'} 
+              onChange={(e) => updateCaseConfig({ plateColor: e.target.value })}
+            />
+            <span className={styles.label}>{data.case_config.plateColor || '#313244'}</span>
+          </div>
+        </div>
+        <div className={styles.group}>
+          <label className={styles.label}>PCBカラー</label>
+          <div className={styles.colorPickerRow}>
+            <input 
+              type="color" 
+              className={styles.colorInput} 
+              value={data.pcb_config.pcbColor || '#166534'} 
+              onChange={(e) => updatePcbConfig({ pcbColor: e.target.value })}
+            />
+            <span className={styles.label}>{data.pcb_config.pcbColor || '#166534'}</span>
+          </div>
+        </div>
+        <div className={styles.group}>
+          <label className={styles.label}>デフォルトキーキャップ</label>
+          <div className={styles.colorPickerRow}>
+            <input 
+              type="color" 
+              className={styles.colorInput} 
+              value={data.case_config.defaultKeycapColor || '#cdd6f4'} 
+              onChange={(e) => updateCaseConfig({ defaultKeycapColor: e.target.value })}
+            />
+            <span className={styles.label}>{data.case_config.defaultKeycapColor || '#cdd6f4'}</span>
+          </div>
+        </div>
+
+        <div className={styles.divider} />
+        
+        <div className={styles.group}>
+          <label className={styles.checkboxLabel}>
+            <input 
+              type="checkbox" 
+              className={styles.checkbox} 
+              checked={data.lighting_config?.underglowEnabled || false} 
+              onChange={(e) => updateLightingConfig({ underglowEnabled: e.target.checked })}
+            />
+            アンダーグロウ (Underglow)
+          </label>
+          {data.lighting_config?.underglowEnabled && (
+            <div className={styles.colorPickerRow}>
+              <input 
+                type="color" 
+                className={styles.colorInput} 
+                value={data.lighting_config.underglowColor || '#ffffff'} 
+                onChange={(e) => updateLightingConfig({ underglowColor: e.target.value })}
+              />
+              <span className={styles.label}>{data.lighting_config.underglowColor || '#ffffff'}</span>
+            </div>
+          )}
+        </div>
+      </CollapsibleSection>
+
+      <div className={styles.divider} />
 
       {selectedKey ? (
         <CollapsibleSection 
@@ -296,6 +369,24 @@ const Sidebar: React.FC = () => {
               <option value="choc">Choc</option>
               <option value="mbk">MBK</option>
             </select>
+          </div>
+          <div className={styles.group}>
+            <label className={styles.label}>キーキャップカラー</label>
+            <div className={styles.colorPickerRow}>
+              <input 
+                type="color" 
+                className={styles.colorInput} 
+                value={selectedKey.keycapColor || data.case_config.defaultKeycapColor || '#cdd6f4'} 
+                onChange={(e) => updateKey(selectedKey.id, { keycapColor: e.target.value })}
+              />
+              <button 
+                className={styles.presetButton} 
+                onClick={() => updateKey(selectedKey.id, { keycapColor: undefined })}
+                style={{ flex: 1 }}
+              >
+                デフォルトに戻す
+              </button>
+            </div>
           </div>
           {data.type === 'split' && (
             <div className={styles.group}>
@@ -408,6 +499,18 @@ const Sidebar: React.FC = () => {
             />
           </div>
           <div className={styles.group}>
+            <label className={styles.label}>ボールカラー</label>
+            <div className={styles.colorPickerRow}>
+              <input 
+                type="color" 
+                className={styles.colorInput} 
+                value={selectedTrackball.ballColor || '#ef4444'} 
+                onChange={(e) => updateTrackball(selectedTrackball.id, { ballColor: e.target.value })}
+              />
+              <span className={styles.label}>{selectedTrackball.ballColor || '#ef4444'}</span>
+            </div>
+          </div>
+          <div className={styles.group}>
             <label className={styles.label}>高さ (Z): {selectedTrackball.z ?? -5}mm</label>
             <div className={styles.row}>
               <input
@@ -439,30 +542,6 @@ const Sidebar: React.FC = () => {
               <option value="pmw3389">PMW3389</option>
               <option value="adns9800">ADNS9800</option>
             </select>
-          </div>
-          <div className={styles.group}>
-            <label className={styles.label}>センサーの配置角度: {selectedTrackball.sensorAngle || 0}°</label>
-            <input
-              type="range"
-              min="0"
-              max="360"
-              step="1"
-              className={styles.input}
-              value={selectedTrackball.sensorAngle || 0}
-              onChange={(e) => updateTrackball(selectedTrackball.id, { sensorAngle: parseFloat(e.target.value) })}
-            />
-          </div>
-          <div className={styles.group}>
-            <label className={styles.label}>センサーの回転: {selectedTrackball.sensorRotation || 0}°</label>
-            <input
-              type="range"
-              min="0"
-              max="360"
-              step="1"
-              className={styles.input}
-              value={selectedTrackball.sensorRotation || 0}
-              onChange={(e) => updateTrackball(selectedTrackball.id, { sensorRotation: parseFloat(e.target.value) })}
-            />
           </div>
           {data.type === 'split' && (
             <div className={styles.group}>
@@ -504,13 +583,6 @@ const Sidebar: React.FC = () => {
           title="MCU設定" 
           isExpanded={expandedSections.selection} 
           onToggle={toggleSection}
-          badge={
-            data.type === 'split' && (
-              <span className={`${styles.badge} ${selectedController.side === 'left' ? styles.badgeLeft : styles.badgeRight}`}>
-                {selectedController.side === 'left' ? 'LEFT' : 'RIGHT'}
-              </span>
-            )
-          }
         >
           <div className={styles.group}>
             <label className={styles.label}>種類</label>
@@ -550,39 +622,6 @@ const Sidebar: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className={styles.group}>
-            <label className={styles.label}>回転</label>
-            <input
-              className={styles.input}
-              type="number"
-              value={selectedController.rotation}
-              onChange={(e) => updateController(selectedController.id, { rotation: parseFloat(e.target.value) || 0 })}
-            />
-          </div>
-          <div className={styles.group}>
-            <label className={styles.label}>マウント面</label>
-            <select
-              className={styles.input}
-              value={selectedController.mountingSide}
-              onChange={(e) => updateController(selectedController.id, { mountingSide: e.target.value as 'top' | 'bottom' })}
-            >
-              <option value="top">表面 (Top)</option>
-              <option value="bottom">裏面 (Bottom)</option>
-            </select>
-          </div>
-          {data.type === 'split' && (
-            <div className={styles.group}>
-              <label className={styles.label}>配置サイド</label>
-              <select
-                className={styles.input}
-                value={selectedController.side || 'left'}
-                onChange={(e) => updateController(selectedController.id, { side: e.target.value as 'left' | 'right' })}
-              >
-                <option value="left">左手 (Left)</option>
-                <option value="right">右手 (Right)</option>
-              </select>
-            </div>
-          )}
           <div style={{ marginTop: 'auto' }}>
             <button 
               className={styles.input} 
@@ -599,13 +638,6 @@ const Sidebar: React.FC = () => {
           title="バッテリー設定" 
           isExpanded={expandedSections.selection} 
           onToggle={toggleSection}
-          badge={
-            data.type === 'split' && (
-              <span className={`${styles.badge} ${selectedBattery.side === 'left' ? styles.badgeLeft : styles.badgeRight}`}>
-                {selectedBattery.side === 'left' ? 'LEFT' : 'RIGHT'}
-              </span>
-            )
-          }
         >
           <div className={styles.group}>
             <label className={styles.label}>座標 (X, Y)</label>
@@ -630,124 +662,6 @@ const Sidebar: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className={styles.group}>
-            <label className={styles.label}>サイズ (幅 x 高さ x 厚み)</label>
-            <div className={styles.row}>
-              <div className={styles.inputWrapper}>
-                <input
-                  className={styles.input}
-                  type="number"
-                  value={selectedBattery.width}
-                  onChange={(e) => updateBattery(selectedBattery.id, { width: parseFloat(e.target.value) || 0 })}
-                  placeholder="幅"
-                />
-              </div>
-              <div className={styles.inputWrapper}>
-                <input
-                  className={styles.input}
-                  type="number"
-                  value={selectedBattery.height}
-                  onChange={(e) => updateBattery(selectedBattery.id, { height: parseFloat(e.target.value) || 0 })}
-                  placeholder="高さ"
-                />
-              </div>
-              <div className={styles.inputWrapper}>
-                <input
-                  className={styles.input}
-                  type="number"
-                  value={selectedBattery.thickness}
-                  onChange={(e) => updateBattery(selectedBattery.id, { thickness: parseFloat(e.target.value) || 0 })}
-                  placeholder="厚み"
-                />
-              </div>
-            </div>
-          </div>
-          <div className={styles.group}>
-            <label className={styles.label}>回転</label>
-            <input
-              className={styles.input}
-              type="number"
-              value={selectedBattery.rotation}
-              onChange={(e) => updateBattery(selectedBattery.id, { rotation: parseFloat(e.target.value) || 0 })}
-            />
-          </div>
-          <div className={styles.group}>
-            <label className={styles.label}>マウント面</label>
-            <select
-              className={styles.input}
-              value={selectedBattery.mountingSide}
-              onChange={(e) => updateBattery(selectedBattery.id, { mountingSide: e.target.value as 'top' | 'bottom' })}
-            >
-              <option value="top">表面 (Top)</option>
-              <option value="bottom">裏面 (Bottom)</option>
-            </select>
-          </div>
-          {data.type === 'split' && (
-            <div className={styles.group}>
-              <label className={styles.label}>配置サイド</label>
-              <select
-                className={styles.input}
-                value={selectedBattery.side || 'left'}
-                onChange={(e) => updateBattery(selectedBattery.id, { side: e.target.value as 'left' | 'right' })}
-              >
-                <option value="left">左手 (Left)</option>
-                <option value="right">右手 (Right)</option>
-              </select>
-            </div>
-          )}
-
-          <div className={styles.divider} />
-          
-          <div className={styles.group}>
-            <label className={styles.checkboxLabel}>
-              <input 
-                type="checkbox" 
-                className={styles.checkbox} 
-                checked={selectedBattery.connectorEnabled || false} 
-                onChange={(e) => updateBattery(selectedBattery.id, { connectorEnabled: e.target.checked })} 
-              />
-              コネクタを有効化
-            </label>
-          </div>
-
-          {selectedBattery.connectorEnabled && (
-            <>
-              <div className={styles.group}>
-                <label className={styles.label}>コネクタ座標 (X, Y)</label>
-                <div className={styles.row}>
-                  <div className={styles.inputWrapper}>
-                    <span className={styles.coordLabel}>X</span>
-                    <input
-                      className={styles.input}
-                      type="number"
-                      value={selectedBattery.connectorX ?? selectedBattery.x}
-                      onChange={(e) => updateBattery(selectedBattery.id, { connectorX: parseFloat(e.target.value) || 0 })}
-                    />
-                  </div>
-                  <div className={styles.inputWrapper}>
-                    <span className={styles.coordLabel}>Y</span>
-                    <input
-                      className={styles.input}
-                      type="number"
-                      value={selectedBattery.connectorY ?? (selectedBattery.y + 10)}
-                      onChange={(e) => updateBattery(selectedBattery.id, { connectorY: parseFloat(e.target.value) || 0 })}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className={styles.group}>
-                <label className={styles.label}>コネクタ マウント面</label>
-                <select
-                  className={styles.input}
-                  value={selectedBattery.connectorMountingSide || selectedBattery.mountingSide}
-                  onChange={(e) => updateBattery(selectedBattery.id, { connectorMountingSide: e.target.value as 'top' | 'bottom' })}
-                >
-                  <option value="top">表面 (Top)</option>
-                  <option value="bottom">裏面 (Bottom)</option>
-                </select>
-              </div>
-            </>
-          )}
           <div style={{ marginTop: 'auto' }}>
             <button 
               className={styles.input} 
@@ -764,13 +678,6 @@ const Sidebar: React.FC = () => {
           title="ダイオード設定" 
           isExpanded={expandedSections.selection} 
           onToggle={toggleSection}
-          badge={
-            data.type === 'split' && (
-              <span className={`${styles.badge} ${selectedDiode.side === 'left' ? styles.badgeLeft : styles.badgeRight}`}>
-                {selectedDiode.side === 'left' ? 'LEFT' : 'RIGHT'}
-              </span>
-            )
-          }
         >
           <div className={styles.group}>
             <label className={styles.label}>座標 (X, Y)</label>
@@ -795,39 +702,6 @@ const Sidebar: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className={styles.group}>
-            <label className={styles.label}>回転</label>
-            <input
-              className={styles.input}
-              type="number"
-              value={selectedDiode.rotation}
-              onChange={(e) => updateDiode(selectedDiode.id, { rotation: parseFloat(e.target.value) || 0 })}
-            />
-          </div>
-          <div className={styles.group}>
-            <label className={styles.label}>マウント面</label>
-            <select
-              className={styles.input}
-              value={selectedDiode.mountingSide}
-              onChange={(e) => updateDiode(selectedDiode.id, { mountingSide: e.target.value as 'top' | 'bottom' })}
-            >
-              <option value="top">表面 (Top)</option>
-              <option value="bottom">裏面 (Bottom)</option>
-            </select>
-          </div>
-          {data.type === 'split' && (
-            <div className={styles.group}>
-              <label className={styles.label}>配置サイド</label>
-              <select
-                className={styles.input}
-                value={selectedDiode.side || 'left'}
-                onChange={(e) => updateDiode(selectedDiode.id, { side: e.target.value as 'left' | 'right' })}
-              >
-                <option value="left">左手 (Left)</option>
-                <option value="right">右手 (Right)</option>
-              </select>
-            </div>
-          )}
           <div style={{ marginTop: 'auto' }}>
             <button 
               className={styles.input} 
@@ -844,13 +718,6 @@ const Sidebar: React.FC = () => {
           title="マウント穴設定" 
           isExpanded={expandedSections.selection} 
           onToggle={toggleSection}
-          badge={
-            data.type === 'split' && (
-              <span className={`${styles.badge} ${selectedMountingHole.side === 'left' ? styles.badgeLeft : styles.badgeRight}`}>
-                {selectedMountingHole.side === 'left' ? 'LEFT' : 'RIGHT'}
-              </span>
-            )
-          }
         >
           <div className={styles.group}>
             <label className={styles.label}>座標 (X, Y)</label>
@@ -875,53 +742,19 @@ const Sidebar: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className={styles.group}>
-            <label className={styles.label}>直径 (Diameter): {selectedMountingHole.diameter}mm</label>
-            <input
-              className={styles.input}
-              type="number"
-              step="0.1"
-              value={selectedMountingHole.diameter}
-              onChange={(e) => updateMountingHole(selectedMountingHole.id, { diameter: parseFloat(e.target.value) || 3.2 })}
-            />
-            <div className={styles.presetGrid} style={{ marginTop: '8px' }}>
-              {[2.2, 3.2, 4.2].map(d => (
-                <button
-                  key={d}
-                  className={`${styles.presetButton} ${selectedMountingHole.diameter === d ? styles.presetButtonActive : ''}`}
-                  onClick={() => updateMountingHole(selectedMountingHole.id, { diameter: d })}
-                >
-                  M{Math.floor(d)} ({d}mm)
-                </button>
-              ))}
-            </div>
-          </div>
-          {data.type === 'split' && (
-            <div className={styles.group}>
-              <label className={styles.label}>配置サイド</label>
-              <select
-                className={styles.input}
-                value={selectedMountingHole.side || 'left'}
-                onChange={(e) => updateMountingHole(selectedMountingHole.id, { side: e.target.value as 'left' | 'right' })}
-              >
-                <option value="left">左手 (Left)</option>
-                <option value="right">右手 (Right)</option>
-              </select>
-            </div>
-          )}
           <div style={{ marginTop: 'auto' }}>
             <button 
               className={styles.input} 
               style={{ width: '100%', borderColor: 'var(--color-secondary)', color: 'var(--color-secondary)' }}
               onClick={() => removeMountingHole(selectedMountingHole.id)}
             >
-              マウント穴を削除
+              穴を削除
             </button>
           </div>
         </CollapsibleSection>
       ) : (
-        <div className={styles.section}>
-          <p className={styles.label}>編集する項目を選択してください。</p>
+        <div style={{ padding: '20px', textAlign: 'center', opacity: 0.6 }}>
+          <p style={{ fontSize: '0.875rem' }}>項目を選択して詳細設定を表示</p>
         </div>
       )}
     </div>

@@ -81,6 +81,8 @@ const PlateMesh: React.FC<PlateMeshProps> = ({ keys, plateThickness, boundaryPoi
     return geo;
   }, [keys, boundaryPoints, center, plateThickness, mountingHoles]);
 
+  const { data } = useKeyboardStore();
+
   return (
     <mesh 
       position={[center.x, -1, center.y]}
@@ -88,7 +90,7 @@ const PlateMesh: React.FC<PlateMeshProps> = ({ keys, plateThickness, boundaryPoi
       geometry={geometry}
     >
       <meshStandardMaterial 
-        color="#2d2d35" 
+        color={data.case_config.plateColor || "#2d2d35"} 
         metalness={0.8} 
         roughness={0.2} 
       />

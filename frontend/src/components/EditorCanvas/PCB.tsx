@@ -29,6 +29,7 @@ const PCBMesh: React.FC<PCBMeshProps> = ({
   mountingHoles,
   sideTrackballs
 }) => {
+  const { data } = useKeyboardStore();
   const geometry = useMemo(() => {
     const shape = new THREE.Shape();
     
@@ -174,7 +175,7 @@ const PCBMesh: React.FC<PCBMeshProps> = ({
       geometry={geometry}
     >
       <meshStandardMaterial 
-        color="#1b4d2e"
+        color={data.pcb_config.pcbColor || "#1b4d2e"}
         metalness={0.3} 
         roughness={0.7} 
       />
